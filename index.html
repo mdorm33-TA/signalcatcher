@@ -112,7 +112,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:18
 .sc-water{fill:none;stroke:rgba(77,163,255,0.15);stroke-width:1.5}
 .sc-brand-s{fill:#fff;font-weight:800;font-size:44px;font-family:var(--sans);letter-spacing:.02em}
 .sc-brand-c{fill:#4da3ff;font-weight:800;font-size:44px;font-family:var(--sans);letter-spacing:.02em}
-.sc-tagline{fill:#ff6b6b;font-weight:700;font-size:21px;font-family:var(--mono);text-anchor:middle}
+.sc-tagline{fill:#ff6b6b;font-weight:700;font-size:26px;font-family:var(--mono);text-anchor:middle}
 .sc-powered{fill:rgba(255,255,255,0.35);font-size:10px;font-family:var(--mono);text-anchor:middle}
 .search-bar{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 12px;flex:1;min-width:0;}
 .search-bar input{background:none;border:none;color:var(--text);font-family:var(--mono);font-size:15px;font-weight:600;outline:none;width:75px;text-transform:uppercase;letter-spacing:.08em;}
@@ -168,6 +168,17 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:18
 .bw{font-family:var(--mono);font-size:14px;color:var(--text3);margin-left:auto;}
 .bw span{color:var(--text2);}
 .bdesc{font-size:14px;color:var(--text3);}
+/* ── THEMATIC INDICATOR GROUPS (v12) ── */
+.ind-group{margin-bottom:12px;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--surface2);}
+.ind-group-hdr{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--surface);border-bottom:1px solid var(--border);}
+.ind-group-icon{font-size:14px;line-height:1;}
+.ind-group-title{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--text);letter-spacing:.04em;}
+.ind-group-desc{font-family:var(--sans);font-size:12px;color:var(--text3);font-style:italic;margin-left:auto;}
+.ind-group-body{padding:4px 0;}
+/* bucket badge on each indicator row */
+.bkt-badge{font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:.08em;padding:1px 5px;border-radius:3px;text-transform:uppercase;flex-shrink:0;line-height:1.4;}
+.bkt-badge.high{background:var(--high-dim);color:var(--high);border:1px solid #4c8ef730;}
+.bkt-badge.med{background:var(--med-dim);color:var(--med);border:1px solid #a78bfa30;}
 
 /* ── INDICATOR ROW ── */
 .ind-row{display:grid;grid-template-columns:180px 1fr 54px;align-items:center;gap:8px;padding:5px 8px;border-radius:6px;margin-bottom:2px;transition:background .12s,box-shadow .12s;position:relative;}
@@ -547,13 +558,16 @@ body:not(.dark-mode) .commentary-item.structural{background:#1a6fd410;border-lef
   .ind-panel.mob-active,.score-panel.mob-active{display:flex;flex-direction:column;}
   .score-panel.mob-active{padding-top:12px;}
   .ind-row{grid-template-columns:140px 1fr 44px;gap:4px;padding:5px 4px;}
+  .ind-group-desc{display:none;}
+  .ind-group-hdr{padding:6px 8px;}
+  .ind-group-title{font-size:11px;}
   .nrow{padding-left:0;padding-top:4px;}
   .hdr-controls{gap:6px;padding:6px 10px;flex-wrap:wrap;}
   .search-bar{max-width:100%;flex:1;}
   .hdr-logo-img{height:60px;}
   .hdr-svg-wrap{max-width:100%;}
   .sc-brand-s,.sc-brand-c{font-size:28px}
-  .sc-tagline{font-size:14px}
+  .sc-tagline{font-size:18px}
   .logo-subtitle{font-size:14px;letter-spacing:.01em;}
   .logo{font-size:16px;text-align:center;width:100%;white-space:normal;}
   .logo-sub{display:none;}
@@ -704,8 +718,9 @@ body:not(.dark-mode) .commentary-item.structural{background:#1a6fd410;border-lef
         <text x="300" y="366" text-anchor="middle">
           <tspan class="sc-brand-s">Mike's Signal </tspan><tspan class="sc-brand-c">Catcher</tspan>
         </text>
-        <text x="300" y="405" class="sc-tagline">Catch the Big Runs</text>
-        <text x="300" y="430" class="sc-powered">Powered by Claude.ai · Yahoo Finance · Weighted Scoring</text>
+        <text x="300" y="403" class="sc-tagline">Catch the Big Runs</text>
+        <text x="300" y="422" text-anchor="middle" style="fill:rgba(255,255,255,0.8);font-size:14px;font-family:'IBM Plex Sans',sans-serif;font-style:italic;">For Fun &amp; Education — Not Financial Advice :-)</text>
+        <text x="300" y="443" class="sc-powered">Powered by Claude.ai · Yahoo Finance · Weighted Scoring</text>
       </svg>
     </div>
   </div>
@@ -800,31 +815,6 @@ body:not(.dark-mode) .commentary-item.structural{background:#1a6fd410;border-lef
       </div>
     </div>
 
-    <div class="bucket">
-      <div class="bucket-hdr">
-        <div class="bpill high">High Confidence</div>
-        <span class="bdesc">Volume Profile · SMA 200 · MA Cross · RSI Extreme · OBV (all computed)</span>
-        <div class="bw">Weight: <span>60%</span></div>
-      </div>
-      <div id="bucket-high"></div>
-    </div>
-
-    <div class="bucket">
-      <div class="bucket-hdr">
-        <div class="bpill med">Medium Confidence</div>
-        <span class="bdesc">MACD Wkly · Ichimoku · Bollinger · DeMark Seq · Candlestick (all computed)</span>
-        <div class="bw">Weight: <span>40%</span></div>
-      </div>
-      <div id="bucket-med"></div>
-    </div>
-
-    <!-- ADX REGIME OVERLAY -->
-    <div class="adx-overlay-card" id="adx-overlay-card" style="background:linear-gradient(145deg,var(--surface) 0%,var(--surface2) 100%);border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:10px;font-family:var(--mono);display:flex;align-items:center;gap:10px;flex-wrap:wrap;position:relative;">
-      <span style="font-size:11px;font-weight:700;color:var(--neu);">⚡ ADX Regime Overlay</span>
-      <span id="adx-overlay-badge" style="font-size:11px;color:var(--text2);flex:1;">Awaiting OHLC data…</span>
-      <span class="tip-wrap"><button class="tip-icon" style="width:22px;height:22px;font-size:13px;border:1.5px solid var(--border2);border-radius:50%;background:var(--surface3);color:var(--text3);cursor:pointer;">?</button><div class="tip-box"><div class="tp-name">ADX Regime Overlay</div><div class="tp-desc"><strong>What is ADX?</strong> The Average Directional Index measures how strongly a stock is trending, regardless of direction. It ranges from 0–100; higher = stronger trend. It does NOT tell you if the trend is up or down — +DI vs -DI shows direction.<br><br>ADX is <strong>not</strong> a scored indicator — it acts as a <strong>regime overlay</strong> that multiplies the weights of trend-following indicators (SMA 200, Ichimoku, MA Cross, MACD Weekly).<br><br><strong>How it works:</strong><br>• ADX ≥ 40: Very Strong Trend → weights boosted 1.20×<br>• ADX ≥ 30: Strong Trend → weights boosted 1.12×<br>• ADX ≥ 25: Trending → weights boosted 1.06×<br>• ADX ≥ 20: Transitional → weights neutral (1.00×)<br>• ADX &lt; 20: Choppy → weights dampened 0.85×</div></div></span>
-    </div>
-
     <!-- FALLING KNIFE ALERT -->
     <div class="knife-card" id="knife-card">
       <div class="knife-hdr">
@@ -838,7 +828,7 @@ body:not(.dark-mode) .commentary-item.structural{background:#1a6fd410;border-lef
       </div>
     </div>
 
-    <!-- SIGNAL COMMENTARY -->
+    <!-- SIGNAL COMMENTARY (moved above indicators in v12) -->
     <div class="commentary-card" id="commentary-card">
       <div class="stitle" style="color:#f0b429">📋 Signal Summary</div>
       <div id="commentary-list"></div>
@@ -854,6 +844,50 @@ body:not(.dark-mode) .commentary-item.structural{background:#1a6fd410;border-lef
     <div class="confluence-card" id="confluence-card">
       <div class="stitle" style="color:var(--bull)">🔒 Indicator Confluence Confirmed</div>
       <div id="confluence-list"></div>
+    </div>
+
+    <!-- ADX REGIME OVERLAY -->
+    <div class="adx-overlay-card" id="adx-overlay-card" style="background:linear-gradient(145deg,var(--surface) 0%,var(--surface2) 100%);border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:10px;font-family:var(--mono);display:flex;align-items:center;gap:10px;flex-wrap:wrap;position:relative;">
+      <span style="font-size:11px;font-weight:700;color:var(--neu);">⚡ ADX Regime Overlay</span>
+      <span id="adx-overlay-badge" style="font-size:11px;color:var(--text2);flex:1;">Awaiting OHLC data…</span>
+      <span class="tip-wrap"><button class="tip-icon" style="width:22px;height:22px;font-size:13px;border:1.5px solid var(--border2);border-radius:50%;background:var(--surface3);color:var(--text3);cursor:pointer;">?</button><div class="tip-box"><div class="tp-name">ADX Regime Overlay</div><div class="tp-desc"><strong>What is ADX?</strong> The Average Directional Index measures how strongly a stock is trending, regardless of direction. It ranges from 0–100; higher = stronger trend. It does NOT tell you if the trend is up or down — +DI vs -DI shows direction.<br><br>ADX is <strong>not</strong> a scored indicator — it acts as a <strong>regime overlay</strong> that multiplies the weights of trend-following indicators (SMA 200, Ichimoku, MA Cross, MACD Weekly).<br><br><strong>How it works:</strong><br>• ADX ≥ 40: Very Strong Trend → weights boosted 1.20×<br>• ADX ≥ 30: Strong Trend → weights boosted 1.12×<br>• ADX ≥ 25: Trending → weights boosted 1.06×<br>• ADX ≥ 20: Transitional → weights neutral (1.00×)<br>• ADX &lt; 20: Choppy → weights dampened 0.85×</div></div></span>
+    </div>
+
+    <!-- THEMATIC INDICATOR GROUPS (v12) — scoring buckets unchanged under the hood -->
+    <div class="ind-group" id="group-trend">
+      <div class="ind-group-hdr">
+        <span class="ind-group-icon">🔵</span>
+        <span class="ind-group-title">Trend Direction</span>
+        <span class="ind-group-desc">Which way is the trend?</span>
+      </div>
+      <div class="ind-group-body" id="grp-trend"></div>
+    </div>
+
+    <div class="ind-group" id="group-volume">
+      <div class="ind-group-hdr">
+        <span class="ind-group-icon">🟢</span>
+        <span class="ind-group-title">Volume & Institutional Flow</span>
+        <span class="ind-group-desc">Where is the money?</span>
+      </div>
+      <div class="ind-group-body" id="grp-volume"></div>
+    </div>
+
+    <div class="ind-group" id="group-contrarian">
+      <div class="ind-group-hdr">
+        <span class="ind-group-icon">🟡</span>
+        <span class="ind-group-title">Contrarian / Mean-Reversion</span>
+        <span class="ind-group-desc">Is the move exhausted?</span>
+      </div>
+      <div class="ind-group-body" id="grp-contrarian"></div>
+    </div>
+
+    <div class="ind-group" id="group-momentum">
+      <div class="ind-group-hdr">
+        <span class="ind-group-icon">🔴</span>
+        <span class="ind-group-title">Momentum & Timing</span>
+        <span class="ind-group-desc">When to act?</span>
+      </div>
+      <div class="ind-group-body" id="grp-momentum"></div>
     </div>
 
     <!-- WEIGHT EDITOR PANEL -->
@@ -3323,8 +3357,8 @@ const CHARTABLE = {
   vol_profile:true, sma_200:true, sma_cross:true,  // sma_cross also gets computed override
   rsi_extreme:true, macd_weekly:true, macd_daily:true, bollinger:true
 };
-function buildRow(ind,bkt){
-  const c=document.getElementById('bucket-'+bkt);
+function buildRow(ind,bkt,container){
+  const c=container||document.getElementById('bucket-'+bkt);
   const row=document.createElement('div'); row.className='ind-row'; row.id='row-'+ind.id;
 
   // name + tip icon + chart button
@@ -3342,6 +3376,10 @@ function buildRow(ind,bkt){
   tipBox.innerHTML=`<div class="tp-name">${info.name}</div><div class="tp-desc">${info.desc}</div><div class="tp-scale"><div class="tp-row"><span>0–20</span><span class="tv bear">Str. Bearish</span></div><div class="tp-row"><span>20–40</span><span class="tv bear">Bearish</span></div><div class="tp-row"><span>40–60</span><span class="tv neu">Neutral</span></div><div class="tp-row"><span>60–80</span><span class="tv bull">Bullish</span></div><div class="tp-row"><span>80–100</span><span class="tv bull">Str. Bullish</span></div></div>`;
   tipWrap.appendChild(tipBtn); tipWrap.appendChild(tipBox);
   nm.appendChild(tipWrap);
+  // Bucket confidence badge (HIGH or MED)
+  const bkBadge=document.createElement('span'); bkBadge.className='bkt-badge '+bkt;
+  bkBadge.textContent=bkt==='high'?'HIGH':'MED';
+  nm.appendChild(bkBadge);
   // JS-driven tooltip — CSS :hover breaks with position:fixed children
   tipBtn._tipBound = true;
   tipBtn.addEventListener('mouseenter', e=>{
@@ -3418,7 +3456,31 @@ function setSl(id,v,anim=true){
   recalc();
 }
 
-function buildAll(){['high','med'].forEach(b=>INDS[b].forEach(i=>buildRow(i,b)));updWB();}
+// v12: Thematic grouping — display-only, scoring buckets unchanged
+const IND_GROUPS = [
+  { container: 'grp-trend',      ids: ['sma_200', 'sma_cross', 'ichimoku'] },
+  { container: 'grp-volume',     ids: ['vol_profile', 'obv'] },
+  { container: 'grp-contrarian', ids: ['rsi_extreme', 'demark_seq', 'bollinger'] },
+  { container: 'grp-momentum',   ids: ['macd_weekly', 'candle_signal'] },
+];
+// Build a lookup: id → bucket name
+const IND_BUCKET = {};
+['high','med'].forEach(b=>INDS[b].forEach(i=>{ IND_BUCKET[i.id]=b; }));
+// Build a lookup: id → ind object
+const IND_BY_ID = {};
+['high','med'].forEach(b=>INDS[b].forEach(i=>{ IND_BY_ID[i.id]=i; }));
+
+function buildAll(){
+  IND_GROUPS.forEach(g=>{
+    const el=document.getElementById(g.container);
+    g.ids.forEach(id=>{
+      const bkt=IND_BUCKET[id];
+      const ind=IND_BY_ID[id];
+      if(ind && el) buildRow(ind, bkt, el);
+    });
+  });
+  updWB();
+}
 
 // ═══ CALCULATE ═══
 function bScore(b){
