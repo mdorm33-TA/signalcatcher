@@ -767,7 +767,7 @@ body:not(.dark-mode) .commentary-item.structural{background:#1a6fd410;border-lef
 <!-- MOBILE TABS -->
 <div class="mob-tabs">
   <button class="mob-tab active" onclick="mobTab('ind')">Indicators</button>
-  <button class="mob-tab" onclick="mobTab('score')">Score &amp; Levels</button>
+  <button class="mob-tab" onclick="mobTab('score')">Fundamentals</button>
 </div>
 
 <div class="layout">
@@ -848,9 +848,9 @@ body:not(.dark-mode) .commentary-item.structural{background:#1a6fd410;border-lef
 
     <!-- ADX REGIME OVERLAY -->
     <div class="adx-overlay-card" id="adx-overlay-card" style="background:linear-gradient(145deg,var(--surface) 0%,var(--surface2) 100%);border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:10px;font-family:var(--mono);display:flex;align-items:center;gap:10px;flex-wrap:wrap;position:relative;">
-      <span style="font-size:11px;font-weight:700;color:var(--neu);">⚡ ADX Regime Overlay</span>
+      <span style="font-size:11px;font-weight:700;color:var(--neu);">⚡ ADX Trend Overlay</span>
       <span id="adx-overlay-badge" style="font-size:11px;color:var(--text2);flex:1;">Awaiting OHLC data…</span>
-      <span class="tip-wrap"><button class="tip-icon" style="width:22px;height:22px;font-size:13px;border:1.5px solid var(--border2);border-radius:50%;background:var(--surface3);color:var(--text3);cursor:pointer;">?</button><div class="tip-box"><div class="tp-name">ADX Regime Overlay</div><div class="tp-desc"><strong>What is ADX?</strong> The Average Directional Index measures how strongly a stock is trending, regardless of direction. It ranges from 0–100; higher = stronger trend. It does NOT tell you if the trend is up or down — +DI vs -DI shows direction.<br><br>ADX is <strong>not</strong> a scored indicator — it acts as a <strong>regime overlay</strong> that multiplies the weights of trend-following indicators (SMA 200, Ichimoku, MA Cross, MACD Weekly).<br><br><strong>How it works:</strong><br>• ADX ≥ 40: Very Strong Trend → weights boosted 1.20×<br>• ADX ≥ 30: Strong Trend → weights boosted 1.12×<br>• ADX ≥ 25: Trending → weights boosted 1.06×<br>• ADX ≥ 20: Transitional → weights neutral (1.00×)<br>• ADX &lt; 20: Choppy → weights dampened 0.85×</div></div></span>
+      <span class="tip-wrap"><button class="tip-icon" style="width:22px;height:22px;font-size:13px;border:1.5px solid var(--border2);border-radius:50%;background:var(--surface3);color:var(--text3);cursor:pointer;">?</button><div class="tip-box"><div class="tp-name">ADX Trend Overlay</div><div class="tp-desc"><strong>What is ADX?</strong> The Average Directional Index measures how strongly a stock is trending, regardless of direction. It ranges from 0–100; higher = stronger trend. It does NOT tell you if the trend is up or down — +DI vs -DI shows direction.<br><br>ADX is <strong>not</strong> a scored indicator — it acts as a <strong>regime overlay</strong> that multiplies the weights of trend-following indicators (SMA 200, Ichimoku, MA Cross, MACD Weekly).<br><br><strong>How it works:</strong><br>• ADX ≥ 40: Very Strong Trend → weights boosted 1.20×<br>• ADX ≥ 30: Strong Trend → weights boosted 1.12×<br>• ADX ≥ 25: Trending → weights boosted 1.06×<br>• ADX ≥ 20: Transitional → weights neutral (1.00×)<br>• ADX &lt; 20: Choppy → weights dampened 0.85×</div></div></span>
     </div>
 
     <!-- THEMATIC INDICATOR GROUPS (v12) — scoring buckets unchanged under the hood -->
@@ -934,7 +934,7 @@ body:not(.dark-mode) .commentary-item.structural{background:#1a6fd410;border-lef
         <div class="gverdict" id="gverdict">LOADING…</div>
         <div class="gdisp">Indicator Agreement: <span id="gdisp-lbl">—</span></div>
         <div style="margin-top:8px;text-align:center;">
-          <span class="scoring-info-btn" onclick="document.getElementById('scoring-info-popup').classList.toggle('visible')" title="How the score is calculated">Scoring Info</span>
+          <span class="scoring-info-btn" onclick="document.getElementById('scoring-info-popup').classList.toggle('visible')" title="How the score is calculated">Scoring Methodology</span>
         </div>
         <div class="scoring-info-popup" id="scoring-info-popup">
           <h4>How the Score Works</h4>
@@ -1788,7 +1788,7 @@ const TIPS = {
   ichimoku:     {name:'Ichimoku Cloud', desc:'A complete trading system developed by Goichi Hosoda. Price above the cloud is bullish, below is bearish. The <strong>Kumo</strong> (cloud) acts as dynamic support/resistance. <strong>Tenkan-Sen</strong> (conversion line) crossing above <strong>Kijun-Sen</strong> (base line) = buy signal. Scored from 4 weighted components: price vs cloud (35%), cloud color (20%), TK cross (25%), <strong>Chikou</strong> (lagging span) confirmation (20%). Computed from real OHLC data.'},
   bollinger:    {name:'Bollinger Bands',   desc:'Bollinger Bands plot a middle <strong>SMA</strong> (Simple Moving Average) with upper and lower bands at 2 standard deviations. CONTRARIAN scoring: <strong>%B</strong> (percent bandwidth) near 0 (at lower band) → bullish reversal signal; %B near 1 (at upper band) → bearish reversal signal. Band squeeze (bandwidth below 4%) → neutral with breakout pending. In strong trends price can "walk the band" — check trend context. Computed from real OHLC data (20-period, 2σ).'},
   obv:          {name:'OBV Trend',         desc:'<strong>OBV</strong> (On-Balance Volume) tracks cumulative volume flow — it adds volume on up days and subtracts it on down days. Rising OBV with rising price confirms accumulation (bullish). Divergence — OBV falling while price rises — warns of distribution (smart money selling). Computed from real OHLC + volume data.'},
-  adx:          {name:'ADX Regime Overlay', desc:'<strong>ADX</strong> (Average Directional Index) measures TREND STRENGTH (not direction). Not scored directly — acts as an overlay multiplier on trend-following indicator weights (SMA 200, Ichimoku, MA Cross, MACD Weekly). Below 20 = no trend (choppy, weights dampened 0.85×). 20–25 = transitional (1.00×). 25–30 = trending (1.06×). 30–40 = strong trend (1.12×). Above 40 = very strong trend (1.20×). <strong>+DI</strong> (Positive Directional Indicator) vs <strong>-DI</strong> (Negative Directional Indicator) shows trend direction. Computed from real OHLC data using Wilder\'s <strong>DMI</strong> (Directional Movement Index), 14-period.'},
+  adx:          {name:'ADX Trend Overlay', desc:'<strong>ADX</strong> (Average Directional Index) measures TREND STRENGTH (not direction). Not scored directly — acts as an overlay multiplier on trend-following indicator weights (SMA 200, Ichimoku, MA Cross, MACD Weekly). Below 20 = no trend (choppy, weights dampened 0.85×). 20–25 = transitional (1.00×). 25–30 = trending (1.06×). 30–40 = strong trend (1.12×). Above 40 = very strong trend (1.20×). <strong>+DI</strong> (Positive Directional Indicator) vs <strong>-DI</strong> (Negative Directional Indicator) shows trend direction. Computed from real OHLC data using Wilder\'s <strong>DMI</strong> (Directional Movement Index), 14-period.'},
   candle_signal: {name:'Candlestick Signal', desc:'Detects classic single-bar and two-bar reversal patterns on daily charts. <strong>Topping Tails</strong> (also called Shooting Stars) signal potential reversals after uptrends — long upper wick shows sellers rejecting higher prices. <strong>Bottoming Tails</strong> (Hammers) signal reversals after downtrends — long lower wick shows buyers stepping in. <strong>Engulfing</strong> candles confirm directional momentum shifts when one bar completely engulfs the prior bar. Stronger signals occur at key levels (VAH/VAL/SMA 200) and on elevated volume.'},
 };
 
