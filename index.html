@@ -538,9 +538,10 @@ body:not(.dark-mode) .commentary-item.structural{background:#1a6fd410;border-lef
 .news-content li{margin-bottom:6px;}
 .news-content strong{color:var(--text);}
 .news-cost-note{font-family:var(--mono);font-size:9px;color:var(--text3);font-style:italic;margin-top:8px;}
-.news-fetch-btn{font-family:var(--mono);font-size:11px;padding:5px 12px;border:1px solid #f59e0b;border-radius:5px;background:#f59e0b18;color:#f59e0b;cursor:pointer;font-weight:600;transition:all .15s;}
-.news-fetch-btn:hover{background:#f59e0b30;}
-.news-fetch-btn:disabled{opacity:0.5;cursor:not-allowed;}
+.news-fetch-btn{font-family:var(--mono);font-size:11px;padding:5px 12px;border:1px solid #f59e0b;border-radius:5px;background:#f59e0b18;color:#f59e0b;cursor:pointer;font-weight:600;transition:all .15s;animation:newsBlink 1.5s ease-in-out infinite;}
+@keyframes newsBlink{0%,100%{opacity:1;box-shadow:0 0 4px #f59e0b00;}50%{opacity:.65;box-shadow:0 0 10px #f59e0b40;}}
+.news-fetch-btn:hover{background:#f59e0b30;animation:none;}
+.news-fetch-btn:disabled{opacity:0.5;cursor:not-allowed;animation:none;}
 .fund-na{font-family:var(--mono);font-size:11px;color:var(--text3);font-style:italic;padding:4px 0 6px;}
 
 /* compact multi-column grid */
@@ -797,7 +798,7 @@ body:not(.dark-mode) .commentary-item.structural{background:#1a6fd410;border-lef
 <!-- MOBILE TABS -->
 <div class="mob-tabs">
   <button class="mob-tab active" onclick="mobTab('ind')">Indicators</button>
-  <button class="mob-tab" onclick="mobTab('score')">Fundamentals</button>
+  <button class="mob-tab" onclick="mobTab('score')">Analysis</button>
 </div>
 
 <div class="layout">
@@ -4028,6 +4029,9 @@ function onACChange(){
   if(titleEl) titleEl.innerHTML=ac==='crypto'
     ? 'Bitcoin Fear &amp; Greed'
     : 'US Stock Market Fear &amp; Greed';
+  // Hide fundamentals panel for crypto (no P/E, EPS, etc.)
+  const fundPanel=document.getElementById('fund-panel');
+  if(fundPanel) fundPanel.style.display = ac==='crypto' ? 'none' : '';
   updWB();recalc();
 }
 function updFGWDisp(){
@@ -4466,7 +4470,7 @@ async function runAnalysis(){
     const _cnc = window._lastSymbolName ? ` · ${window._lastSymbolName}` : '';
     const priceC = document.getElementById('price-val').textContent || '';
     dot.className='sdot active';st.className='stext active';st.style.animation='';st.style.color='';
-    st.innerHTML=`<span class="sticker">${ticker}</span>${_cnc} — <span style="color:${_cc};font-weight:600">${_vc}</span> · ${priceC} · OHLC scored · ${nowStamp()}`;
+    st.innerHTML=`<span class="sticker">${ticker}</span>${_cnc} · ${priceC} · ${nowStamp()}`;
     so.textContent='Waiting for AI (divNote + fundamentals)…';
     btn.disabled=false;btn.classList.remove('loading');
     console.log('runAnalysis: ALL DONE. Score:', _sc);
@@ -4597,7 +4601,7 @@ All values plain text only — no HTML, no citations. N/A if unknown.`;
       const _aiScore = Math.round(bScore('high')*customBW.high + bScore('med')*customBW.med);
       const _aiVerdict = verd(_aiScore).l, _aiCol = sCol(_aiScore);
       dot.className='sdot active';st.className='stext active';st.style.animation='';st.style.color='';
-      st.innerHTML=`<span class="sticker">${parsed.ticker||ticker}</span>${_cname} — <span style="color:${_aiCol};font-weight:600">${_aiVerdict}</span> · ${priceText} · ${nowStamp()}`;
+      st.innerHTML=`<span class="sticker">${parsed.ticker||ticker}</span>${_cname} · ${priceText} · ${nowStamp()}`;
       console.log('AI call complete for', ticker, '— divNote + fundamentals loaded');
       // If name arrived late, do another status bar update
       if(!window._lastSymbolName){
@@ -4608,7 +4612,7 @@ All values plain text only — no HTML, no citations. N/A if unknown.`;
               const _s2 = Math.round(bScore('high')*customBW.high + bScore('med')*customBW.med);
               const _v2 = verd(_s2).l, _c2 = sCol(_s2);
               const priceNow = document.getElementById('price-val').textContent || '';
-              cur.innerHTML=`<span class="sticker">${ticker}</span> · ${window._lastSymbolName} — <span style="color:${_c2};font-weight:600">${_v2}</span> · ${priceNow} · ${nowStamp()}`;
+              cur.innerHTML=`<span class="sticker">${ticker}</span> · ${window._lastSymbolName} · ${priceNow} · ${nowStamp()}`;
             }
           }
         }, 3000);
@@ -5373,12 +5377,12 @@ document.addEventListener('DOMContentLoaded',()=>{
     const chev=document.getElementById('coast-chevron');
     if(body){body.classList.add('open');if(chev)chev.classList.add('open');loadCoastalConditions();}
   })();
-  // Load from URL hash first, else load MU preload
+  // Load from URL hash if present, otherwise show empty state
   if(window.location.hash&&window.location.hash.length>3){
     loadFromUrl();
   } else {
-    loadPreset(MU_PRELOAD);
-    document.getElementById('ticker-input').value = 'MU';
+    document.getElementById('ticker-input').value = '';
+    document.getElementById('ticker-input').placeholder = 'AAPL, MSFT, BTC…';
   }
   drawFGA(null);
   onACChange();
