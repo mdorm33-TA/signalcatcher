@@ -2681,8 +2681,8 @@ async function runAllComputed(ticker){
     const cross = I.cross;
     let maDetail;
     const spreadPct = cross.sma50 && cross.sma200 ? Math.abs(cross.sma50 - cross.sma200) / cross.sma200 * 100 : 0;
-    if(cross.type === 'golden')     maDetail = `Golden Cross · ${cross.barsAgo} days ago`;
-    else if(cross.type === 'death') maDetail = `Death Cross · ${cross.barsAgo} days ago`;
+    if(cross.type === 'golden')     maDetail = `Golden Cross · ${cross.barsAgo === 0 ? 'Today' : cross.barsAgo + ' days ago'}`;
+    else if(cross.type === 'death') maDetail = `Death Cross · ${cross.barsAgo === 0 ? 'Today' : cross.barsAgo + ' days ago'}`;
     else if(cross.sma50 > cross.sma200) maDetail = `SMA50 > SMA200 · spread ${spreadPct.toFixed(1)}%`;
     else                                maDetail = `SMA50 < SMA200 · spread ${spreadPct.toFixed(1)}%`;
     const maSub = document.getElementById('sub-sma_cross');
@@ -2838,9 +2838,9 @@ async function runAllComputed(ticker){
     const dm = I.demark;
     let dmDetail;
     if(dm.lastCd && dm.barsSinceCd !== null && dm.barsSinceCd <= 15)
-      dmDetail = `CD13 ${dm.lastCd.toUpperCase()} · ${dm.barsSinceCd} days ago`;
+      dmDetail = `CD13 ${dm.lastCd.toUpperCase()} · ${dm.barsSinceCd === 0 ? 'Today' : dm.barsSinceCd + ' days ago'}`;
     else if(dm.lastSetup && dm.barsSince !== null && dm.barsSince <= 20)
-      dmDetail = `Setup9 ${dm.lastSetup.toUpperCase()}${dm.perfect ? ' ★' : ''} · ${dm.barsSince} days ago`;
+      dmDetail = `Setup9 ${dm.lastSetup.toUpperCase()}${dm.perfect ? ' ★' : ''} · ${dm.barsSince === 0 ? 'Today' : dm.barsSince + ' days ago'}`;
     else if(dm.activeBuy >= 5)  dmDetail = `Active BUY setup ${dm.activeBuy}/9`;
     else if(dm.activeSell >= 5) dmDetail = `Active SELL setup ${dm.activeSell}/9`;
     else if(dm.activeBuy > 0)   dmDetail = `BUY setup counting: ${dm.activeBuy}/9`;
