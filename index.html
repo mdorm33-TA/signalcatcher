@@ -249,34 +249,34 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:18
 .confl-strength.moderate{background:#4dd9a022;color:#22b87a;}
 
 /* ── FALLING KNIFE ALERT ── */
-.knife-card{background:linear-gradient(145deg,#1a0a2e 0%,#120820 100%);border:2px solid #a855f7;border-radius:12px;padding:16px;display:none;box-shadow:0 2px 12px rgba(168,85,247,.2),0 0 20px rgba(168,85,247,.08);position:relative;overflow:hidden;}
-.knife-card::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:conic-gradient(from 0deg,transparent,rgba(168,85,247,.06),transparent,rgba(168,85,247,.06),transparent);animation:knifeGlow 6s linear infinite;}
+.knife-card{background:linear-gradient(145deg,#1a1508 0%,#12100a 100%);border:2px solid #f59e0b;border-radius:12px;padding:16px;display:none;box-shadow:0 2px 12px rgba(245,158,11,.25),0 0 20px rgba(245,158,11,.1);position:relative;overflow:hidden;}
+.knife-card::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:conic-gradient(from 0deg,transparent,rgba(245,158,11,.06),transparent,rgba(245,158,11,.06),transparent);animation:knifeGlow 6s linear infinite;}
 @keyframes knifeGlow{to{transform:rotate(360deg);}}
 .knife-card.active{display:block;}
 .knife-hdr{display:flex;align-items:center;gap:10px;margin-bottom:10px;position:relative;z-index:1;}
-.knife-icon{font-size:22px;filter:drop-shadow(0 0 6px rgba(168,85,247,.5));}
-.knife-title{font-family:var(--mono);font-size:15px;font-weight:700;color:#d8b4fe;letter-spacing:.08em;text-transform:uppercase;text-shadow:0 0 10px rgba(168,85,247,.3);}
+.knife-icon{font-size:22px;filter:drop-shadow(0 0 6px rgba(245,158,11,.5));}
+.knife-title{font-family:var(--mono);font-size:15px;font-weight:700;color:#fbbf24;letter-spacing:.08em;text-transform:uppercase;text-shadow:0 0 10px rgba(245,158,11,.3);}
 .knife-body{position:relative;z-index:1;}
-.knife-desc{font-family:var(--sans);font-size:14px;color:#c4b5fd;line-height:1.6;margin-bottom:10px;}
-.knife-desc strong{color:#e9d5ff;font-weight:600;}
+.knife-desc{font-family:var(--sans);font-size:14px;color:#e8dcc8;line-height:1.6;margin-bottom:10px;}
+.knife-desc strong{color:#fef3c7;font-weight:600;}
 .knife-signals{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
-.knife-sig{font-family:var(--mono);font-size:12px;padding:3px 8px;border-radius:4px;border:1px solid #7c3aed44;}
+.knife-sig{font-family:var(--mono);font-size:12px;padding:3px 8px;border-radius:4px;border:1px solid #b4540044;}
 .knife-sig.bull{background:#22c55e18;color:#4ade80;border-color:#22c55e44;}
 .knife-sig.bear{background:#ef444418;color:#f87171;border-color:#ef444444;}
-.knife-sig.neu{background:#a855f718;color:#c084fc;border-color:#a855f744;}
-.knife-context{font-family:var(--mono);font-size:12px;color:#8b5cf6;padding:8px 10px;background:#1e1035;border-radius:6px;border:1px solid #7c3aed30;line-height:1.6;}
-.knife-context strong{color:#c4b5fd;}
+.knife-sig.neu{background:#f59e0b18;color:#fbbf24;border-color:#f59e0b44;}
+.knife-context{font-family:var(--mono);font-size:12px;color:#d4a017;padding:8px 10px;background:#1a1610;border-radius:6px;border:1px solid #b4540030;line-height:1.6;}
+.knife-context strong{color:#fbbf24;}
 /* Light mode override */
-body:not(.dark-mode) .knife-card{background:linear-gradient(145deg,#faf5ff 0%,#f3e8ff 100%);border-color:#a855f7;box-shadow:0 2px 12px rgba(168,85,247,.12);}
+body:not(.dark-mode) .knife-card{background:linear-gradient(145deg,#fffbeb 0%,#fef3c7 100%);border-color:#f59e0b;box-shadow:0 2px 12px rgba(245,158,11,.15);}
 body:not(.dark-mode) .knife-card::before{background:none;}
-body:not(.dark-mode) .knife-title{color:#7c3aed;text-shadow:none;}
-body:not(.dark-mode) .knife-desc{color:#5b21b6;}
-body:not(.dark-mode) .knife-desc strong{color:#4c1d95;}
+body:not(.dark-mode) .knife-title{color:#b45309;text-shadow:none;}
+body:not(.dark-mode) .knife-desc{color:#78350f;}
+body:not(.dark-mode) .knife-desc strong{color:#451a03;}
 body:not(.dark-mode) .knife-sig.bull{background:#0a8a4e14;color:#0a8a4e;border-color:#0a8a4e44;}
 body:not(.dark-mode) .knife-sig.bear{background:#cc284014;color:#cc2840;border-color:#cc284044;}
-body:not(.dark-mode) .knife-sig.neu{background:#7c3aed14;color:#7c3aed;border-color:#7c3aed44;}
-body:not(.dark-mode) .knife-context{background:#f5f0ff;border-color:#c4b5fd;color:#5b21b6;}
-body:not(.dark-mode) .knife-context strong{color:#4c1d95;}
+body:not(.dark-mode) .knife-sig.neu{background:#f59e0b14;color:#b45309;border-color:#f59e0b44;}
+body:not(.dark-mode) .knife-context{background:#fffbeb;border-color:#fbbf24;color:#78350f;}
+body:not(.dark-mode) .knife-context strong{color:#451a03;}
 
 /* ── DUAL-SIGNAL COMMENTARY ── */
 .commentary-card{background:linear-gradient(145deg,#111820 0%,#0d1218 100%);border:1px solid #f0b42944;border-radius:12px;padding:14px;display:none;box-shadow:0 1px 4px rgba(240,180,41,.08);}
@@ -286,7 +286,7 @@ body:not(.dark-mode) .knife-context strong{color:#4c1d95;}
 .commentary-item:last-child{margin-bottom:0;}
 .commentary-item.tension{border-left:3px solid #f0b429;background:#f0b42908;}
 .commentary-item.reinforcement{border-left:3px solid #22c55e;background:#22c55e08;}
-.commentary-item.capitulation{border-left:3px solid #a855f7;background:#a855f708;}
+.commentary-item.capitulation{border-left:3px solid #f59e0b;background:#f59e0b08;}
 .commentary-item.structural{border-left:3px solid #58a6ff;background:#58a6ff08;}
 .commentary-item strong{color:var(--text);font-weight:600;}
 body:not(.dark-mode) .commentary-card{background:linear-gradient(145deg,#fffbf0 0%,#fff8e8 100%);border-color:#f0b42944;box-shadow:0 1px 4px rgba(240,180,41,.08);}
@@ -294,7 +294,7 @@ body:not(.dark-mode) .commentary-item{color:#5a4a20;}
 body:not(.dark-mode) .commentary-item strong{color:#3a2e10;}
 body:not(.dark-mode) .commentary-item.tension{background:#f0b42910;border-left-color:#d4960a;}
 body:not(.dark-mode) .commentary-item.reinforcement{background:#22c55e10;border-left-color:#0a8a4e;}
-body:not(.dark-mode) .commentary-item.capitulation{background:#a855f710;border-left-color:#7c3aed;}
+body:not(.dark-mode) .commentary-item.capitulation{background:#f59e0b10;border-left-color:#b45309;}
 body:not(.dark-mode) .commentary-item.structural{background:#1a6fd410;border-left-color:#1a6fd4;}
 
 .conflict-item{display:flex;align-items:flex-start;gap:7px;padding:5px 0;border-bottom:1px solid var(--border);}
@@ -881,7 +881,7 @@ body:not(.dark-mode) .commentary-item.structural{background:#1a6fd410;border-lef
     <div class="adx-overlay-card" id="adx-overlay-card" style="background:linear-gradient(145deg,var(--surface) 0%,var(--surface2) 100%);border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:10px;font-family:var(--mono);display:flex;align-items:center;gap:10px;flex-wrap:wrap;position:relative;">
       <span style="font-size:11px;font-weight:700;color:var(--neu);">⚡ ADX Trend Overlay</span>
       <span id="adx-overlay-badge" style="font-size:11px;color:var(--text2);flex:1;">Awaiting OHLC data…</span>
-      <span class="tip-wrap"><button class="tip-icon" style="width:22px;height:22px;font-size:13px;border:1.5px solid var(--border2);border-radius:50%;background:var(--surface3);color:var(--text3);cursor:pointer;">?</button><div class="tip-box"><div class="tp-name">ADX Trend Overlay</div><div class="tp-desc"><strong>What is ADX?</strong> The Average Directional Index measures how strongly a stock is trending, regardless of direction. It ranges from 0–100; higher = stronger trend. It does NOT tell you if the trend is up or down — +DI vs -DI shows direction.<br><br>ADX is <strong>not</strong> a scored indicator — it acts as a <strong>regime overlay</strong> that multiplies the weights of trend-following indicators (SMA 200, Ichimoku, MA Cross, MACD Weekly).<br><br><strong>How it works:</strong><br>• ADX ≥ 40: Very Strong Trend → weights boosted 1.20×<br>• ADX ≥ 30: Strong Trend → weights boosted 1.12×<br>• ADX ≥ 25: Trending → weights boosted 1.06×<br>• ADX ≥ 20: Transitional → weights neutral (1.00×)<br>• ADX &lt; 20: Choppy → weights dampened 0.85×</div></div></span>
+      <span class="tip-wrap"><button class="tip-icon" style="width:22px;height:22px;font-size:13px;border:1.5px solid var(--border2);border-radius:50%;background:var(--surface3);color:var(--text3);cursor:pointer;">?</button><div class="tip-box"><div class="tp-name">ADX Trend Overlay</div><div class="tp-desc"><strong>What is ADX?</strong> The Average Directional Index measures how strongly a stock is trending, regardless of direction. It ranges from 0–100; higher = stronger trend. It does NOT tell you if the trend is up or down — +DI vs -DI shows direction.<br><br>ADX is <strong>not</strong> a scored indicator — it acts as a <strong>regime overlay</strong> that multiplies the weights of trend-following indicators (SMA 200, Ichimoku, MA Cross).<br><br><strong>How it works:</strong><br>• ADX ≥ 40: Very Strong Trend → weights boosted 1.20×<br>• ADX ≥ 30: Strong Trend → weights boosted 1.12×<br>• ADX ≥ 25: Trending → weights boosted 1.06×<br>• ADX ≥ 20: Transitional → weights neutral (1.00×)<br>• ADX &lt; 20: Choppy → weights dampened 0.85×</div></div></span>
     </div>
 
     <!-- THEMATIC INDICATOR GROUPS (v12) — scoring buckets unchanged under the hood -->
@@ -910,15 +910,6 @@ body:not(.dark-mode) .commentary-item.structural{background:#1a6fd410;border-lef
         <span class="ind-group-desc">Is the move exhausted?</span>
       </div>
       <div class="ind-group-body" id="grp-contrarian"></div>
-    </div>
-
-    <div class="ind-group" id="group-momentum">
-      <div class="ind-group-hdr">
-        <span class="ind-group-icon">🔴</span>
-        <span class="ind-group-title">Momentum & Timing</span>
-        <span class="ind-group-desc">When to act?</span>
-      </div>
-      <div class="ind-group-body" id="grp-momentum"></div>
     </div>
 
     <!-- WEIGHT EDITOR PANEL -->
@@ -972,10 +963,10 @@ body:not(.dark-mode) .commentary-item.structural{background:#1a6fd410;border-lef
           <h4>How the Score Works</h4>
           10 technical indicators are scored 0–100 individually, then combined using weighted averages across two confidence buckets:<br><br>
           <strong style="color:#4c8ef7">HIGH confidence (60%)</strong> — Volume Profile, SMA (Simple Moving Average) 200, MA Cross 50/200, RSI (Relative Strength Index) Extreme, OBV (On-Balance Volume) Trend<br>
-          <strong style="color:#a78bfa">MED confidence (40%)</strong> — MACD (Moving Avg. Convergence/Divergence) Weekly, Ichimoku Cloud, Bollinger Bands, DeMark Sequential, Candlestick Signal<br>
+          <strong style="color:#a78bfa">MED confidence (40%)</strong> — Money Flow Index (MFI), Ichimoku Cloud, Bollinger Bands, DeMark Sequential, Candlestick Signal<br>
           <div class="si-section">
             <h4>ADX Trend Overlay</h4>
-            ADX (Average Directional Index) measures trend strength and adjusts the weights of trend-following indicators (SMA 200, Ichimoku, MA Cross, MACD Weekly). In strong trends these indicators get boosted; in choppy markets they get dampened.
+            ADX (Average Directional Index) measures trend strength and adjusts the weights of trend-following indicators (SMA 200, Ichimoku, MA Cross). In strong trends these indicators get boosted; in choppy markets they get dampened.
           </div>
           <div class="si-section">
             <h4>Confluence &amp; Conflicts</h4>
@@ -1318,42 +1309,37 @@ function scoreBollinger(boll, price, sma200) {
   return Math.round(50 + (0.45 - pctB) / 0.30 * 28);
 }
 
-// ─── MACD ────────────────────────────────────────────────────
-function computeMACD(closes) {
-  // Soft guard: >104 bars likely means daily data was passed instead of weekly
-  if (closes.length > 104) {
-    console.warn('computeMACD: received ' + closes.length + ' bars — expected ~52–104 weekly bars. Verify caller is passing weekly closes.');
+// ─── MFI (Money Flow Index) ─────────────────────────────────
+function computeMFI(bars, period=14) {
+  if(bars.length < period + 1) return { mfi: null, prevMfi: null, series: [] };
+  const tp = bars.map(b => (b.h + b.l + b.c) / 3);
+  const series = [];
+  for(let i = period; i < bars.length; i++){
+    let posFlow = 0, negFlow = 0;
+    for(let j = i - period + 1; j <= i; j++){
+      const rawFlow = tp[j] * (bars[j].v || 0);
+      if(tp[j] > tp[j-1]) posFlow += rawFlow;
+      else if(tp[j] < tp[j-1]) negFlow += rawFlow;
+    }
+    const mfi = negFlow === 0 ? 100 : 100 - 100 / (1 + posFlow / negFlow);
+    series.push(mfi);
   }
-  const ema12 = emaCalc(closes, 12);
-  const ema26 = emaCalc(closes, 26);
-  const macdLine = closes.map((_, i) => ema12[i] != null && ema26[i] != null ? ema12[i] - ema26[i] : null);
-  const validMacd = macdLine.filter(v => v !== null);
-  const signalRaw = emaCalc(validMacd, 9);
-  // O(n) mapping instead of O(n²) — track running count of non-null MACD values
-  let nonNullCount = 0;
-  const signalFull = macdLine.map((v, i) => {
-    if(v !== null) nonNullCount++;
-    return signalRaw[nonNullCount - 1] ?? null;
-  });
-  const n = closes.length;
-  const last = macdLine[n - 1], prev = macdLine[n - 2];
-  const lastSig = signalFull[n - 1] ?? null, prevSig = signalFull[n - 2] ?? null;
-  return { macd: last, signal: lastSig, prevMacd: prev, prevSignal: prevSig };
+  const n = series.length;
+  return { mfi: n > 0 ? series[n-1] : null, prevMfi: n > 1 ? series[n-2] : null, series };
 }
-function scoreMACD(m) {
-  if (m.macd === null || m.signal === null) return 50;
-  const hist = m.macd - m.signal;
-  const prevHist = (m.prevMacd != null && m.prevSignal != null) ? m.prevMacd - m.prevSignal : 0;
-  const bullCross = m.prevMacd < m.prevSignal && m.macd >= m.signal;
-  const bearCross = m.prevMacd > m.prevSignal && m.macd <= m.signal;
-  if (bullCross) return m.macd > 0 ? 88 : 75;
-  if (bearCross) return m.macd < 0 ? 12 : 25;
-  if (m.macd > m.signal) {
-    const mom = hist > prevHist ? 'exp' : 'con';
-    return m.macd > 0 ? (mom === 'exp' ? 78 : 68) : (mom === 'exp' ? 65 : 58);
-  }
-  const mom = hist < prevHist ? 'exp' : 'con';
-  return m.macd < 0 ? (mom === 'exp' ? 22 : 32) : (mom === 'exp' ? 35 : 42);
+function scoreMFI(m) {
+  if(m.mfi === null) return 50;
+  const v = m.mfi;
+  // CONTRARIAN scoring: oversold → bullish, overbought → bearish
+  if(v <= 10) return 92;  // extreme oversold — very strong buy
+  if(v <= 20) return 82;  // oversold — strong buy
+  if(v <= 30) return 68;  // mild oversold — lean bullish
+  if(v <= 40) return 58;  // neutral-ish, slight bullish
+  if(v <= 60) return 50;  // neutral zone
+  if(v <= 70) return 42;  // neutral-ish, slight bearish
+  if(v <= 80) return 32;  // mild overbought — lean bearish
+  if(v <= 90) return 18;  // overbought — strong sell
+  return 8;               // extreme overbought — very strong sell
 }
 
 // ─── OBV ─────────────────────────────────────────────────────
@@ -1784,7 +1770,6 @@ async function scoreSymbol(dailyBars, weeklyBars) {
   if(n < 30){ console.warn('scoreSymbol: <30 bars, returning empty'); return { price: 0, scores: {}, adx: {adx:0,plusDI:0,minusDI:0,adxRising:false}, indicators: {} }; }
   const closes = dailyBars.map(b => b.c);
   const price = closes[n - 1];
-  const macdCloses = (weeklyBars && weeklyBars.length > 0) ? weeklyBars.map(b => b.c) : closes;
 
   // ── Yield helper — lets browser paint between heavy compute calls ──
   const yld = () => new Promise(r => setTimeout(r, 0));
@@ -1800,7 +1785,7 @@ async function scoreSymbol(dailyBars, weeklyBars) {
   const sma50 = safe('SMA50', ()=>computeSMA(closes, 50));
   await yld();
   const boll = safe('Bollinger', ()=>computeBollinger(closes));
-  const macd = safe('MACD', ()=>computeMACD(macdCloses));
+  const mfi = safe('MFI', ()=>computeMFI(dailyBars));
   const obv = safe('OBV', ()=>computeOBV(dailyBars));
   await yld();
   const ichimoku = safe('Ichimoku', ()=>computeIchimoku(dailyBars));
@@ -1817,7 +1802,7 @@ async function scoreSymbol(dailyBars, weeklyBars) {
     rsi_extreme: safe('sRSI', ()=>scoreRSI(rsi)) ?? 50,
     sma_200: safe('sSMA', ()=>scoreSMA200(price, sma200, closes)) ?? 50,
     bollinger: safe('sBoll', ()=>scoreBollinger(boll, price, sma200)) ?? 50,
-    macd_weekly: safe('sMACD', ()=>scoreMACD(macd)) ?? 50,
+    mfi: safe('sMFI', ()=>scoreMFI(mfi)) ?? 50,
     obv: safe('sOBV', ()=>scoreOBV(obv, dailyBars)) ?? 50,
     ichimoku: safe('sIchi', ()=>scoreIchimoku(ichimoku, price)) ?? 50,
     demark_seq: safe('sDM', ()=>scoreDeMark(demark)) ?? 50,
@@ -1825,7 +1810,7 @@ async function scoreSymbol(dailyBars, weeklyBars) {
     sma_cross: safe('sCross', ()=>scoreSMACross(closes, sma50, sma200, cross)) ?? 50,
   };
   console.log('scoreSymbol: COMPLETE. Scores:', JSON.stringify(scores));
-  return { price, scores, adx, indicators: { rsi, sma200, sma50, boll, macd, obv, ichimoku, demark, candle, adx, volProf, cross } };
+  return { price, scores, adx, indicators: { rsi, sma200, sma50, boll, mfi, obv, ichimoku, demark, candle, adx, volProf, cross } };
 }
 // ═══ END SCORING ENGINE ═══════════════════════════════════════
 
@@ -1844,11 +1829,11 @@ const TIPS = {
   sma_cross:    {name:'MA Cross 50/200',   desc:'<strong>MA</strong> (Moving Average) crossover system. Golden Cross (50-day SMA crosses above 200-day SMA) = bullish structural signal; Death Cross = bearish. Scored by recency — fresh cross (within 60 bars) scores 72–90/10–28. No recent cross is graded by SMA spread: wider gap = stronger trend. Computed from real <strong>OHLC</strong> (Open/High/Low/Close) data with 120-bar lookback.'},
   rsi_extreme:  {name:'RSI Extreme',       desc:'<strong>RSI</strong> (Relative Strength Index) measures momentum on a 0–100 scale. This is a CONTRARIAN indicator: RSI below 30 = oversold → scored BULLISH (potential reversal up, sellers exhausted). RSI above 70 = overbought → scored BEARISH (potential reversal down, buyers exhausted). RSI 40–60 = neutral (no extreme signal). In strong trends RSI can remain extreme for extended periods — check trend context.'},
   demark_seq:   {name:'DeMark Sequential', desc:'<strong>TD</strong> (Tom DeMark) Sequential counts 9 consecutive closes vs the close 4 bars ago to identify price exhaustion. A completed Setup 9 — especially "perfected" — is a high-conviction reversal signal. Countdown 13 is the strongest signal. Computed from real OHLC data.'},
-  macd_weekly:  {name:'MACD (Weekly)',     desc:'<strong>MACD</strong> (Moving Average Convergence/Divergence) tracks the relationship between two moving averages of price. When the faster average crosses above the slower one, it signals building bullish momentum (and vice versa). The histogram shows the gap between the MACD line and its signal line.<br><br>Weekly MACD (12,26,9) removes daily noise. A bullish crossover (MACD line above signal line) with a positive histogram is a strong intermediate-term buy signal. Weekly MACD has significantly more predictive value than daily. Computed from real OHLC data.'},
+  mfi:          {name:'Money Flow Index',  desc:'<strong>MFI</strong> (Money Flow Index) is a volume-weighted RSI. It measures buying/selling pressure by combining price movement with volume — money flowing IN (price up on volume) vs money flowing OUT (price down on volume).<br><br><strong>CONTRARIAN scoring:</strong> MFI ≤ 20 → oversold (bullish buy signal); MFI ≥ 80 → overbought (bearish sell signal). MFI divergences from price are powerful reversal signals.<br><br><strong>Pairs with OBV:</strong> OBV confirms the big-picture volume trend; MFI times the exact entry on momentum extremes. Computed from real OHLCV data (14-period).'},
   ichimoku:     {name:'Ichimoku Cloud', desc:'A complete trading system developed by Goichi Hosoda. Price above the cloud is bullish, below is bearish. The <strong>Kumo</strong> (cloud) acts as dynamic support/resistance. <strong>Tenkan-Sen</strong> (conversion line) crossing above <strong>Kijun-Sen</strong> (base line) = buy signal. Scored from 4 weighted components: price vs cloud (35%), cloud color (20%), TK cross (25%), <strong>Chikou</strong> (lagging span) confirmation (20%). Computed from real OHLC data.'},
   bollinger:    {name:'Bollinger Bands',   desc:'Bollinger Bands plot a middle <strong>SMA</strong> (Simple Moving Average) with upper and lower bands at 2 standard deviations. CONTRARIAN scoring: <strong>%B</strong> (percent bandwidth) near 0 (at lower band) → bullish reversal signal; %B near 1 (at upper band) → bearish reversal signal. Band squeeze (bandwidth below 4%) → neutral with breakout pending. In strong trends price can "walk the band" — check trend context. Computed from real OHLC data (20-period, 2σ).'},
   obv:          {name:'OBV Trend',         desc:'<strong>OBV</strong> (On-Balance Volume) tracks cumulative volume flow — it adds volume on up days and subtracts it on down days. Rising OBV with rising price confirms accumulation (bullish). Divergence — OBV falling while price rises — warns of distribution (smart money selling). Computed from real OHLC + volume data.'},
-  adx:          {name:'ADX Trend Overlay', desc:'<strong>ADX</strong> (Average Directional Index) measures TREND STRENGTH (not direction). Not scored directly — acts as an overlay multiplier on trend-following indicator weights (SMA 200, Ichimoku, MA Cross, MACD Weekly). Below 20 = no trend (choppy, weights dampened 0.85×). 20–25 = transitional (1.00×). 25–30 = trending (1.06×). 30–40 = strong trend (1.12×). Above 40 = very strong trend (1.20×). <strong>+DI</strong> (Positive Directional Indicator) vs <strong>-DI</strong> (Negative Directional Indicator) shows trend direction. Computed from real OHLC data using Wilder\'s <strong>DMI</strong> (Directional Movement Index), 14-period.'},
+  adx:          {name:'ADX Trend Overlay', desc:'<strong>ADX</strong> (Average Directional Index) measures TREND STRENGTH (not direction). Not scored directly — acts as an overlay multiplier on trend-following indicator weights (SMA 200, Ichimoku, MA Cross). Below 20 = no trend (choppy, weights dampened 0.85×). 20–25 = transitional (1.00×). 25–30 = trending (1.06×). 30–40 = strong trend (1.12×). Above 40 = very strong trend (1.20×). <strong>+DI</strong> (Positive Directional Indicator) vs <strong>-DI</strong> (Negative Directional Indicator) shows trend direction. Computed from real OHLC data using Wilder\'s <strong>DMI</strong> (Directional Movement Index), 14-period.'},
   candle_signal: {name:'Candlestick Signal', desc:'Detects classic single-bar and two-bar reversal patterns on daily charts. <strong>Topping Tails</strong> (also called Shooting Stars) signal potential reversals after uptrends — long upper wick shows sellers rejecting higher prices. <strong>Bottoming Tails</strong> (Hammers) signal reversals after downtrends — long lower wick shows buyers stepping in. <strong>Engulfing</strong> candles confirm directional momentum shifts when one bar completely engulfs the prior bar. Stronger signals occur at key levels (VAH/VAL/SMA 200) and on elevated volume.'},
 };
 
@@ -1861,7 +1846,7 @@ const INDS={
     {id:'obv',         name:'OBV Trend',        sub:'On-Balance Volume — computing…',   iW:1.0},
   ],
   med:[
-    {id:'macd_weekly', name:'MACD (Weekly)',    sub:'12,26,9 weekly — computing…',      iW:1.1},
+    {id:'mfi',          name:'Money Flow Index', sub:'14-period MFI — computing…',         iW:1.1},
     {id:'ichimoku',    name:'Ichimoku Cloud',   sub:'Ichimoku — computing…',            iW:1.0},
     {id:'bollinger',   name:'Bollinger Bands',  sub:'20-period 2σ — computing…',        iW:0.9},
     {id:'demark_seq',  name:'DeMark Sequential',sub:'TD 9/13 — computing…',             iW:0.9},
@@ -1872,13 +1857,13 @@ const INDS={
 // Conflict pairs: [id1, id2, description template]
 const CONFLICT_PAIRS = [
   ['sma_200',    'rsi_extreme', 'Trend vs. Exhaustion: SMA200 trend and RSI contrarian signal disagree — trend says one direction, RSI says the move may be overdone. This is the classic trend-follower vs. mean-reversion tension.'],
-  ['ichimoku',   'macd_weekly', 'Ichimoku cloud position and weekly MACD momentum conflict — investigate which timeframe is leading.'],
+  ['ichimoku',   'mfi',         'Ichimoku trend and MFI money flow conflict — trend says one direction but volume-weighted momentum says the other.'],
   ['obv',        'bollinger',   'OBV volume flow and Bollinger price position conflict — volume tells a different story than price bands.'],
   ['demark_seq', 'sma_200',     'Exhaustion vs. Trend: DeMark signals a reversal while SMA200 confirms the current trend. If DeMark is perfected AND RSI confirms, the reversal signal gains credibility.'],
-  ['macd_weekly','rsi_extreme', 'Trend vs. Exhaustion: Weekly MACD trend and RSI extreme reading conflict — MACD says momentum is one direction, RSI says it is overdone.'],
+  ['mfi',        'rsi_extreme', 'Volume-weighted vs. Price-only: MFI and RSI disagree — money flow tells a different story than price momentum alone.'],
   ['sma_cross',  'ichimoku',    'MA Cross and Ichimoku trend direction conflict — both are trend systems, so this disagreement suggests a trend transition in progress.'],
   ['obv',        'sma_200',     'Volume flow (OBV) and price trend (SMA200) diverging — smart money may be accumulating/distributing against the visible price trend.'],
-  ['sma_cross',  'macd_weekly', 'MA Cross and Weekly MACD disagree on trend direction — one may be leading the other in a developing trend change.'],
+  ['mfi',        'obv',         'MFI overbought/oversold vs OBV trend diverging — volume oscillator and cumulative volume flow tell different stories.'],
 ];
 const CONFLICT_THRESH = 40; // abs difference to flag
 
@@ -1902,10 +1887,10 @@ const CONFLUENCE_DEFS = [
     multiplier: 1.10,
   },
   {
-    ids: ['macd_weekly', 'rsi_extreme'],
+    ids: ['mfi', 'rsi_extreme'],
     thresh: 62,
-    bull: '📈 Momentum Confirmation — Weekly MACD and RSI aligned bullish.',
-    bear: '📉 Momentum Confirmation — Weekly MACD and RSI aligned bearish.',
+    bull: '📈 Dual Oscillator Confirmation — MFI and RSI both signaling oversold. Volume-weighted and price-only momentum aligned.',
+    bear: '📉 Dual Oscillator Confirmation — MFI and RSI both signaling overbought. Volume-weighted and price-only momentum aligned.',
     strength: 'moderate',
     multiplier: 1.08,
   },
@@ -1934,10 +1919,10 @@ const CONFLUENCE_DEFS = [
     multiplier: 1.15,
   },
   {
-    ids: ['obv', 'macd_weekly', 'sma_cross'],
+    ids: ['obv', 'mfi'],
     thresh: 62,
-    bull: '💪 Momentum Trifecta — OBV accumulation + MACD bullish + MA Cross bullish. Smart money and momentum aligned.',
-    bear: '💪 Momentum Trifecta — OBV distribution + MACD bearish + MA Cross bearish. Smart money and momentum aligned.',
+    bull: '💪 Smart Money Signal — OBV accumulation + MFI oversold. Volume trend and volume momentum both bullish.',
+    bear: '💪 Smart Money Signal — OBV distribution + MFI overbought. Volume trend and volume momentum both bearish.',
     strength: 'strong',
     multiplier: 1.10,
   },
@@ -1948,10 +1933,10 @@ let confluenceMultipliers = {};
 
 // ── ADX OVERLAY ──
 // ADX is not a scored indicator. Instead, it modifies trend-follower weights:
-//   ADX > 25 (trending): boost SMA200, Ichimoku, MA Cross, MACD weights
+//   ADX > 25 (trending): boost SMA200, Ichimoku, MA Cross weights
 //   ADX < 20 (choppy):   dampen those weights
 // The multiplier is applied during recalc alongside confluence multipliers.
-const ADX_TREND_IDS = ['sma_200', 'ichimoku', 'sma_cross', 'macd_weekly'];
+const ADX_TREND_IDS = ['sma_200', 'ichimoku', 'sma_cross'];
 let adxOverlay = { adx: null, plusDI: null, minusDI: null, multiplier: 1.0, label: 'N/A' };
 
 function computeADXOverlayMultiplier(adxVal) {
@@ -1969,7 +1954,7 @@ const BW={high:.60,med:.40};
 const BASELINE_BW={high:.60,med:.40};
 const BASELINE_IW={
   vol_profile:1.1, sma_200:1.4,  sma_cross:1.1, rsi_extreme:1.2, obv:1.0,
-  macd_weekly:1.1, ichimoku:1.0, bollinger:0.9, demark_seq:0.9, candle_signal:1.0
+  mfi:1.0, ichimoku:1.0, bollinger:0.9, demark_seq:0.9, candle_signal:1.0
 };
 // Custom weights — start at baseline, user can modify
 let customBW={...BASELINE_BW};
@@ -1986,7 +1971,7 @@ const TF_PRESETS = {
     bw: { high:0.55, med:0.45 },
     iw: {
       vol_profile:1.0, sma_200:0.8,  sma_cross:0.9,  rsi_extreme:1.5, obv:1.1,
-      macd_weekly:0.8, ichimoku:0.7,  bollinger:1.4,   demark_seq:1.4, candle_signal:1.2,
+      mfi:1.3,         ichimoku:0.7,  bollinger:1.4,   demark_seq:1.4, candle_signal:1.2,
     }
   },
   position: {
@@ -1995,7 +1980,7 @@ const TF_PRESETS = {
     bw: { high:0.60, med:0.40 },
     iw: {
       vol_profile:1.1, sma_200:1.4,  sma_cross:1.1,  rsi_extreme:1.2, obv:1.0,
-      macd_weekly:1.1, ichimoku:1.0,  bollinger:0.9,   demark_seq:0.9, candle_signal:1.0,
+      mfi:1.0,         ichimoku:1.0,  bollinger:0.9,   demark_seq:0.9, candle_signal:1.0,
     }
   },
   intermediate: {
@@ -2004,7 +1989,7 @@ const TF_PRESETS = {
     bw: { high:0.65, med:0.35 },
     iw: {
       vol_profile:1.3, sma_200:1.5,  sma_cross:1.3,  rsi_extreme:0.9, obv:1.1,
-      macd_weekly:1.2, ichimoku:1.3,  bollinger:0.7,   demark_seq:0.7, candle_signal:0.8,
+      mfi:0.8,         ichimoku:1.3,  bollinger:0.7,   demark_seq:0.7, candle_signal:0.8,
     }
   },
   longterm: {
@@ -2013,7 +1998,7 @@ const TF_PRESETS = {
     bw: { high:0.65, med:0.35 },
     iw: {
       vol_profile:1.2, sma_200:1.8,  sma_cross:1.5,  rsi_extreme:0.6, obv:1.2,
-      macd_weekly:1.0, ichimoku:1.4,  bollinger:0.5,   demark_seq:0.5, candle_signal:0.6,
+      mfi:0.6,         ichimoku:1.4,  bollinger:0.5,   demark_seq:0.5, candle_signal:0.6,
     }
   }
 };
@@ -2074,7 +2059,7 @@ let vals={}, fgVal=null;
 // MU preload
 const MU_PRELOAD={
   ticker:'MU', price:'422.90',
-  indicators:{vol_profile:72,sma_200:62,sma_cross:68,rsi_extreme:47,obv:75,demark_seq:62,macd_weekly:72,ichimoku:70,bollinger:52,candle_signal:50},
+  indicators:{vol_profile:72,sma_200:62,sma_cross:68,rsi_extreme:47,obv:75,demark_seq:62,mfi:55,ichimoku:70,bollinger:52,candle_signal:50},
   levels:{r1:'$455–$471',r2:'$503–$515',s1:'$395–$415',s2:'$375',stop:'$390',target:'$500–$525'},
   divNote:'MU ~0.13% TTM yield. Total return is price-driven. Div-adj SMA 200 ≈ price-only.'
 };
@@ -2523,14 +2508,15 @@ async function fetchNewsAnalysis(){
   const sys = `You are a financial news analyst. Search the web for the most recent news, events, and developments for the given stock ticker. Then provide a concise analysis of what is driving recent price action.
 
 Format your response as clean HTML (no markdown). Use this structure:
+<strong>Price Action Read</strong>
+<p>2-3 sentences interpreting what the technicals + news together suggest about near-term direction. Include speculative investor sentiment analysis connecting specific dated news to price behavior.</p>
 <strong>Recent Catalysts</strong>
 <ul>
 <li><strong>[Date or timeframe]:</strong> Brief description of the event/news</li>
 </ul>
-<strong>Price Action Read</strong>
-<p>2-3 sentences interpreting what the technicals + news together suggest about near-term direction.</p>
 
 Rules:
+- Lead with the price action interpretation and sentiment read — this is the most important section
 - Focus on the last 1-4 weeks of news
 - Include earnings, analyst actions, sector moves, regulatory news, insider activity if relevant
 - Be specific with dates and numbers where possible
@@ -2708,28 +2694,23 @@ async function runAllComputed(ticker){
     }
     }
 
-    // MACD Weekly
-    if(I.macd){
-    const m = I.macd;
-    if(m.macd !== null && m.signal !== null){
-      const hist = m.macd - m.signal;
-      const prevHist = (m.prevMacd != null && m.prevSignal != null) ? m.prevMacd - m.prevSignal : 0;
-      const bullCross = m.prevMacd < m.prevSignal && m.macd >= m.signal;
-      const bearCross = m.prevMacd > m.prevSignal && m.macd <= m.signal;
-      let macdDetail;
-      if(bullCross)      macdDetail = `Bullish crossover${m.macd > 0 ? ' above zero' : ' below zero'}`;
-      else if(bearCross) macdDetail = `Bearish crossover${m.macd < 0 ? ' below zero' : ' above zero'}`;
-      else if(m.macd > m.signal){
-        const mom = hist > prevHist ? 'expanding' : 'contracting';
-        macdDetail = `MACD > Signal${m.macd > 0 ? ', above zero' : ', below zero'} · hist ${mom}`;
-      } else {
-        const mom = hist < prevHist ? 'expanding' : 'contracting';
-        macdDetail = `MACD < Signal${m.macd < 0 ? ', below zero' : ', above zero'} · hist ${mom}`;
-      }
-      const macdSub = document.getElementById('sub-macd_weekly');
-      if(macdSub) macdSub.textContent = macdDetail;
-      const macdNote = document.getElementById('nt-macd_weekly');
-      if(macdNote && !macdNote.value) macdNote.value = `[Computed from ${weekly ? weekly.length+' weekly' : n+' daily'} bars] ${macdDetail}`;
+    // MFI (Money Flow Index)
+    if(I.mfi){
+    const m = I.mfi;
+    if(m.mfi !== null){
+      const v = m.mfi;
+      let mfiDetail;
+      if(v <= 10)      mfiDetail = `Extreme oversold (${v.toFixed(1)}) — strong buy signal`;
+      else if(v <= 20) mfiDetail = `Oversold (${v.toFixed(1)}) — buy signal`;
+      else if(v <= 30) mfiDetail = `Mild oversold (${v.toFixed(1)})`;
+      else if(v <= 70) mfiDetail = `Neutral zone (${v.toFixed(1)})`;
+      else if(v <= 80) mfiDetail = `Mild overbought (${v.toFixed(1)})`;
+      else if(v <= 90) mfiDetail = `Overbought (${v.toFixed(1)}) — sell signal`;
+      else             mfiDetail = `Extreme overbought (${v.toFixed(1)}) — strong sell signal`;
+      const mfiSub = document.getElementById('sub-mfi');
+      if(mfiSub) mfiSub.textContent = mfiDetail;
+      const mfiNote = document.getElementById('nt-mfi');
+      if(mfiNote && !mfiNote.value) mfiNote.value = `[Computed from ${n} daily bars] MFI 14-period: ${v.toFixed(1)} · ${mfiDetail}`;
     }
     }
 
@@ -2801,7 +2782,7 @@ async function runAllComputed(ticker){
       // Display in ADX overlay badge
       const adxBadge = document.getElementById('adx-overlay-badge');
       if(adxBadge) adxBadge.textContent = adxDetail;
-      if(adxBadge) adxBadge.title = `ADX Overlay: Multiplies trend-follower weights (SMA200, Ichimoku, MA Cross, MACD) by ${adxOverlay.multiplier}×`;
+      if(adxBadge) adxBadge.title = `ADX Overlay: Multiplies trend-follower weights (SMA200, Ichimoku, MA Cross) by ${adxOverlay.multiplier}×`;
     }
 
     // Volume Profile
@@ -3228,8 +3209,7 @@ async function fetchOHLCForCharts(ticker){
     }
     return out;
   };
-  // Daily only — weekly bars dropped (MACD uses daily closes, more responsive for swing/intermediate)
-  // 3y range = ~756 bars — plenty for SMA200 + chart display
+  // Daily only — 3y range = ~756 bars — plenty for SMA200 + chart display
   const daily = await fetchBars('1d','3y');
   ohlcCache = { ticker, daily, weekly: [] };
   return ohlcCache;
@@ -3360,20 +3340,28 @@ async function renderChart(id){
         {label:'Midline (50)',data:Array(labels_d.length).fill(50),borderColor:'#d0d6e055',borderWidth:1,pointRadius:0,borderDash:[2,4]},
       ]}, options:{...baseOpts, scales:{...baseOpts.scales, y:{...baseOpts.scales.y,min:0,max:100}}}};
 
-    } else if(id === 'macd_daily' || id === 'macd_weekly'){
-      const closes = id==='macd_daily' ? closes_d : closes_w;
-      const labels  = id==='macd_daily' ? labels_d : labels_w;
-      const ema12 = ema(closes,12), ema26 = ema(closes,26);
-      const macdLine = closes.map((_,i)=> ema12[i]!==null&&ema26[i]!==null ? ema12[i]-ema26[i] : null);
-      const signal   = ema(macdLine.filter(v=>v!==null),9);
-      const signalFull = macdLine.map((v,i)=>{ const idx=macdLine.slice(0,i+1).filter(v=>v!==null).length-1; return signal[idx]??null; });
-      const hist = macdLine.map((v,i)=>v!==null&&signalFull[i]!==null?v-signalFull[i]:null);
-      const histColors = hist.map(v=>v===null?'transparent':v>=0?'#0a8a4e66':'#cc284066');
-      cfg = { type:'bar', data:{ labels, datasets:[
-        {type:'line',label:'MACD',data:macdLine,borderColor:'#1a6fd4',borderWidth:1.5,pointRadius:0,tension:0.2,order:1,yAxisID:'y'},
-        {type:'line',label:'Signal',data:signalFull,borderColor:'#c85000',borderWidth:1.5,pointRadius:0,tension:0.2,order:2,yAxisID:'y'},
-        {type:'bar',label:'Histogram',data:hist,backgroundColor:histColors,order:3,yAxisID:'y'},
-      ]}, options:{...baseOpts}};
+    } else if(id === 'mfi'){
+      // MFI 14-period calculation for chart
+      const bars = d;
+      const tp = bars.map(b => (b.h + b.l + b.c) / 3);
+      const mfiSeries = [];
+      for(let i=0;i<14;i++) mfiSeries.push(null);
+      for(let i=14;i<bars.length;i++){
+        let posFlow=0, negFlow=0;
+        for(let j=i-13;j<=i;j++){
+          const rawFlow = tp[j] * (bars[j].v || 0);
+          if(tp[j] > tp[j-1]) posFlow += rawFlow;
+          else if(tp[j] < tp[j-1]) negFlow += rawFlow;
+        }
+        mfiSeries.push(negFlow === 0 ? 100 : 100 - 100/(1 + posFlow/negFlow));
+      }
+      const mfiColors = mfiSeries.map(v=>v===null?'transparent':v<=20?'#0a8a4e':v>=80?'#cc2840':'#1a6fd4');
+      cfg = { type:'line', data:{ labels:labels_d, datasets:[
+        {label:'MFI 14',data:mfiSeries,borderColor:'#1a6fd4',borderWidth:1.5,pointRadius:0,tension:0.2,segment:{borderColor:ctx=>mfiSeries[ctx.p1DataIndex]<=20?'#0a8a4e':mfiSeries[ctx.p1DataIndex]>=80?'#cc2840':'#1a6fd4'}},
+        {label:'Overbought (80) → Bearish signal',data:Array(labels_d.length).fill(80),borderColor:'#cc284055',borderWidth:1,pointRadius:0,borderDash:[4,4]},
+        {label:'Oversold (20) → Bullish signal',data:Array(labels_d.length).fill(20),borderColor:'#0a8a4e55',borderWidth:1,pointRadius:0,borderDash:[4,4]},
+        {label:'Midline (50)',data:Array(labels_d.length).fill(50),borderColor:'#d0d6e055',borderWidth:1,pointRadius:0,borderDash:[2,4]},
+      ]}, options:{...baseOpts, scales:{...baseOpts.scales, y:{...baseOpts.scales.y,min:0,max:100}}}};
 
     } else if(id === 'bollinger'){
       const sma20 = sma(closes_d,20);
@@ -3387,9 +3375,9 @@ async function renderChart(id){
       }
       cfg = { type:'line', data:{ labels:labels_d, datasets:[
         {label:'Price',data:closes_d,borderColor:'#1a6fd4',borderWidth:1.5,pointRadius:0,tension:0.2,order:1},
-        {label:'Upper Band',data:upper,borderColor:'#cc284066',borderWidth:1,pointRadius:0,borderDash:[3,3],fill:false},
+        {label:'Upper Band',data:upper,borderColor:'#cc2840aa',borderWidth:1.5,pointRadius:0,borderDash:[3,3],fill:false},
         {label:'SMA 20',data:sma20,borderColor:'#a06a00',borderWidth:1,pointRadius:0,borderDash:[4,2]},
-        {label:'Lower Band',data:lower,borderColor:'#0a8a4e66',borderWidth:1,pointRadius:0,borderDash:[3,3],fill:false},
+        {label:'Lower Band',data:lower,borderColor:'#0a8a4eaa',borderWidth:1.5,pointRadius:0,borderDash:[3,3],fill:false},
       ]}, options:{...baseOpts}};
     }
 
@@ -3415,7 +3403,7 @@ function clearChartCache(){
 // ═══ BUILD ROWS ═══
 const CHARTABLE = {
   vol_profile:true, sma_200:true, sma_cross:true,  // sma_cross also gets computed override
-  rsi_extreme:true, macd_weekly:true, macd_daily:true, bollinger:true
+  rsi_extreme:true, mfi:true, bollinger:true
 };
 function buildRow(ind,bkt,container){
   const c=container||document.getElementById('bucket-'+bkt);
@@ -3519,9 +3507,8 @@ function setSl(id,v,anim=true){
 // v12: Thematic grouping — display-only, scoring buckets unchanged
 const IND_GROUPS = [
   { container: 'grp-trend',      ids: ['sma_200', 'sma_cross', 'ichimoku'] },
-  { container: 'grp-volume',     ids: ['vol_profile', 'obv'] },
-  { container: 'grp-contrarian', ids: ['rsi_extreme', 'demark_seq', 'bollinger'] },
-  { container: 'grp-momentum',   ids: ['macd_weekly', 'candle_signal'] },
+  { container: 'grp-volume',     ids: ['vol_profile', 'obv', 'mfi'] },
+  { container: 'grp-contrarian', ids: ['rsi_extreme', 'demark_seq', 'bollinger', 'candle_signal'] },
 ];
 // Build a lookup: id → bucket name
 const IND_BUCKET = {};
@@ -3789,7 +3776,7 @@ function detectDualSignalCommentary(){
   const ichi     = vals.ichimoku ?? 50;
   const obv      = vals.obv ?? 50;
   const boll     = vals.bollinger ?? 50;
-  const macd     = vals.macd_weekly ?? 50;
+  const mfiVal   = vals.mfi ?? 50;
   const volP     = vals.vol_profile ?? 50;
   const maCross  = vals.sma_cross ?? 50;
 
@@ -3825,22 +3812,22 @@ function detectDualSignalCommentary(){
 
   // ── TREND ASSESSMENT ──
   if(trendBullCount >= 3){
-    parts.push(`<strong>${ticker} is in a confirmed uptrend</strong> — all 3 trend-following indicators (SMA 200, Ichimoku, MA Cross) are bullish${adxOverlay.adx >= 25 ? ', and ADX confirms strong trend strength' : ''}. This means the broad direction of price is up, and institutional positioning favors buyers.`);
+    parts.push(`<strong>${ticker} is in a confirmed uptrend</strong> — all 3 trend-following indicators (the 200-day Moving Average, Ichimoku Cloud, and Moving Average Crossover) are bullish${adxOverlay.adx >= 25 ? ', and the Average Directional Index (ADX) confirms strong trend strength' : ''}. This means the broad direction of price is up, and institutional positioning favors buyers.`);
   } else if(trendBearCount >= 3){
-    parts.push(`<strong>${ticker} is in a confirmed downtrend</strong> — all 3 trend-following indicators (SMA 200, Ichimoku, MA Cross) are bearish${adxOverlay.adx >= 25 ? ', and ADX confirms strong trend strength' : ''}. This means the broad direction of price is down, and the weight of evidence favors sellers.`);
+    parts.push(`<strong>${ticker} is in a confirmed downtrend</strong> — all 3 trend-following indicators (the 200-day Moving Average, Ichimoku Cloud, and Moving Average Crossover) are bearish${adxOverlay.adx >= 25 ? ', and the Average Directional Index (ADX) confirms strong trend strength' : ''}. This means the broad direction of price is down, and the weight of evidence favors sellers.`);
   } else if(trendBullCount >= 2 && trendBearCount === 0){
     parts.push(`<strong>${ticker} leans bullish on trend</strong> — most trend indicators point up, though the signal is not unanimous. The uptrend is developing but not yet fully confirmed across all systems.`);
   } else if(trendBearCount >= 2 && trendBullCount === 0){
     parts.push(`<strong>${ticker} leans bearish on trend</strong> — most trend indicators point down, though the signal is not unanimous. The downtrend is developing but not yet confirmed across all systems.`);
   } else {
-    parts.push(`<strong>${ticker} shows no clear trend</strong> — trend indicators are mixed or neutral${adxOverlay.adx < 20 ? ' (ADX below 20 confirms choppy/trendless conditions)' : ''}. This typically means the stock is consolidating, transitioning between regimes, or choppy. Trend-following signals carry less conviction here.`);
+    parts.push(`<strong>${ticker} shows no clear trend</strong> — trend indicators are mixed or neutral${adxOverlay.adx < 20 ? ' (the Average Directional Index below 20 confirms choppy/trendless conditions)' : ''}. This typically means the stock is consolidating, transitioning between regimes, or choppy. Trend-following signals carry less conviction here.`);
   }
 
   // ── EXHAUSTION / CONTRARIAN ASSESSMENT ──
   if(exhBullCount >= 3){
-    parts.push(`Meanwhile, <strong>exhaustion signals are flashing oversold</strong> — all 3 contrarian indicators (RSI, DeMark, Bollinger) say the recent move down may be overdone. These are "mean reversion" signals that suggest the selling is stretched, not necessarily that it's over.`);
+    parts.push(`Meanwhile, <strong>exhaustion signals are flashing oversold</strong> — all 3 contrarian indicators (the Relative Strength Index, DeMark Sequential, and Bollinger Bands) say the recent move down may be overdone. These are "mean reversion" signals that suggest the selling is stretched, not necessarily that it's over.`);
   } else if(exhBearCount >= 3){
-    parts.push(`Meanwhile, <strong>exhaustion signals are flashing overbought</strong> — all 3 contrarian indicators (RSI, DeMark, Bollinger) say the recent move up may be stretched. These signals warn that the rally could be running out of steam, not necessarily that it's reversing.`);
+    parts.push(`Meanwhile, <strong>exhaustion signals are flashing overbought</strong> — all 3 contrarian indicators (the Relative Strength Index, DeMark Sequential, and Bollinger Bands) say the recent move up may be stretched. These signals warn that the rally could be running out of steam, not necessarily that it's reversing.`);
   } else if(exhBullCount >= 2){
     parts.push(`Some contrarian indicators are starting to signal oversold conditions — suggesting the downward pressure may be getting stretched, though not yet at extreme levels.`);
   } else if(exhBearCount >= 2){
@@ -3864,20 +3851,20 @@ function detectDualSignalCommentary(){
     const volConfirms = (trendDir === 'bullish' && obv >= 60) || (trendDir === 'bearish' && obv <= 40);
     const volDiverges = (trendDir === 'bullish' && obv <= 38) || (trendDir === 'bearish' && obv >= 62);
     if(volConfirms){
-      parts.push(`Volume flow (OBV) confirms the ${trendDir} direction — institutional money appears to be moving in agreement with the trend.`);
+      parts.push(`On-Balance Volume (OBV) confirms the ${trendDir} direction — institutional money appears to be moving in agreement with the trend.`);
     } else if(volDiverges){
-      parts.push(`<strong>Volume flow (OBV) diverges from the trend</strong> — this is often an early warning that institutional money is quietly positioning against the current price direction. Worth watching closely.`);
+      parts.push(`<strong>On-Balance Volume (OBV) diverges from the trend</strong> — this is often an early warning that institutional money is quietly positioning against the current price direction. Worth watching closely.`);
     }
   }
 
   // ── ADX CONTEXT ──
   const adxVal_c = adxOverlay.adx ?? 0;
   if(adxVal_c >= 40){
-    parts.push(`Trend strength (ADX ${adxVal_c}) is very high — whatever direction is in play has strong momentum behind it. Trend-follower weights are boosted ${adxOverlay.multiplier}×. Contrarian signals tend to be less reliable in this environment.`);
+    parts.push(`The Average Directional Index (ADX) at ${adxVal_c} shows very high trend strength — whatever direction is in play has strong momentum behind it. Trend-follower weights are boosted ${adxOverlay.multiplier}×. Contrarian signals tend to be less reliable in this environment.`);
   } else if(adxVal_c >= 25){
-    parts.push(`Trend strength (ADX ${adxVal_c}) confirms a trending market — trend-follower weights are boosted ${adxOverlay.multiplier}×.`);
+    parts.push(`The Average Directional Index (ADX) at ${adxVal_c} confirms a trending market — trend-follower weights are boosted ${adxOverlay.multiplier}×.`);
   } else if(adxVal_c > 0 && adxVal_c < 20){
-    parts.push(`Trend strength (ADX ${adxVal_c}) is weak — the market is range-bound or lacking directional conviction. Trend-follower weights are dampened (${adxOverlay.multiplier}×). Contrarian/mean-reversion signals tend to be more reliable in this environment.`);
+    parts.push(`The Average Directional Index (ADX) at ${adxVal_c} is weak — the market is range-bound or lacking directional conviction. Trend-follower weights are dampened (${adxOverlay.multiplier}×). Contrarian/mean-reversion signals tend to be more reliable in this environment.`);
   }
 
   // ── AGREEMENT/DISAGREEMENT ──
@@ -4391,8 +4378,8 @@ async function runAnalysis(){
   if(maSub) maSub.textContent='Golden / Death cross — computing…';
   const rsiSub = document.getElementById('sub-rsi_extreme');
   if(rsiSub) rsiSub.textContent='14-period — computing…';
-  const macdSub = document.getElementById('sub-macd_weekly');
-  if(macdSub) macdSub.textContent='12,26,9 weekly — computing…';
+  const mfiSub = document.getElementById('sub-mfi');
+  if(mfiSub) mfiSub.textContent='14-period MFI — computing…';
   const sma200Sub = document.getElementById('sub-sma_200');
   if(sma200Sub) sma200Sub.textContent='SMA 200 — computing…';
   const bollSub = document.getElementById('sub-bollinger');
