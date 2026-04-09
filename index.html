@@ -402,6 +402,29 @@ body:not(.dark-mode) .commentary-item.structural{background:#1a6fd410;border-lef
 .scoring-info-popup .si-band{display:flex;align-items:center;gap:8px;padding:2px 0;}
 .scoring-info-popup .si-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
 .scoring-info-popup .si-section{margin-top:10px;padding-top:8px;border-top:1px solid var(--border);}
+
+/* ── GUIDE MODAL ── */
+.guide-btn{font-size:13px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:8px;color:var(--text3);cursor:pointer;padding:3px 10px;font-family:var(--mono);font-weight:600;transition:all .15s;letter-spacing:.03em;user-select:none;}
+.guide-btn:hover{background:var(--high-dim);border-color:var(--accent);color:var(--accent);transform:scale(1.03);}
+.guide-overlay{display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.65);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);justify-content:center;align-items:flex-start;padding:24px 12px;}
+.guide-overlay.visible{display:flex;}
+.guide-modal{background:var(--surface);border:1px solid var(--border2);border-radius:14px;width:100%;max-width:720px;max-height:calc(100vh - 48px);overflow-y:auto;padding:24px 28px 20px;box-shadow:0 8px 40px rgba(0,0,0,.35);position:relative;scrollbar-width:thin;scrollbar-color:var(--border2) transparent;}
+.guide-modal::-webkit-scrollbar{width:6px;}.guide-modal::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
+.guide-close{position:sticky;top:0;float:right;width:28px;height:28px;border-radius:50%;border:1.5px solid var(--border2);background:var(--surface);color:var(--text3);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:1;transition:all .15s;}
+.guide-close:hover{border-color:var(--bear);color:var(--bear);background:var(--surface2);}
+.guide-modal h2{font-family:var(--mono);font-size:18px;color:var(--accent);margin:0 0 4px;letter-spacing:.06em;}
+.guide-modal h3{font-family:var(--mono);font-size:14px;color:var(--text);margin:18px 0 8px;padding-top:12px;border-top:1px solid var(--border);letter-spacing:.04em;}
+.guide-modal h4{font-family:var(--mono);font-size:12px;color:var(--accent);margin:12px 0 4px;letter-spacing:.04em;}
+.guide-modal p,.guide-modal li{font-family:var(--sans);font-size:13.5px;color:var(--text2);line-height:1.7;}
+.guide-modal p{margin:0 0 10px;}
+.guide-modal strong{color:var(--text);font-weight:600;}
+.guide-modal em{color:var(--text3);font-style:italic;}
+.guide-modal .gd-highlight{background:var(--high-dim);padding:10px 14px;border-radius:8px;border-left:3px solid var(--accent);margin:10px 0 14px;font-size:13px;color:var(--text2);line-height:1.7;}
+.guide-modal table{width:100%;border-collapse:collapse;margin:8px 0 14px;font-size:12px;font-family:var(--mono);}
+.guide-modal th{text-align:left;padding:6px 8px;border-bottom:2px solid var(--border2);color:var(--text);font-size:11px;letter-spacing:.06em;text-transform:uppercase;}
+.guide-modal td{padding:5px 8px;border-bottom:1px solid var(--border);color:var(--text2);vertical-align:top;}
+.guide-modal tr:last-child td{border-bottom:none;}
+.guide-modal .gd-disclaimer{font-size:11px;color:var(--text3);margin-top:16px;padding-top:10px;border-top:1px solid var(--border);text-align:center;font-family:var(--mono);letter-spacing:.03em;}
 .lvl-info-title{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--accent);margin-bottom:6px;letter-spacing:.06em;text-transform:uppercase;}
 .lvl-info-body strong{font-weight:600;color:var(--text);}
 
@@ -775,6 +798,7 @@ body:not(.dark-mode) .commentary-item.structural{background:#1a6fd410;border-lef
       <div class="spinner"></div><span class="btn-text">▶ Analyze</span>
     </button>
     <button class="dark-toggle" id="dark-toggle" onclick="toggleDarkMode()" title="Toggle dark/light mode">🌙</button>
+    <button class="guide-btn" onclick="document.getElementById('guide-overlay').classList.add('visible')" title="How Signal Catcher works">📖 Guide</button>
   </div>
 </div>
 
@@ -5274,14 +5298,13 @@ function renderTideChart(curve, hilos){
     if(dist < minDist){ minDist = dist; nowIdx = i; }
   });
 
-  const isDark = document.body.classList.contains('dark-mode');
-
   // Mark hi/lo points
   const hiloTimes = new Set(hilos.map(h => h.t));
   const pointRadii = sampled.map(p => hiloTimes.has(p.t) ? 4 : 0);
   const pointBg = sampled.map(p => hiloTimes.has(p.t) ? '#fff' : 'transparent');
   const pointBorder = sampled.map(p => hiloTimes.has(p.t) ? (isDark ? '#58a6ff' : '#1a4d80') : 'transparent');
 
+  const isDark = document.body.classList.contains('dark-mode');
   const gridColor = isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.06)';
   const textColor = isDark ? 'rgba(255,255,255,0.75)' : 'rgba(0,0,0,0.4)';
 
@@ -5339,6 +5362,10 @@ document.addEventListener('DOMContentLoaded',()=>{
       const sip=document.getElementById('scoring-info-popup');if(sip)sip.classList.remove('visible');
     }
   });
+  // Escape key closes guide modal
+  document.addEventListener('keydown', e=>{
+    if(e.key==='Escape'){const g=document.getElementById('guide-overlay');if(g)g.classList.remove('visible');}
+  });
   // Initialize mouseenter/touch for ALL static tip-wrap tooltip buttons (ADX, Lev Sentiment, etc.)
   document.querySelectorAll('.tip-wrap').forEach(wrap => {
     const btn = wrap.querySelector('.tip-icon');
@@ -5388,5 +5415,100 @@ document.addEventListener('DOMContentLoaded',()=>{
   },2000);
 });
 </script>
+<!-- ═══ GUIDE MODAL ═══ -->
+<div class="guide-overlay" id="guide-overlay" onclick="if(event.target===this)this.classList.remove('visible')">
+<div class="guide-modal">
+<button class="guide-close" onclick="document.getElementById('guide-overlay').classList.remove('visible')">✕</button>
+
+<h2>📖 Signal Catcher Guide</h2>
+<p style="font-family:var(--mono);font-size:11px;color:var(--text3);margin-bottom:14px;">Catch the Big Runs · 10 Indicators · 2 Confidence Buckets · ADX Regime Overlay</p>
+
+<h3>What Is Signal Catcher?</h3>
+<p>Signal Catcher takes raw price and volume data and collapses it into a single <strong>Weighted Technical Score</strong> from 0–100 for any ticker you type in.</p>
+<p>No AI inside the scoring engine. No subjective chart drawings. No fundamentals in the math. Just clean, deterministic computation — the same data always produces the same score.</p>
+
+<h3>Why Add Technicals to Your Fundamental Work?</h3>
+<p>Fundamentals answer the <strong>"what"</strong> — is this a business worth owning?<br>
+Technicals answer the <strong>"when"</strong> — is the price action confirming or fighting your thesis <em>right now</em>?</p>
+<div class="gd-highlight">
+<strong>Fundamentals →</strong> conviction in the name.<br>
+<strong>Technicals →</strong> conviction in the timing.<br><br>
+Together, they help you avoid the classic "great company, terrible entry" trap.
+</div>
+
+<h3>Two Families of Indicators</h3>
+<p>Every market speaks in two voices at once:</p>
+<table>
+<tr><th>Family</th><th>What It Measures</th><th>Indicators</th></tr>
+<tr><td><strong>Trend-Following</strong></td><td>Persistence &amp; strength of the current move</td><td>SMA 200, MA Cross 50/200, Ichimoku Cloud</td></tr>
+<tr><td><strong>Contrarian</strong></td><td>When a move has gone too far (exhaustion)</td><td>RSI Extreme, DeMark Sequential, Bollinger Bands, MFI</td></tr>
+</table>
+<p><strong>When both families agree →</strong> highest-conviction setup. The trend is strong AND it's not exhausted.<br>
+<strong>When they clash →</strong> the system flags the exact tension — those moments often mark transitions where the biggest opportunities and risks hide.</p>
+
+<h3>How the Scoring Works</h3>
+
+<h4>1. Score Each Indicator (0–100)</h4>
+<p>Ten indicators independently score the current market condition. Contrarian indicators use inverted scoring: oversold RSI is scored bullish because sellers are exhausted.</p>
+
+<h4>2. Weight by Confidence Bucket</h4>
+<table>
+<tr><th>Bucket</th><th>Weight</th><th>Indicators</th><th>Role</th></tr>
+<tr><td><strong>HIGH</strong></td><td>60%</td><td>Volume Profile, SMA 200, MA Cross, RSI Extreme, OBV</td><td>Structural, institutional-grade anchors</td></tr>
+<tr><td><strong>MED</strong></td><td>40%</td><td>MFI, Ichimoku, Bollinger Bands, DeMark, Candlestick</td><td>Interpretive timing tools</td></tr>
+</table>
+<p>Each indicator has an <strong>intra-weight</strong> reflecting its authority. SMA 200 carries the highest (1.4×) — the most widely watched institutional level. RSI Extreme is second (1.2×) — the strongest contrarian signal.</p>
+
+<h4>3. ADX Regime Overlay</h4>
+<p>ADX doesn't contribute a score — it's a <strong>market regime switch</strong> that adjusts trend-follower weights:</p>
+<table>
+<tr><th>ADX</th><th>Regime</th><th>Effect</th></tr>
+<tr><td>≥ 40</td><td>Very Strong Trend</td><td>1.20× boost</td></tr>
+<tr><td>≥ 30</td><td>Strong Trend</td><td>1.12× boost</td></tr>
+<tr><td>≥ 25</td><td>Trending</td><td>1.06× boost</td></tr>
+<tr><td>20–25</td><td>Transitional</td><td>1.00× neutral</td></tr>
+<tr><td>&lt; 20</td><td>Choppy</td><td>0.85× dampen</td></tr>
+</table>
+
+<h4>4. Confluences &amp; Conflicts</h4>
+<p><strong>7 confluence patterns</strong> boost weights when specific combinations align:</p>
+<table>
+<tr><th>Pattern</th><th>Indicators</th><th>Multiplier</th></tr>
+<tr><td>🔒 Triple Trend Confirmed</td><td>SMA 200 + Ichimoku + MA Cross</td><td>1.12×</td></tr>
+<tr><td>🔥 Triple Exhaustion</td><td>RSI + DeMark + Bollinger</td><td>1.15×</td></tr>
+<tr><td>⚡ Double Exhaustion</td><td>DeMark + Bollinger</td><td>1.10×</td></tr>
+<tr><td>📈 Dual Oscillator</td><td>MFI + RSI</td><td>1.08×</td></tr>
+<tr><td>🏦 Volume Confirms Trend</td><td>OBV + SMA 200</td><td>1.08×</td></tr>
+<tr><td>💪 Smart Money</td><td>OBV + MFI</td><td>1.10×</td></tr>
+<tr><td>🏗 Structure + Trend</td><td>Vol Profile + SMA 200</td><td>1.06×</td></tr>
+</table>
+
+<p><strong>8 conflict pairs</strong> surface meaningful disagreements (40+ point divergence):</p>
+<table>
+<tr><th>Conflict</th><th>What It Means</th></tr>
+<tr><td>SMA 200 vs. RSI</td><td>Classic trend vs. exhaustion — the system's philosophical backbone</td></tr>
+<tr><td>Ichimoku vs. MFI</td><td>Trend direction and volume-weighted momentum disagree</td></tr>
+<tr><td>OBV vs. Bollinger</td><td>Institutional money vs. price bands tell different stories</td></tr>
+<tr><td>DeMark vs. SMA 200</td><td>Exhaustion says reverse; trend says continue</td></tr>
+<tr><td>MFI vs. RSI</td><td>Volume-weighted vs. price-only momentum diverge</td></tr>
+<tr><td>MA Cross vs. Ichimoku</td><td>Two trend systems disagree — transition in progress</td></tr>
+<tr><td>OBV vs. SMA 200</td><td>Volume flow diverging from price trend — early warning</td></tr>
+<tr><td>MFI vs. OBV</td><td>Short-term volume impulse vs. long-term volume trend</td></tr>
+</table>
+
+<h4>5. Specialized Alerts</h4>
+<p><strong>Falling Knife</strong> — four simultaneous conditions (RSI oversold + DeMark buy + bearish candlestick + confirmed downtrend) detect potential capitulation bottoms.<br>
+<strong>Blow-Off Top</strong> — the mirror image, detecting euphoria tops where exhaustion meets a confirmed uptrend.</p>
+
+<h3>What You Can Do With It</h3>
+<p><strong>Avoid buying into exhaustion</strong> — A score of 28 with Triple Exhaustion active means the technicals are begging you to wait, even if the fundamentals look perfect.</p>
+<p><strong>Confirm your entry</strong> — A score of 72 with Triple Trend Confirmed and volume flowing in means the chart agrees with your thesis.</p>
+<p><strong>Recognize transitions</strong> — When trend and exhaustion indicators are fighting, the market is changing. Signal Catcher surfaces these moments instead of hiding them.</p>
+<p><strong>Stay in strong moves</strong> — When trend is aligned, exhaustion is absent, and OBV confirms accumulation — "stay in the trade."</p>
+
+<p class="gd-disclaimer">Signal Catcher is built for fun &amp; education — not financial advice. 🎣<br>Version 13 · April 2026</p>
+</div>
+</div>
+
 </body>
 </html>
