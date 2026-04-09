@@ -5453,6 +5453,39 @@ Together, they help you avoid the classic "great company, terrible entry" trap.
 <p><strong>When both families agree →</strong> highest-conviction setup. The trend is strong AND it's not exhausted.<br>
 <strong>When they clash →</strong> the system flags the exact tension — those moments often mark transitions where the biggest opportunities and risks hide.</p>
 
+<h3>The 10 Indicators</h3>
+<p>Each indicator was chosen because it provides unique information no other indicator in the system covers. Here's what each one does and why it matters:</p>
+
+<h4>Trend Direction</h4>
+<p><strong>SMA 200 Trend</strong> — The 200-day Simple Moving Average is the single most widely watched level by institutional investors worldwide. Price above it = healthy uptrend; price below = downtrend. It's the dividing line between bull and bear markets. Carries the highest intra-weight (1.4×) for a reason.</p>
+<p><strong>MA Cross 50/200</strong> — When the 50-day Moving Average crosses above the 200-day, that's a Golden Cross (bullish structural shift); crossing below is a Death Cross (bearish). These events are rare and meaningful — they signal the trend itself is changing, not just price.</p>
+<p><strong>Ichimoku Cloud</strong> — A complete Japanese trading system that shows trend direction, momentum, and support/resistance in one view. Price above the cloud is bullish, below is bearish. The cloud itself acts as dynamic support and resistance. Scored from four components: price vs. cloud, cloud color, conversion/base line cross, and lagging span confirmation.</p>
+
+<h4>Volume &amp; Institutional Flow</h4>
+<p><strong>Volume Profile</strong> — Maps where the heaviest institutional trading occurred. The POC (Point of Control) is the price with the most volume — it acts as a magnet. VAH (Volume Area High) and VAL (Volume Area Low) bracket where 70% of volume traded. Price above POC = bullish structure.</p>
+<p><strong>OBV Trend</strong> — On-Balance Volume tracks cumulative volume flow: adds volume on up days, subtracts on down days. Rising OBV with rising price confirms smart money is accumulating. The key signal is divergence — OBV falling while price rises warns that institutions may be quietly selling.</p>
+<p><strong>MFI</strong> — Money Flow Index is a volume-weighted RSI. It combines price movement with volume to measure actual buying/selling pressure — money flowing in vs. money flowing out. Scored as a contrarian indicator: MFI below 20 = oversold (bullish); above 80 = overbought (bearish).</p>
+
+<h4>Contrarian / Mean-Reversion</h4>
+<p><strong>RSI Extreme</strong> — The Relative Strength Index measures momentum on a 0–100 scale. This is a <em>contrarian</em> indicator: RSI below 30 means sellers are exhausted → scored bullish. RSI above 70 means buyers are exhausted → scored bearish. Carries the second-highest weight (1.2×) because it sits at the opposite philosophical end from SMA 200.</p>
+<p><strong>DeMark Sequential</strong> — Tom DeMark's system counts 9 consecutive closes in the same direction to identify price exhaustion. A completed "Setup 9" — especially when "perfected" — is a high-conviction reversal signal. Countdown 13 is the strongest signal. It answers: has this move been going on too long?</p>
+<p><strong>Bollinger Bands</strong> — Plots bands at 2 standard deviations around a 20-day SMA. Scored as contrarian: price at the lower band suggests oversold (bullish reversal); price at the upper band suggests overbought (bearish reversal). A band squeeze (very narrow bands) signals a breakout is building.</p>
+
+<h4>Momentum &amp; Timing</h4>
+<p><strong>Candlestick Signal</strong> — Detects classic reversal patterns in the most recent daily bars. Topping Tails (Shooting Stars) show sellers rejecting higher prices. Bottoming Tails (Hammers) show buyers stepping in. Engulfing patterns confirm momentum shifts. Signals are stronger at key levels (VAH, VAL, SMA 200) and on elevated volume.</p>
+
+<h4>Regime Overlay (Not Scored)</h4>
+<p><strong>ADX</strong> — The Average Directional Index doesn't produce a score. Instead, it tells the system <em>how much to trust</em> the trend-following indicators. In strong trends (ADX above 25), trend signals get boosted. In choppy, range-bound markets (ADX below 20), they get dampened. It's the "trust gate" for the entire trend family.</p>
+
+<h3 style="color:#f59e0b;">Why Not Elliott Wave, Fibonacci, or Trend Lines?</h3>
+<p>Signal Catcher has a strict design rule: <strong>every indicator must be deterministically computable from raw OHLCV data.</strong> Two independent implementations given the same data must always produce the same score. No exceptions.</p>
+<p>These popular techniques were deliberately excluded:</p>
+<p><strong>Elliott Wave</strong> — Requires subjective wave counting. Ask five analysts to label the waves on the same chart and you'll get five different answers. There is no algorithm that can deterministically identify wave counts without human interpretation.</p>
+<p><strong>Fibonacci Retracements</strong> — The levels themselves are mathematically precise, but choosing which swing high and swing low to anchor them to is entirely subjective. Different anchor points produce completely different levels.</p>
+<p><strong>Trend Lines</strong> — Drawing a trend line requires choosing which points to connect. Two analysts looking at the same chart will draw different lines. There's no objective rule for "the correct" trend line.</p>
+<p><strong>Anchored VWAP</strong> — Same problem as Fibonacci. The VWAP calculation is deterministic, but choosing the anchor date is a judgment call.</p>
+<p>These aren't bad tools — many skilled traders use them effectively. They just can't survive Signal Catcher's repeatability requirement. If two people can look at the same data and get different results, it doesn't belong in the scoring engine.</p>
+
 <h3>How the Scoring Works</h3>
 
 <h4>1. Score Each Indicator (0–100)</h4>
