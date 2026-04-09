@@ -404,7 +404,7 @@ body:not(.dark-mode) .commentary-item.structural{background:#1a6fd410;border-lef
 .scoring-info-popup .si-section{margin-top:10px;padding-top:8px;border-top:1px solid var(--border);}
 
 /* ── GUIDE MODAL ── */
-.guide-btn{font-size:13px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:8px;color:var(--text3);cursor:pointer;padding:3px 10px;font-family:var(--mono);font-weight:600;transition:all .15s;letter-spacing:.03em;user-select:none;}
+.guide-btn{font-size:15px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:8px;color:var(--text3);cursor:pointer;padding:6px 14px;font-family:var(--mono);font-weight:600;transition:all .15s;letter-spacing:.03em;user-select:none;}
 .guide-btn:hover{background:var(--high-dim);border-color:var(--accent);color:var(--accent);transform:scale(1.03);}
 .guide-overlay{display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.65);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);justify-content:center;align-items:flex-start;padding:24px 12px;}
 .guide-overlay.visible{display:flex;}
@@ -5299,12 +5299,12 @@ function renderTideChart(curve, hilos){
   });
 
   // Mark hi/lo points
+  const isDark = document.body.classList.contains('dark-mode');
   const hiloTimes = new Set(hilos.map(h => h.t));
   const pointRadii = sampled.map(p => hiloTimes.has(p.t) ? 4 : 0);
   const pointBg = sampled.map(p => hiloTimes.has(p.t) ? '#fff' : 'transparent');
   const pointBorder = sampled.map(p => hiloTimes.has(p.t) ? (isDark ? '#58a6ff' : '#1a4d80') : 'transparent');
 
-  const isDark = document.body.classList.contains('dark-mode');
   const gridColor = isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.06)';
   const textColor = isDark ? 'rgba(255,255,255,0.75)' : 'rgba(0,0,0,0.4)';
 
@@ -5426,6 +5426,9 @@ document.addEventListener('DOMContentLoaded',()=>{
 <h3>What Is Signal Catcher?</h3>
 <p>Signal Catcher takes raw price and volume data and collapses it into a single <strong>Weighted Technical Score</strong> from 0–100 for any ticker you type in.</p>
 <p>No AI inside the scoring engine. No subjective chart drawings. No fundamentals in the math. Just clean, deterministic computation — the same data always produces the same score.</p>
+<div class="gd-highlight">
+<strong>🔍 Cross-AI Validated:</strong> The scoring logic was independently audited by Grok, Claude, and Gemini to verify mathematical accuracy. The weighting system, confluence definitions, and conflict pairs incorporate the best recommendations from all three AI platforms — each contributed ideas that made the final architecture stronger than any single perspective would have produced.
+</div>
 
 <h3>Why Add Technicals to Your Fundamental Work?</h3>
 <p>Fundamentals answer the <strong>"what"</strong> — is this a business worth owning?<br>
