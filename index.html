@@ -5274,13 +5274,14 @@ function renderTideChart(curve, hilos){
     if(dist < minDist){ minDist = dist; nowIdx = i; }
   });
 
+  const isDark = document.body.classList.contains('dark-mode');
+
   // Mark hi/lo points
   const hiloTimes = new Set(hilos.map(h => h.t));
   const pointRadii = sampled.map(p => hiloTimes.has(p.t) ? 4 : 0);
   const pointBg = sampled.map(p => hiloTimes.has(p.t) ? '#fff' : 'transparent');
   const pointBorder = sampled.map(p => hiloTimes.has(p.t) ? (isDark ? '#58a6ff' : '#1a4d80') : 'transparent');
 
-  const isDark = document.body.classList.contains('dark-mode');
   const gridColor = isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.06)';
   const textColor = isDark ? 'rgba(255,255,255,0.75)' : 'rgba(0,0,0,0.4)';
 
