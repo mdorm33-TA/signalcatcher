@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Signal Catcher — Watchlist Admin</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+
+:root {
+  --bg: #0d1117;
+  --surface: #161b22;
+  --surface2: #1c2128;
+  --surface3: #21262d;
+  --border: #30363d;
+  --border2: #484f58;
+  --text: #e6edf3;
+  --text2: #b0bac8;
+  --text3: #8b949e;
+  --accent: #58a6ff;
+  --accent-dim: #58a6ff22;
+  --bull: #3fb950;
+  --bull-dim: #3fb95018;
+  --bear: #f85149;
+  --bear-dim: #f8514918;
+  --warn: #d29922;
+  --mono: 'IBM Plex Mono', monospace;
+  --sans: 'IBM Plex Sans', sans-serif;
+  --card-shadow: 0 1px 4px rgba(0,0,0,.3), 0 0 0 1px rgba(255,255,255,.06);
+  --radius: 10px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+/* ── HEADER ── */
+.hdr {
+  background: linear-gradient(180deg, #1a4d80 0%, #002b4d 45%, #001426 100%);
+  border-bottom: 2px solid rgba(77,163,255,0.2);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  padding: 18px 24px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.hdr::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 30% 80%, rgba(77,163,255,0.08) 0%, transparent 60%),
+              radial-gradient(ellipse at 70% 20%, rgba(77,163,255,0.05) 0%, transparent 50%);
+  pointer-events: none;
+}
+.hdr-title {
+  font-family: var(--mono);
+  font-size: 22px;
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: .03em;
+  position: relative;
+  z-index: 1;
+}
+.hdr-title span { color: #f85149; }
+.hdr-sub {
+  font-family: var(--sans);
+  font-size: 13px;
+  color: rgba(255,255,255,.55);
+  margin-top: 2px;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── LAYOUT ── */
+.wrap {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 20px 16px 60px;
+}
+
+/* ── STATUS BAR ── */
+.status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.status-pill {
+  font-family: var(--mono);
+  font-size: 13px;
+  padding: 5px 12px;
+  border-radius: 6px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text2);
+}
+.status-pill b { color: var(--accent); }
+.status-pill.live { border-color: var(--bull); }
+.status-pill.live b { color: var(--bull); }
+.status-pill.err { border-color: var(--bear); }
+.status-pill.err b { color: var(--bear); }
+
+/* ── CARDS ── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--card-shadow);
+  padding: 18px;
+  margin-bottom: 16px;
+}
+.card-title {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--text3);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.card-title .dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.dot-blue { background: var(--accent); }
+.dot-green { background: var(--bull); }
+.dot-orange { background: var(--warn); }
+
+/* ── BUTTONS ── */
+.btn {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 9px 18px;
+  border-radius: 8px;
+  border: 1px solid var(--border2);
+  background: var(--surface2);
+  color: var(--text);
+  cursor: pointer;
+  transition: all .15s;
+  white-space: nowrap;
+}
+.btn:hover { border-color: var(--accent); color: var(--accent); }
+.btn:active { transform: scale(.97); }
+.btn.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #000;
+  font-weight: 600;
+}
+.btn.primary:hover { background: #79bbff; border-color: #79bbff; color: #000; }
+.btn.danger { border-color: var(--bear); color: var(--bear); }
+.btn.danger:hover { background: var(--bear-dim); }
+
+/* ══════════════════════════════════════
+   SYMBOL LOOKUP
+   ══════════════════════════════════════ */
+.lookup-wrap {
+  position: relative;
+}
+.lookup-input {
+  width: 100%;
+  font-family: var(--mono);
+  font-size: 14px;
+  padding: 10px 14px;
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  color: var(--text);
+  outline: none;
+  transition: border-color .15s;
+}
+.lookup-input:focus { border-color: var(--accent); }
+.lookup-input::placeholder { color: var(--text3); }
+
+.lookup-hint {
+  font-size: 12px;
+  color: var(--text3);
+  margin-top: 6px;
+}
+
+/* Dropdown */
+.lookup-dd {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  margin-top: 4px;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  box-shadow: 0 12px 40px rgba(0,0,0,.5);
+  max-height: 360px;
+  overflow-y: auto;
+  display: none;
+}
+.lookup-dd.open { display: block; }
+
+.lookup-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border);
+  transition: background .1s;
+}
+.lookup-item:last-child { border-bottom: none; }
+.lookup-item:hover { background: var(--surface2); }
+.lookup-item.already { opacity: .5; }
+
+.li-sym {
+  font-family: var(--mono);
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--accent);
+  min-width: 72px;
+}
+.li-name {
+  flex: 1;
+  font-size: 13px;
+  color: var(--text2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.li-meta {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text3);
+  text-align: right;
+  white-space: nowrap;
+}
+.li-badge {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+.li-badge.add {
+  background: var(--bull-dim);
+  border: 1px solid var(--bull);
+  color: var(--bull);
+}
+.li-badge.exists {
+  background: var(--surface3);
+  border: 1px solid var(--border);
+  color: var(--text3);
+}
+
+.lookup-loading, .lookup-empty {
+  padding: 16px;
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--text3);
+}
+
+/* ── QUICK ADD (manual entry) ── */
+.add-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+.add-input {
+  flex: 1;
+  min-width: 180px;
+  font-family: var(--mono);
+  font-size: 13px;
+  padding: 8px 12px;
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  color: var(--text);
+  outline: none;
+  transition: border-color .15s;
+}
+.add-input:focus { border-color: var(--accent); }
+.add-input::placeholder { color: var(--text3); }
+
+.add-hint {
+  width: 100%;
+  font-size: 11px;
+  color: var(--text3);
+  margin-top: 4px;
+}
+
+/* ── SYMBOL GRID ── */
+.sym-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+.sym-chip {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: var(--surface3);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  cursor: default;
+  transition: all .15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  user-select: none;
+}
+.sym-chip:hover { border-color: var(--bear); }
+.sym-chip .chip-name {
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--text3);
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sym-chip .x-btn {
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  color: var(--text3);
+  font-size: 13px;
+  line-height: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all .15s;
+}
+.sym-chip:hover .x-btn { color: var(--bear); background: var(--bear-dim); }
+
+.sym-chip.new-add {
+  animation: chipPop .3s ease-out;
+  border-color: var(--bull);
+  color: var(--bull);
+}
+@keyframes chipPop {
+  0% { transform: scale(0.7); opacity: 0; }
+  60% { transform: scale(1.08); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* ── SORT BAR ── */
+.sort-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+.sort-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  margin-right: 2px;
+}
+.sort-btn {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 3px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text3);
+  cursor: pointer;
+  transition: all .15s;
+  white-space: nowrap;
+}
+.sort-btn:hover { border-color: var(--accent); color: var(--accent); }
+.sort-btn.active {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-dim);
+}
+.sort-save {
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 3px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text3);
+  cursor: pointer;
+  transition: all .15s;
+  display: none;
+}
+.sort-save:hover { border-color: var(--bull); color: var(--bull); background: var(--bull-dim); }
+.sort-save.show { display: inline-block; }
+
+/* ── CATEGORY TAGS ── */
+.cat-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.cat-tag {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 3px 10px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text3);
+  cursor: pointer;
+  transition: all .15s;
+}
+.cat-tag:hover, .cat-tag.active {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-dim);
+}
+
+/* ── BULK TEXTAREA ── */
+.bulk-area {
+  width: 100%;
+  min-height: 100px;
+  font-family: var(--mono);
+  font-size: 13px;
+  padding: 10px 12px;
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  color: var(--text);
+  outline: none;
+  resize: vertical;
+  transition: border-color .15s;
+}
+.bulk-area:focus { border-color: var(--accent); }
+.bulk-area::placeholder { color: var(--text3); }
+
+.bulk-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+/* ── TOAST ── */
+.toast {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  font-family: var(--mono);
+  font-size: 13px;
+  padding: 10px 20px;
+  border-radius: 8px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  box-shadow: 0 8px 32px rgba(0,0,0,.5);
+  opacity: 0;
+  transition: all .3s ease;
+  z-index: 100;
+  pointer-events: none;
+  max-width: 90vw;
+}
+.toast.show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+.toast.ok { border-color: var(--bull); color: var(--bull); }
+.toast.fail { border-color: var(--bear); color: var(--bear); }
+
+/* ── SPINNER ── */
+.spinner {
+  display: inline-block;
+  width: 14px; height: 14px;
+  border: 2px solid var(--border2);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin .6s linear infinite;
+  vertical-align: middle;
+  margin-right: 6px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 500px) {
+  .hdr { padding: 14px 12px; }
+  .hdr-title { font-size: 18px; }
+  .wrap { padding: 14px 10px 40px; }
+  .card { padding: 14px; }
+  .sym-chip { font-size: 12px; padding: 3px 8px; }
+  .sym-chip .chip-name { display: none; }
+  .li-meta { display: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-title">Signal <span>Catcher</span> — Watchlist Admin</div>
+  <div class="hdr-sub">Manage the alert scanner watchlist · Stored in Cloudflare KV</div>
+</div>
+
+<div class="wrap">
+
+  <!-- Status bar -->
+  <div class="status-bar">
+    <div class="status-pill" id="st-conn"><span class="spinner"></span> Connecting…</div>
+    <div class="status-pill" id="st-count">Symbols: <b>—</b></div>
+    <div class="status-pill" id="st-cap">Cap: <b>200</b></div>
+  </div>
+
+  <!-- Symbol Lookup -->
+  <div class="card">
+    <div class="card-title"><span class="dot dot-green"></span> Symbol Lookup</div>
+    <div class="lookup-wrap">
+      <input class="lookup-input" id="lookup-input" type="text"
+             placeholder="Search by name or ticker… e.g. Apple, NVDA, Bitcoin"
+             autocomplete="off" spellcheck="false">
+      <div class="lookup-dd" id="lookup-dd"></div>
+    </div>
+    <div class="lookup-hint">Type at least 2 characters · Click a result to add · Shows exchange &amp; type</div>
+
+    <!-- Direct add fallback -->
+    <div class="add-row">
+      <input class="add-input" id="add-input" type="text" placeholder="Or type symbols directly: AAPL, MSFT …"
+             autocomplete="off" oninput="this.value=this.value.toUpperCase()">
+      <button class="btn primary" onclick="addSymbolsDirect()">+ Add</button>
+    </div>
+    <div class="add-hint">Comma or space separated · Duplicates ignored · Symbols are NOT validated</div>
+  </div>
+
+  <!-- Current watchlist -->
+  <div class="card">
+    <div class="card-title"><span class="dot dot-blue"></span> Current Watchlist</div>
+    <div class="cat-row" id="cat-row">
+      <span class="cat-tag active" onclick="filterCat('all')">All</span>
+    </div>
+    <div class="sort-bar" id="sort-bar">
+      <span class="sort-label">Sort:</span>
+      <button class="sort-btn active" data-sort="default" onclick="setSort('default')">Original</button>
+      <button class="sort-btn" data-sort="az" onclick="setSort('az')">A → Z</button>
+      <button class="sort-btn" data-sort="za" onclick="setSort('za')">Z → A</button>
+      <button class="sort-btn" data-sort="category" onclick="setSort('category')">By Category</button>
+      <button class="sort-save" id="sort-save" onclick="saveSortOrder()">Save Sort Order ↻</button>
+    </div>
+    <div class="sym-grid" id="sym-grid">
+      <span style="color:var(--text3)">Loading…</span>
+    </div>
+  </div>
+
+  <!-- Bulk edit -->
+  <div class="card">
+    <div class="card-title"><span class="dot dot-orange"></span> Bulk Edit</div>
+    <textarea class="bulk-area" id="bulk-area" placeholder="Paste a full symbol list here (comma, space, or newline separated)&#10;This REPLACES the entire watchlist."></textarea>
+    <div class="bulk-actions">
+      <button class="btn" onclick="loadBulk()">Load Current → Textarea</button>
+      <button class="btn danger" onclick="saveBulk()">Replace Entire List</button>
+      <button class="btn" onclick="exportCSV()">Export CSV</button>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = 'https://ta-alerts.mdorm33.workers.dev';
+let symbols = [];
+let nameCache = {};
+let activeCat = 'all';
+let currentSort = 'default';
+let lookupTimer = null;
+
+// ─── CATEGORIES ───
+const CATS = {
+  'ETF':    s => /^(XL[A-Z]|SPY|QQQ|DIA|IWM|TLT|GLD|SLV|USO|UNG|EEM|VXX|HYG|LQD|ARKK|ARKG|KWEB|FXI|EWZ|EFA|VNQ|IBIT|BITO)$/i.test(s),
+  'Index':  s => s.startsWith('^'),
+  'Crypto': s => /-USD$/i.test(s),
+  'Future': s => /=F$/i.test(s),
+};
+function categorize(s) {
+  for (const [cat, fn] of Object.entries(CATS)) { if (fn(s)) return cat; }
+  return 'Stock';
+}
+
+// ═══════════════════════════════════════
+//  SYMBOL LOOKUP
+// ═══════════════════════════════════════
+const lookupInput = document.getElementById('lookup-input');
+const lookupDD    = document.getElementById('lookup-dd');
+
+lookupInput.addEventListener('input', () => {
+  clearTimeout(lookupTimer);
+  const q = lookupInput.value.trim();
+  if (q.length < 2) { closeDD(); return; }
+  lookupTimer = setTimeout(() => runLookup(q), 280);
+});
+lookupInput.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { closeDD(); lookupInput.blur(); }
+});
+document.addEventListener('click', e => {
+  if (!e.target.closest('.lookup-wrap')) closeDD();
+});
+
+function closeDD() { lookupDD.classList.remove('open'); }
+
+async function runLookup(q) {
+  lookupDD.innerHTML = '<div class="lookup-loading"><span class="spinner"></span> Searching…</div>';
+  lookupDD.classList.add('open');
+  try {
+    const r = await fetch(API + '/lookup?q=' + encodeURIComponent(q));
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const data = await r.json();
+    const quotes = data.quotes || [];
+    if (quotes.length === 0) {
+      lookupDD.innerHTML = '<div class="lookup-empty">No matches found</div>';
+      return;
+    }
+    lookupDD.innerHTML = quotes.map(qt => {
+      const sym = qt.symbol.toUpperCase();
+      const inList = symbols.includes(sym);
+      nameCache[sym] = qt.name;
+      return `<div class="lookup-item${inList ? ' already' : ''}"
+                   onclick="addFromLookup('${esc(qt.symbol)}','${esc(qt.name)}',${inList})">
+        <span class="li-sym">${esc(qt.symbol)}</span>
+        <span class="li-name">${esc(qt.name)}</span>
+        <span class="li-meta">${esc(qt.type)} · ${esc(qt.exchange)}</span>
+        <span class="li-badge ${inList ? 'exists' : 'add'}">${inList ? 'IN LIST' : '+ ADD'}</span>
+      </div>`;
+    }).join('');
+  } catch (e) {
+    lookupDD.innerHTML = '<div class="lookup-empty" style="color:var(--bear)">Lookup failed: ' + esc(e.message) + '</div>';
+  }
+}
+
+async function addFromLookup(sym, name, alreadyIn) {
+  if (alreadyIn) { toast(sym + ' is already in watchlist', 'fail'); return; }
+  const symUp = sym.toUpperCase();
+  closeDD();
+  lookupInput.value = '';
+  updateStatus('busy', 'Adding…');
+  try {
+    const r = await fetch(API + '/watchlist/add', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ symbols: [symUp] })
+    });
+    const data = await r.json();
+    if (!data.ok) throw new Error('API error');
+    symbols = [...new Set([...symbols, symUp])];
+    nameCache[symUp] = name;
+    updateStatus('live');
+    renderCatTags();
+    renderSymbols([symUp]);
+    toast('Added ' + symUp + ' — ' + name, 'ok');
+  } catch (e) {
+    updateStatus('live');
+    toast('Add failed: ' + e.message, 'fail');
+  }
+}
+
+// ═══════════════════════════════════════
+//  DIRECT ADD (manual comma-separated)
+// ═══════════════════════════════════════
+async function addSymbolsDirect() {
+  const raw = document.getElementById('add-input').value;
+  const newSyms = parseSymbols(raw);
+  if (newSyms.length === 0) { toast('No valid symbols entered', 'fail'); return; }
+  const fresh = newSyms.filter(s => !symbols.includes(s));
+  const dupes = newSyms.length - fresh.length;
+  if (fresh.length === 0) { toast('All symbols already in watchlist', 'fail'); return; }
+  updateStatus('busy', 'Adding…');
+  try {
+    const r = await fetch(API + '/watchlist/add', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ symbols: fresh })
+    });
+    const data = await r.json();
+    if (!data.ok) throw new Error('API error');
+    symbols = [...new Set([...symbols, ...fresh])];
+    document.getElementById('add-input').value = '';
+    updateStatus('live');
+    renderCatTags();
+    renderSymbols(fresh);
+    toast('Added ' + fresh.length + ': ' + fresh.join(', ') + (dupes ? ' · ' + dupes + ' already present' : ''), 'ok');
+  } catch (e) {
+    updateStatus('live');
+    toast('Add failed: ' + e.message, 'fail');
+  }
+}
+document.getElementById('add-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') addSymbolsDirect();
+});
+
+// ═══════════════════════════════════════
+//  WATCHLIST LOAD / RENDER
+// ═══════════════════════════════════════
+async function loadWatchlist() {
+  try {
+    const r = await fetch(API + '/watchlist');
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const data = await r.json();
+    symbols = data.symbols || [];
+    updateStatus('live');
+    renderSymbols();
+    renderCatTags();
+  } catch (e) {
+    updateStatus('err', e.message);
+  }
+}
+
+function updateStatus(state, msg) {
+  const el = document.getElementById('st-conn');
+  const ct = document.getElementById('st-count');
+  if (state === 'live') {
+    el.className = 'status-pill live';
+    el.innerHTML = 'Worker: <b>Connected</b>';
+    ct.innerHTML = 'Symbols: <b>' + symbols.length + '</b>';
+  } else if (state === 'err') {
+    el.className = 'status-pill err';
+    el.innerHTML = 'Worker: <b>Error</b>';
+    toast('Connection failed: ' + (msg || 'unknown'), 'fail');
+  } else {
+    el.className = 'status-pill';
+    el.innerHTML = '<span class="spinner"></span> ' + (msg || 'Working…');
+  }
+}
+
+function sortSymbols(list) {
+  const arr = [...list];
+  if (currentSort === 'az') arr.sort((a, b) => a.localeCompare(b));
+  else if (currentSort === 'za') arr.sort((a, b) => b.localeCompare(a));
+  else if (currentSort === 'category') {
+    const catOrder = ['Index', 'ETF', 'Stock', 'Crypto', 'Future'];
+    arr.sort((a, b) => {
+      const ca = catOrder.indexOf(categorize(a)), cb = catOrder.indexOf(categorize(b));
+      if (ca !== cb) return ca - cb;
+      return a.localeCompare(b);
+    });
+  }
+  return arr;
+}
+
+function setSort(mode) {
+  currentSort = mode;
+  document.querySelectorAll('.sort-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.sort === mode);
+  });
+  // Show "Save Sort Order" when not on default
+  document.getElementById('sort-save').classList.toggle('show', mode !== 'default');
+  renderSymbols();
+}
+
+async function saveSortOrder() {
+  const sorted = sortSymbols(symbols);
+  updateStatus('busy', 'Saving order…');
+  try {
+    const r = await fetch(API + '/watchlist', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ symbols: sorted })
+    });
+    const data = await r.json();
+    if (!data.ok) throw new Error('API error');
+    symbols = data.symbols || sorted;
+    currentSort = 'default';
+    document.querySelectorAll('.sort-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.sort === 'default');
+    });
+    document.getElementById('sort-save').classList.remove('show');
+    updateStatus('live');
+    renderSymbols();
+    toast('Sort order saved to watchlist', 'ok');
+  } catch (e) {
+    updateStatus('live');
+    toast('Save failed: ' + e.message, 'fail');
+  }
+}
+
+function renderSymbols(highlight) {
+  const grid = document.getElementById('sym-grid');
+  const hl = new Set(highlight || []);
+  let filtered = activeCat === 'all' ? symbols : symbols.filter(s => categorize(s) === activeCat);
+  filtered = sortSymbols(filtered);
+  if (filtered.length === 0) {
+    grid.innerHTML = '<span style="color:var(--text3)">' +
+      (symbols.length === 0 ? 'Watchlist is empty' : 'No symbols in this category') + '</span>';
+    return;
+  }
+  let lastCat = '';
+  const parts = [];
+  filtered.forEach(s => {
+    // Insert category separator when sorting by category
+    if (currentSort === 'category' && activeCat === 'all') {
+      const cat = categorize(s);
+      if (cat !== lastCat) {
+        if (lastCat) parts.push('<div style="width:100%;height:1px"></div>');
+        parts.push('<div style="width:100%;font-family:var(--mono);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin:6px 0 2px;padding-left:2px;">' + cat + 's</div>');
+        lastCat = cat;
+      }
+    }
+    const nm = nameCache[s];
+    const nameSpan = nm ? '<span class="chip-name">' + esc(nm) + '</span>' : '';
+    parts.push('<span class="sym-chip' + (hl.has(s) ? ' new-add' : '') + '">' +
+      s + nameSpan + '<button class="x-btn" onclick="removeSymbol(\'' + s + '\')" title="Remove ' + s + '">×</button></span>');
+  });
+  grid.innerHTML = parts.join('');
+  document.getElementById('st-count').innerHTML = 'Symbols: <b>' + symbols.length + '</b>';
+}
+
+function renderCatTags() {
+  const cats = {};
+  symbols.forEach(s => { const c = categorize(s); cats[c] = (cats[c] || 0) + 1; });
+  const row = document.getElementById('cat-row');
+  let html = '<span class="cat-tag' + (activeCat === 'all' ? ' active' : '') + '" onclick="filterCat(\'all\')">All (' + symbols.length + ')</span>';
+  for (const [cat, n] of Object.entries(cats).sort((a, b) => b[1] - a[1])) {
+    html += '<span class="cat-tag' + (activeCat === cat ? ' active' : '') + '" onclick="filterCat(\'' + cat + '\')">' + cat + ' (' + n + ')</span>';
+  }
+  row.innerHTML = html;
+}
+
+function filterCat(cat) {
+  activeCat = cat;
+  renderCatTags();
+  renderSymbols();
+}
+
+// ═══════════════════════════════════════
+//  REMOVE
+// ═══════════════════════════════════════
+async function removeSymbol(sym) {
+  updateStatus('busy', 'Removing…');
+  try {
+    const r = await fetch(API + '/watchlist/remove', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ symbols: [sym] })
+    });
+    const data = await r.json();
+    if (!data.ok) throw new Error('API error');
+    symbols = symbols.filter(s => s !== sym);
+    updateStatus('live');
+    renderCatTags();
+    renderSymbols();
+    toast('Removed ' + sym, 'ok');
+  } catch (e) {
+    updateStatus('live');
+    toast('Remove failed: ' + e.message, 'fail');
+  }
+}
+
+// ═══════════════════════════════════════
+//  BULK
+// ═══════════════════════════════════════
+function loadBulk() {
+  document.getElementById('bulk-area').value = symbols.join(', ');
+  toast('Current list loaded into textarea', 'ok');
+}
+
+async function saveBulk() {
+  const raw = document.getElementById('bulk-area').value;
+  const newList = parseSymbols(raw);
+  if (newList.length === 0) {
+    if (!confirm('This will CLEAR the entire watchlist. Continue?')) return;
+  } else {
+    if (!confirm('Replace entire watchlist with ' + newList.length + ' symbols?')) return;
+  }
+  updateStatus('busy', 'Saving…');
+  try {
+    const r = await fetch(API + '/watchlist', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ symbols: newList })
+    });
+    const data = await r.json();
+    if (!data.ok) throw new Error('API error');
+    symbols = data.symbols || newList;
+    updateStatus('live');
+    renderCatTags();
+    renderSymbols();
+    toast('Watchlist replaced: ' + symbols.length + ' symbols', 'ok');
+  } catch (e) {
+    updateStatus('live');
+    toast('Save failed: ' + e.message, 'fail');
+  }
+}
+
+function exportCSV() {
+  if (symbols.length === 0) { toast('Nothing to export', 'fail'); return; }
+  const blob = new Blob([symbols.join('\n')], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'watchlist_' + new Date().toISOString().slice(0, 10) + '.csv';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast('Exported ' + symbols.length + ' symbols', 'ok');
+}
+
+// ─── UTIL ───
+function parseSymbols(raw) {
+  return [...new Set(
+    raw.split(/[\s,;\n\r]+/)
+       .map(s => s.trim().toUpperCase())
+       .filter(s => s.length > 0 && s.length <= 10 && /^[A-Z0-9\.\-\^=]+$/.test(s))
+  )];
+}
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function toast(msg, cls) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show ' + (cls || '');
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.className = 'toast', 3000);
+}
+
+// ─── BOOT ───
+loadWatchlist();
+</script>
+</body>
+</html>
