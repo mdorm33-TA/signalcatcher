@@ -128,7 +128,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:18
 .search-bar input{background:none;border:none;color:var(--text);font-family:var(--mono);font-size:15px;font-weight:600;outline:none;width:75px;text-transform:uppercase;letter-spacing:.08em;}
 .search-bar input::placeholder{color:var(--text3);font-weight:400;}
 .sdiv{width:1px;height:18px;background:var(--border2);flex-shrink:0;}
-.pdisp{font-family:var(--mono);font-size:13px;color:var(--hdr-text);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pdisp{font-family:var(--mono);font-size:13px;color:var(--hdr-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .pdisp .pv{color:var(--hdr-text);font-weight:500;}
 .pdisp .pfetch{font-size:10px;cursor:pointer;color:var(--text3);margin-left:6px;text-decoration:underline;text-decoration-style:dotted;}
 .pdisp .pfetch:hover{color:var(--accent);}
@@ -404,7 +404,7 @@ body:not(.dark-mode) .commentary-item.structural{background:#1a6fd410;border-lef
 .scoring-info-popup .si-section{margin-top:10px;padding-top:8px;border-top:1px solid var(--border);}
 
 /* ── GUIDE MODAL ── */
-.guide-btn{font-size:15px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:8px;color:var(--text3);cursor:pointer;padding:6px 14px;font-family:var(--mono);font-weight:600;transition:all .15s;letter-spacing:.03em;user-select:none;}
+.guide-btn{font-size:16px;background:var(--surface3);border:1.5px solid var(--border2);border-radius:8px;color:var(--text3);cursor:pointer;padding:7px 16px;font-family:var(--mono);font-weight:600;transition:all .15s;letter-spacing:.03em;user-select:none;}
 .guide-btn:hover{background:var(--high-dim);border-color:var(--accent);color:var(--accent);transform:scale(1.03);}
 .guide-overlay{display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.65);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);justify-content:center;align-items:flex-start;padding:24px 12px;}
 .guide-overlay.visible{display:flex;}
@@ -547,21 +547,21 @@ body:not(.dark-mode) .commentary-item.structural{background:#1a6fd410;border-lef
 .fund-body{display:none;border-top:1px solid var(--border);padding:12px 13px 13px;}
 .fund-body.open{display:block;}
 .news-panel{background:var(--surface2);border:2px solid #f59e0b;border-radius:10px;margin-top:10px;overflow:hidden;}
-.news-panel-hdr{display:flex;align-items:center;justify-content:space-between;padding:12px 13px;cursor:pointer;user-select:none;transition:background .15s;border-radius:10px;}
+.news-panel-hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;cursor:pointer;user-select:none;transition:background .15s;border-radius:10px;}
 .news-panel-hdr:hover{background:var(--surface3);}
-.news-panel-title{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--text2);display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
-.news-badge{font-size:10px;padding:1px 6px;border-radius:3px;font-weight:400;background:var(--surface3);color:var(--text3);}
+.news-panel-title{font-family:var(--mono);font-size:14px;font-weight:600;color:var(--text2);display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.news-badge{font-size:12px;padding:2px 8px;border-radius:3px;font-weight:400;background:var(--surface3);color:var(--text3);}
 .news-badge.loaded{background:#f59e0b18;color:#f59e0b;}
 .news-badge.loading{background:#f59e0b18;color:#f59e0b;animation:blink 0.7s step-end infinite;}
 .news-badge.error{background:#ff456018;color:#ff4560;}
-.news-body{padding:0 13px 13px;display:none;}
+.news-body{padding:0 16px 16px;display:none;}
 .news-body.open{display:block;}
-.news-content{font-family:var(--sans);font-size:14px;color:var(--text2);line-height:1.7;}
+.news-content{font-family:var(--sans);font-size:15px;color:var(--text2);line-height:1.7;}
 .news-content ul{margin:6px 0 10px;padding-left:20px;}
 .news-content li{margin-bottom:6px;}
 .news-content strong{color:var(--text);}
-.news-cost-note{font-family:var(--mono);font-size:9px;color:var(--text3);font-style:italic;margin-top:8px;}
-.news-fetch-btn{font-family:var(--mono);font-size:11px;padding:5px 12px;border:1px solid #f59e0b;border-radius:5px;background:#f59e0b18;color:#f59e0b;cursor:pointer;font-weight:600;transition:all .15s;animation:newsBlink 1.5s ease-in-out infinite;}
+.news-cost-note{font-family:var(--mono);font-size:10px;color:var(--text3);font-style:italic;margin-top:10px;}
+.news-fetch-btn{font-family:var(--mono);font-size:14px;padding:7px 16px;border:1px solid #f59e0b;border-radius:5px;background:#f59e0b18;color:#f59e0b;cursor:pointer;font-weight:600;transition:all .15s;animation:newsBlink 1.5s ease-in-out infinite;}
 @keyframes newsBlink{0%,100%{opacity:1;box-shadow:0 0 4px #f59e0b00;}50%{opacity:.65;box-shadow:0 0 10px #f59e0b40;}}
 .news-fetch-btn:hover{background:#f59e0b30;animation:none;}
 .news-fetch-btn:disabled{opacity:0.5;cursor:not-allowed;animation:none;}
@@ -797,7 +797,7 @@ body:not(.dark-mode) .commentary-item.structural{background:#1a6fd410;border-lef
     <button class="run-btn" id="run-btn" onclick="runAnalysis()">
       <div class="spinner"></div><span class="btn-text">▶ Analyze</span>
     </button>
-    <button class="dark-toggle" id="dark-toggle" onclick="toggleDarkMode()" title="Toggle dark/light mode">🌙</button>
+    <button class="dark-toggle" id="dark-toggle" onclick="toggleDarkMode()" title="Toggle dark/light mode" style="margin-left:auto;">🌙</button>
     <button class="guide-btn" onclick="document.getElementById('guide-overlay').classList.add('visible')" title="How Signal Catcher works">📖 Guide</button>
   </div>
 </div>
@@ -1022,6 +1022,23 @@ body:not(.dark-mode) .commentary-item.structural{background:#1a6fd410;border-lef
 
 
 
+
+
+      <!-- NEWS & PRICE ACTION PANEL — moved above price levels -->
+      <div class="news-panel" id="news-panel">
+        <div class="news-panel-hdr" onclick="toggleNewsPanel()">
+          <div class="news-panel-title">
+            📰 What's Driving This?
+            <span class="news-badge" id="news-badge">click button to load</span>
+          </div>
+          <button class="news-fetch-btn" id="news-fetch-btn" onclick="event.stopPropagation();fetchNewsAnalysis()">🔍 Fetch News</button>
+        </div>
+        <div class="news-body" id="news-body">
+          <div class="news-content" id="news-content"></div>
+          <div class="news-cost-note">On-demand · uses Claude + web search · ~$0.10-0.15 per fetch</div>
+        </div>
+      </div>
+
       <div class="lvl-card">
         <div class="stitle" style="display:flex;align-items:center;gap:6px;">Key Price Levels
           <span class="lvl-info-btn" onclick="document.getElementById('lvl-info-popup').classList.toggle('visible')" title="What do these levels mean?">?</span>
@@ -1062,20 +1079,7 @@ body:not(.dark-mode) .commentary-item.structural{background:#1a6fd410;border-lef
       </div>
     </div>
 
-    <!-- NEWS & PRICE ACTION PANEL -->
-    <div class="news-panel" id="news-panel">
-      <div class="news-panel-hdr" onclick="toggleNewsPanel()">
-        <div class="news-panel-title">
-          📰 What's Driving This?
-          <span class="news-badge" id="news-badge">click button to load</span>
-        </div>
-        <button class="news-fetch-btn" id="news-fetch-btn" onclick="event.stopPropagation();fetchNewsAnalysis()">🔍 Fetch News</button>
-      </div>
-      <div class="news-body" id="news-body">
-        <div class="news-content" id="news-content"></div>
-        <div class="news-cost-note">On-demand · uses Claude + web search · ~$0.10-0.15 per fetch</div>
-      </div>
-    </div>
+    <!-- NEWS panel moved above price levels -->
 
       <!-- MACRO REGIME PANEL (includes F&G) -->
       <div class="fg-card" id="regime-card">
