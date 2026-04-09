@@ -5428,8 +5428,8 @@ document.addEventListener('DOMContentLoaded',()=>{
 <p style="font-family:var(--mono);font-size:11px;color:var(--text3);margin-bottom:14px;">Catch the Big Runs · 10 Indicators · 2 Confidence Buckets · ADX (Average Directional Index) Regime Overlay</p>
 
 <h3>What Is Signal Catcher?</h3>
-<p>Signal Catcher takes raw price and volume data and collapses it into a single <strong>Weighted Technical Score</strong> from 0–100 for any ticker you type in.</p>
-<p>No AI inside the scoring engine. No subjective chart drawings. No fundamentals in the math. Just clean, deterministic computation — the same data always produces the same score.</p>
+<p>Signal Catcher takes raw price, volume, and time data for a given ticker symbol and collapses it into a single <strong>Weighted Technical Score</strong> from 0–100.</p>
+<p>There is no AI magic inside the scoring engine. No subjective chart drawings. No subjective fundamental or Analyst ratings in the math. Just clean, deterministic computation — the same price, volume, and time data always produces the same score no matter who computes it.</p>
 <div class="gd-highlight">
 <strong>🔍 Cross-AI Validated:</strong> The scoring logic was independently audited by ChatGPT, Grok, Claude, and Gemini to verify mathematical accuracy. The weighting system, confluence definitions, and conflict pairs incorporate the best recommendations from all four AI platforms — each contributed ideas that made the final architecture stronger than any single perspective would have produced.
 </div>
@@ -5442,16 +5442,6 @@ Technicals answer the <strong>"when"</strong> — is the price action confirming
 <strong>Technicals →</strong> conviction in the timing.<br><br>
 Together, they help you avoid the classic "great company, terrible entry" trap.
 </div>
-
-<h3>Two Families of Indicators</h3>
-<p>Every market speaks in two voices at once:</p>
-<table>
-<tr><th>Family</th><th>What It Measures</th><th>Indicators</th></tr>
-<tr><td><strong>Trend-Following</strong></td><td>Persistence &amp; strength of the current move</td><td>SMA (Simple Moving Average) 200, MA (Moving Average) Cross 50/200, Ichimoku Cloud</td></tr>
-<tr><td><strong>Contrarian</strong></td><td>When a move has gone too far (exhaustion)</td><td>RSI (Relative Strength Index) Extreme, DeMark Sequential, Bollinger Bands, MFI (Money Flow Index)</td></tr>
-</table>
-<p><strong>When both families agree →</strong> highest-conviction setup. The trend is strong AND it's not exhausted.<br>
-<strong>When they clash →</strong> the system flags the exact tension — those moments often mark transitions where the biggest opportunities and risks hide.</p>
 
 <h3>The 10 Indicators</h3>
 <p>Each indicator was chosen because it provides unique information no other indicator in the system covers. Here's what each one does and why it matters:</p>
@@ -5476,6 +5466,16 @@ Together, they help you avoid the classic "great company, terrible entry" trap.
 
 <h4>Regime Overlay (Not Scored)</h4>
 <p><strong>ADX</strong> — The Average Directional Index doesn't produce a score. Instead, it tells the system <em>how much to trust</em> the trend-following indicators. In strong trends (ADX above 25), trend signals get boosted. In choppy, range-bound markets (ADX below 20), they get dampened. It's the "trust gate" for the entire trend family.</p>
+
+<h3>Two Families of Indicators</h3>
+<p>These 10 indicators fall into two philosophical families. Every market speaks in two voices at once:</p>
+<table>
+<tr><th>Family</th><th>What It Measures</th><th>Indicators</th></tr>
+<tr><td><strong>Trend-Following</strong></td><td>Persistence &amp; strength of the current move</td><td>SMA 200, MA Cross 50/200, Ichimoku Cloud</td></tr>
+<tr><td><strong>Contrarian</strong></td><td>When a move has gone too far (exhaustion)</td><td>RSI Extreme, DeMark Sequential, Bollinger Bands, MFI</td></tr>
+</table>
+<p><strong>When both families agree →</strong> highest-conviction setup. The trend is strong AND it's not exhausted.<br>
+<strong>When they clash →</strong> the system flags the exact tension — those moments often mark transitions where the biggest opportunities and risks hide.</p>
 
 <h3 style="color:#f59e0b;">Why Not Elliott Wave, Fibonacci, or Trend Lines?</h3>
 <p>Signal Catcher has a strict design rule: <strong>every indicator must be deterministically computable from raw OHLCV data.</strong> Two independent implementations given the same data must always produce the same score. No exceptions.</p>
