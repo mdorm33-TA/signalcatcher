@@ -1510,6 +1510,17 @@ function computeDeMark(bars) {
     if (!lastCd && cdDone[i]) { lastCd = cdDone[i]; lastCdBar = i; }
     if (lastSetup && lastCd) break;
   }
+  // Invalidate stale setup if subsequent price action violates it.
+  // Buy setup voided once any later close breaks below the setup bar's close; mirror for sell.
+  if (lastSetup === 'buy' && lastSetupBar !== null) {
+    for (let i = lastSetupBar + 1; i < n; i++) {
+      if (close[i] < close[lastSetupBar]) { lastSetup = null; lastSetupBar = null; lastSetupPerf = false; break; }
+    }
+  } else if (lastSetup === 'sell' && lastSetupBar !== null) {
+    for (let i = lastSetupBar + 1; i < n; i++) {
+      if (close[i] > close[lastSetupBar]) { lastSetup = null; lastSetupBar = null; lastSetupPerf = false; break; }
+    }
+  }
   let bc2 = 0, sc2 = 0;
   for (let i = 4; i < n; i++) {
     if (close[i] < close[i - 4]) { bc2++; sc2 = 0; if (bc2 >= 9) bc2 = 0; }
@@ -1519,7 +1530,7 @@ function computeDeMark(bars) {
   return { lastSetup, barsSince: lastSetupBar !== null ? n - 1 - lastSetupBar : null, perfect: lastSetupPerf, lastCd, barsSinceCd: lastCdBar !== null ? n - 1 - lastCdBar : null, activeBuy: bc2, activeSell: sc2 };
 }
 function scoreDeMark(dm) {
-  const STALE_SETUP = 20, STALE_CD = 15;
+  const STALE_SETUP = 10, STALE_CD = 15;
   if (dm.lastCd && dm.barsSinceCd !== null && dm.barsSinceCd <= STALE_CD) {
     const fresh = Math.max(0, 1 - dm.barsSinceCd / STALE_CD);
     if (dm.lastCd === 'buy') return Math.round(85 + fresh * 10);
