@@ -3780,28 +3780,29 @@ function detectFallingKnife(){
   const boll     = vals.bollinger ?? 50;
   const maCross  = vals.sma_cross ?? 50;
 
-  // ── FALLING KNIFE (capitulation buy setup) ──
-  // Exhaustion indicators fire bullish WHILE candlestick is bearish (the capitulation candle)
-  // AND trend confirms we're in a downtrend
+  // ── FALLING KNIFE (capitulation bottom — reversal candle confirms buyers stepping in) ──
+  // Exhaustion indicators fire bullish AND a bullish reversal candle (hammer/bottoming tail)
+  // shows buyers have stepped in at the bottom. Trend confirms we're in a downtrend.
   const rsiBullish       = rsi >= 65;          // RSI oversold → contrarian buy
   const demarkBullish    = demark >= 62;       // DeMark exhaustion buy
-  const candleBearish    = candle <= 40;       // Bearish candle = the capitulation event
+  const candleReversal   = candle >= 60;       // Bullish candle = hammer/bottoming tail, buyers stepped in
   const trendBearish     = sma200 <= 40 || maCross <= 35;   // Confirmed downtrend
   const bollingerBullish = boll >= 60;         // Near/below lower band
 
-  // ── BLOW-OFF TOP (euphoria sell setup) ──
-  // Exhaustion indicators fire bearish WHILE candlestick is bullish (blow-off candle)
+  // ── BLOW-OFF TOP (euphoria top — reversal candle confirms sellers stepping in) ──
+  // Exhaustion indicators fire bearish AND a bearish reversal candle (topping tail/shooting star)
+  // shows sellers have stepped in at the top.
   const rsiBearish       = rsi <= 35;
   const demarkBearish    = demark <= 38;
-  const candleBullish    = candle >= 60;
+  const candleRejection  = candle <= 40;       // Bearish candle = topping tail/shooting star, sellers stepped in
   const trendBullish     = sma200 >= 60 || maCross >= 65;
   const bollingerBearish = boll <= 40;
 
   let alertType = null; // 'knife' | 'blowoff'
   let strength = 0;     // count of confirming signals
 
-  // Falling Knife: need RSI + DeMark + bearish candle + bearish trend
-  if(rsiBullish && demarkBullish && candleBearish && trendBearish){
+  // Falling Knife: RSI + DeMark + bullish reversal candle + bearish trend
+  if(rsiBullish && demarkBullish && candleReversal && trendBearish){
     alertType = 'knife';
     strength = 2; // base: RSI + DeMark
     if(bollingerBullish) strength++;  // Bollinger confirms oversold
@@ -3809,8 +3810,8 @@ function detectFallingKnife(){
     if(obv >= 60) strength++;  // OBV bullish divergence (accumulation into selloff)
   }
 
-  // Blow-Off Top: mirror
-  if(rsiBearish && demarkBearish && candleBullish && trendBullish){
+  // Blow-Off Top: RSI + DeMark + bearish reversal candle + bullish trend
+  if(rsiBearish && demarkBearish && candleRejection && trendBullish){
     alertType = 'blowoff';
     strength = 2;
     if(bollingerBearish) strength++;
@@ -3830,8 +3831,8 @@ function detectFallingKnife(){
 
   // Build description
   desc.innerHTML = isKnife
-    ? `<strong>Capitulation pattern detected.</strong> Multiple exhaustion indicators are firing BUY signals while a bearish candlestick pattern confirms the panic selling event. This is the signature of a potential capitulation bottom — the exact moment where sellers are most exhausted but fear is highest.`
-    : `<strong>Blow-off top pattern detected.</strong> Multiple exhaustion indicators are firing SELL signals while a bullish candlestick confirms the euphoria event. This is the signature of a potential blow-off top — the exact moment where buyers are most euphoric but the rally is exhausted.`;
+    ? `<strong>Capitulation bottom detected.</strong> Multiple exhaustion indicators are firing BUY signals and a bullish reversal candle (hammer/bottoming tail) shows buyers stepping in. This is the signature of a potential capitulation bottom — sellers are exhausted and the first sign of a turnaround has appeared.`
+    : `<strong>Blow-off top detected.</strong> Multiple exhaustion indicators are firing SELL signals and a bearish reversal candle (topping tail/shooting star) shows sellers stepping in. This is the signature of a potential blow-off top — buyers are exhausted and the first sign of rejection has appeared.`;
 
   // Build signal tags
   sigs.innerHTML = '';
@@ -3840,7 +3841,7 @@ function detectFallingKnife(){
   if(isKnife){
     addSig(`RSI Oversold (${rsi})`, 'bull');
     addSig(`DeMark BUY (${demark})`, 'bull');
-    addSig(`Bearish Candle (${candle})`, 'bear');
+    addSig(`Reversal Candle (${candle})`, 'bull');
     addSig(`Downtrend Confirmed`, 'bear');
     if(bollingerBullish) addSig(`Bollinger Oversold (${boll})`, 'bull');
     if(obv >= 60) addSig(`OBV Accumulation (${obv})`, 'bull');
@@ -3848,7 +3849,7 @@ function detectFallingKnife(){
   } else {
     addSig(`RSI Overbought (${rsi})`, 'bear');
     addSig(`DeMark SELL (${demark})`, 'bear');
-    addSig(`Bullish Candle (${candle})`, 'bull');
+    addSig(`Reversal Candle (${candle})`, 'bear');
     addSig(`Uptrend Confirmed`, 'bull');
     if(bollingerBearish) addSig(`Bollinger Overbought (${boll})`, 'bear');
     if(obv <= 40) addSig(`OBV Distribution (${obv})`, 'bear');
@@ -5067,7 +5068,7 @@ function copyReport(){
     'BUCKET SCORES',`  HIGH (60%) : ${d.bucketScores.high}`,`  MED  (40%) : ${d.bucketScores.med}`].filter(l=>l!==null);
   if(d.conflicts.length>0){lines.push('','⚠ CONFLICTS DETECTED',...d.conflicts.map(c=>`  ${c.tier==='backbone'?'🔑':'•'} ${c.desc}`));}
   if(d.confluences.length>0){lines.push('','🔒 CONFLUENCES CONFIRMED',...d.confluences.map(c=>`  • ${c}`));}
-  if(d.fallingKnife){lines.push('',`🔪 ${d.fallingKnife} ALERT ACTIVE`,'  Multiple exhaustion indicators firing against a bearish candlestick pattern.');}
+  if(d.fallingKnife){lines.push('',`🔪 ${d.fallingKnife} ALERT ACTIVE`,'  Exhaustion indicators firing with a reversal candle confirming the turn.');}
   lines.push('','INDICATOR READINGS','────────────────────────────────────────',
     ...d.indicators.map(i=>{const ln=`[${i.bucket.padEnd(4)}] ${i.name.padEnd(22)} ${i.label.padEnd(16)} (${i.signal}/100)`;return i.notes?ln+`\n         ↳ ${i.notes}`:ln;}),
     '','KEY LEVELS',`  Resistance 1 : ${d.keyLevels.r1||'—'}`,`  Resistance 2 : ${d.keyLevels.r2||'—'}`,`  Support 1    : ${d.keyLevels.s1||'—'}`,`  Support 2    : ${d.keyLevels.s2||'—'}`,`  Stop         : ${d.keyLevels.stop||'—'}`,`  Target       : ${d.keyLevels.target||'—'}`,'');
@@ -5643,8 +5644,8 @@ Together, they help you avoid the classic "great company, terrible entry" trap.
 </table>
 
 <h4>5. Specialized Alerts</h4>
-<p><strong>Falling Knife</strong> — four simultaneous conditions (RSI oversold + DeMark buy + bearish candlestick + confirmed downtrend) detect potential capitulation bottoms.<br>
-<strong>Blow-Off Top</strong> — the mirror image, detecting euphoria tops where exhaustion meets a confirmed uptrend.</p>
+<p><strong>Falling Knife</strong> — four simultaneous conditions (RSI oversold + DeMark buy + bullish reversal candle + confirmed downtrend) detect potential capitulation bottoms. The reversal candle (hammer/bottoming tail) confirms buyers are stepping in.<br>
+<strong>Blow-Off Top</strong> — the mirror image: RSI overbought + DeMark sell + bearish reversal candle (topping tail) + confirmed uptrend. Sellers are stepping in at the top.</p>
 
 <h3>What You Can Do With It</h3>
 <p><strong>Avoid buying into exhaustion</strong> — A score of 28 with Triple Exhaustion active means the technicals are begging you to wait, even if the fundamentals look perfect.</p>
