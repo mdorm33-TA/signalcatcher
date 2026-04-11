@@ -306,6 +306,15 @@ body:not(.dark-mode) .commentary-item.structural{background:#1a6fd410;border-lef
 .ci-severity.high{background:#ff456022;color:var(--bear);}
 .ci-severity.med{background:#f0b42922;color:var(--neu);}
 
+/* ── CONFLICT REGIME TIERS ── */
+.conflict-card.regime-elevated{border-color:var(--conflict);box-shadow:0 1px 6px rgba(200,80,0,.12);}
+.conflict-card.regime-transition{border-color:#ff4560;border-width:2px;box-shadow:0 2px 10px rgba(255,69,96,.18);}
+body.dark-mode .conflict-card.regime-transition{background:linear-gradient(145deg,#2a141580,#2a141550);border-color:#ff456088;}
+.conflict-item.backbone{background:rgba(200,80,0,.04);border-radius:4px;padding:6px 5px;margin:2px -5px;}
+body.dark-mode .conflict-item.backbone{background:rgba(255,160,80,.06);}
+.ci-backbone-tag{font-family:var(--mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;padding:1px 4px;border-radius:2px;background:#c8500018;color:var(--conflict);border:1px solid var(--conflict)44;margin-left:4px;vertical-align:middle;}
+body.dark-mode .ci-backbone-tag{background:#f0883e18;color:#f0883e;border-color:#f0883e44;}
+
 /* ── SCORE PANEL CARDS ── */
 .stitle{font-family:var(--mono);font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);margin-bottom:8px;font-weight:600;padding-bottom:4px;border-bottom:1px solid var(--border);}
 .gauge-card{background:linear-gradient(145deg,var(--surface) 0%,var(--surface2) 100%);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center;box-shadow:var(--card-shadow);}
@@ -320,6 +329,9 @@ body:not(.dark-mode) .commentary-item.structural{background:#1a6fd410;border-lef
 .gdisp-bar{height:4px;border-radius:2px;background:var(--border);margin-top:2px;margin-bottom:1px;overflow:hidden;}
 .gdisp-fill{height:100%;border-radius:2px;transition:width .4s;}
 .gdisp-legend{font-size:12px;color:var(--text3);margin-top:4px;display:flex;flex-wrap:wrap;gap:6px;line-height:1.6;}
+.gregime-badge{font-family:var(--mono);font-size:11px;text-align:center;margin-top:5px;padding:3px 8px;border-radius:4px;letter-spacing:.04em;}
+.gregime-badge.elevated{background:#f0883e18;color:var(--conflict);border:1px solid var(--conflict)44;}
+.gregime-badge.transition{background:#ff456018;color:#ff4560;border:1px solid #ff456044;font-weight:600;}
 .iw{font-family:var(--mono);font-size:12px;font-weight:600;padding:1px 5px;border-radius:3px;cursor:default;white-space:nowrap;}
 .iw.eff-hi{background:#00d97e18;color:#00d97e;}
 .iw.eff-med{background:#4c8ef718;color:var(--accent);}
@@ -891,7 +903,7 @@ body:not(.dark-mode) .commentary-item.structural{background:#1a6fd410;border-lef
 
     <!-- CONFLICT DETECTOR -->
     <div class="conflict-card" id="conflict-card">
-      <div class="stitle" style="color:var(--conflict)">⚠ Indicator Conflicts Detected</div>
+      <div class="stitle" id="conflict-header" style="color:var(--conflict)">⚠ Indicator Conflicts Detected</div>
       <div id="conflict-list"></div>
     </div>
 
@@ -980,6 +992,7 @@ body:not(.dark-mode) .commentary-item.structural{background:#1a6fd410;border-lef
         </div>
         <div class="gverdict" id="gverdict">LOADING…</div>
         <div class="gdisp">Indicator Agreement: <span id="gdisp-lbl">—</span></div>
+        <div class="gregime-badge" id="gregime-badge" style="display:none;"></div>
         <div style="margin-top:8px;text-align:center;">
           <span class="scoring-info-btn" onclick="document.getElementById('scoring-info-popup').classList.toggle('visible')" title="How the score is calculated">Scoring Methodology</span>
         </div>
@@ -994,7 +1007,11 @@ body:not(.dark-mode) .commentary-item.structural{background:#1a6fd410;border-lef
           </div>
           <div class="si-section">
             <h4>Confluence &amp; Conflicts</h4>
-            When related indicators align (e.g. Triple Trend: SMA200 + Ichimoku + MA Cross), the score gets a confidence boost. When they diverge (e.g. trend vs. exhaustion), conflicts are flagged — reducing certainty.
+            When related indicators align (e.g. Triple Trend: SMA200 + Ichimoku + MA Cross), the score gets a confidence boost. When they diverge (e.g. trend vs. exhaustion), conflicts are flagged.<br><br>
+            <strong>Conflict Regime Tiers:</strong> Three "backbone" conflict pairs (SMA 200 vs RSI, DeMark vs SMA 200, OBV vs SMA 200) represent the deepest trend-vs-exhaustion tensions.<br>
+            • <strong>Clear</strong> — 0–1 conflicts, 0 backbone: normal scoring<br>
+            • <strong>Elevated</strong> — 2–3 conflicts OR 1 backbone: conviction reduced, warning shown<br>
+            • <strong>Transition</strong> — 4+ conflicts OR 2+ backbone: score capped toward neutral (65 bull / 35 bear); the conflict pattern itself is the primary signal
           </div>
           <div class="si-section">
             <h4>Score Bands</h4>
@@ -1893,16 +1910,17 @@ const INDS={
   ],
 };
 
-// Conflict pairs: [id1, id2, description template]
+// Conflict pairs: [id1, id2, description, tier]
+// tier: 'backbone' = deepest philosophical tensions; 'standard' = meaningful but less critical.
 const CONFLICT_PAIRS = [
-  ['sma_200',    'rsi_extreme', 'Trend vs. Exhaustion: SMA200 trend and RSI contrarian signal disagree — trend says one direction, RSI says the move may be overdone. This is the classic trend-follower vs. mean-reversion tension.'],
-  ['ichimoku',   'mfi',         'Ichimoku trend and MFI money flow conflict — trend says one direction but volume-weighted momentum says the other.'],
-  ['obv',        'bollinger',   'OBV volume flow and Bollinger price position conflict — volume tells a different story than price bands.'],
-  ['demark_seq', 'sma_200',     'Exhaustion vs. Trend: DeMark signals a reversal while SMA200 confirms the current trend. If DeMark is perfected AND RSI confirms, the reversal signal gains credibility.'],
-  ['mfi',        'rsi_extreme', 'Volume-weighted vs. Price-only: MFI and RSI disagree — money flow tells a different story than price momentum alone.'],
-  ['sma_cross',  'ichimoku',    'MA Cross and Ichimoku trend direction conflict — both are trend systems, so this disagreement suggests a trend transition in progress.'],
-  ['obv',        'sma_200',     'Volume flow (OBV) and price trend (SMA200) diverging — smart money may be accumulating/distributing against the visible price trend.'],
-  ['mfi',        'obv',         'MFI overbought/oversold vs OBV trend diverging — volume oscillator and cumulative volume flow tell different stories.'],
+  ['sma_200',    'rsi_extreme', 'Trend vs. Exhaustion: SMA200 trend and RSI contrarian signal disagree — trend says one direction, RSI says the move may be overdone. This is the classic trend-follower vs. mean-reversion tension.', 'backbone'],
+  ['ichimoku',   'mfi',         'Ichimoku trend and MFI money flow conflict — trend says one direction but volume-weighted momentum says the other.', 'standard'],
+  ['obv',        'bollinger',   'OBV volume flow and Bollinger price position conflict — volume tells a different story than price bands.', 'standard'],
+  ['demark_seq', 'sma_200',     'Exhaustion vs. Trend: DeMark signals a reversal while SMA200 confirms the current trend. If DeMark is perfected AND RSI confirms, the reversal signal gains credibility.', 'backbone'],
+  ['mfi',        'rsi_extreme', 'Volume-weighted vs. Price-only: MFI and RSI disagree — money flow tells a different story than price momentum alone.', 'standard'],
+  ['sma_cross',  'ichimoku',    'MA Cross and Ichimoku trend direction conflict — both are trend systems, so this disagreement suggests a trend transition in progress.', 'standard'],
+  ['obv',        'sma_200',     'Volume flow (OBV) and price trend (SMA200) diverging — smart money may be accumulating/distributing against the visible price trend.', 'backbone'],
+  ['mfi',        'obv',         'MFI overbought/oversold vs OBV trend diverging — volume oscillator and cumulative volume flow tell different stories.', 'standard'],
 ];
 const CONFLICT_THRESH = 40; // abs difference to flag
 
@@ -3585,14 +3603,18 @@ function recalc(){
   // Detect confluences first (populates confluenceMultipliers for bScore)
   detectConfluences();
   const bs={high:bScore('high'),med:bScore('med')};
-  const t=bs.high*customBW.high+bs.med*customBW.med;
+  const rawT=bs.high*customBW.high+bs.med*customBW.med;
   // Compute dispersion: std dev of all active indicator scores
   const allInds=[...INDS.high,...INDS.med];
   const scores=allInds.map(i=>vals[i.id]??50);
   const mean=scores.reduce((s,v)=>s+v,0)/scores.length;
   const variance=scores.reduce((s,v)=>s+(v-mean)**2,0)/scores.length;
   const dispersion=Math.sqrt(variance); // 0=perfect agreement, ~25=typical, ~35=high conflict
-  drawGauge(t,dispersion); updBD(bs,t); updWB(); detectConflicts(); detectFallingKnife(); detectDualSignalCommentary();
+  // Detect conflicts BEFORE gauge so regime classification is available
+  detectConflicts();
+  // Apply conflict regime score cap (Transition clamps toward neutral)
+  const t=applyConflictCap(rawT,currentConflictRegime);
+  drawGauge(t,dispersion,rawT); updBD(bs,t); updWB(); detectFallingKnife(); detectDualSignalCommentary();
 }
 function sCol(s){if(s>=70)return'#00d97e';if(s>=60)return'#4dd9a0';if(s>=55)return'#a0cfb8';if(s>=45)return'#f0b429';if(s>=40)return'#ff9a7c';if(s>=30)return'#ff7c8a';return'#ff4560';}
 function verd(s){
@@ -3605,20 +3627,36 @@ function verd(s){
   return       {l:'STRONGLY BEARISH',  c:'~70–80% bearish probability',col:'#ff4560'};
 }
 
+// ═══ CONFLICT REGIME CLASSIFIER ═══
+// Pure logic — mirrors ta-scoring-engine.js classifyConflictRegime()
+function classifyConflictRegime(conflicts){
+  const conflictCount=conflicts.length;
+  const backboneCount=conflicts.filter(c=>c.tier==='backbone').length;
+  if(conflictCount>=4||backboneCount>=2) return {regime:'transition',conflictCount,backboneCount,label:'Transition Regime',scoreCap:{bullMax:65,bearMin:35}};
+  if(conflictCount>=2||backboneCount>=1) return {regime:'elevated',conflictCount,backboneCount,label:'Elevated Conflict',scoreCap:null};
+  return {regime:'clear',conflictCount,backboneCount,label:'',scoreCap:null};
+}
+function applyConflictCap(rawScore,regime){
+  if(!regime||!regime.scoreCap) return rawScore;
+  const {bullMax,bearMin}=regime.scoreCap;
+  if(rawScore>bullMax) return bullMax;
+  if(rawScore<bearMin) return bearMin;
+  return rawScore;
+}
+
 // ═══ CONFLICT DETECTOR ═══
+let currentConflictRegime={regime:'clear',conflictCount:0,backboneCount:0,label:'',scoreCap:null};
 function detectConflicts(){
   const conflicts=[];
-  CONFLICT_PAIRS.forEach(([a,b,desc])=>{
+  CONFLICT_PAIRS.forEach(([a,b,desc,tier])=>{
     const va=vals[a]??50, vb=vals[b]??50;
     const diff=Math.abs(va-vb);
     if(diff>=CONFLICT_THRESH){
-      // Determine which is more bullish
       const aName=INDS.high.concat(INDS.med).find(i=>i.id===a)?.name||a;
       const bName=INDS.high.concat(INDS.med).find(i=>i.id===b)?.name||b;
       const aSig=getSig(va), bSig=getSig(vb);
       const severity=diff>=60?'high':'med';
-      conflicts.push({aName,bName,aSig,bSig,diff,desc,severity});
-      // Flag rows
+      conflicts.push({aName,bName,aSig,bSig,diff,desc,tier,severity});
       document.getElementById('row-'+a)?.classList.add('conflict-flag');
       document.getElementById('row-'+b)?.classList.add('conflict-flag');
     } else {
@@ -3627,15 +3665,41 @@ function detectConflicts(){
     }
   });
 
+  // Classify conflict regime
+  currentConflictRegime=classifyConflictRegime(conflicts);
+
   const card=document.getElementById('conflict-card');
   const list=document.getElementById('conflict-list');
+  const hdr=document.getElementById('conflict-header');
   list.innerHTML='';
-  if(conflicts.length===0){card.classList.remove('has-conflicts');return;}
+
+  // Remove all regime classes
+  card.classList.remove('has-conflicts','regime-elevated','regime-transition');
+
+  if(conflicts.length===0){return;}
   card.classList.add('has-conflicts');
+
+  // Apply regime class for styling
+  if(currentConflictRegime.regime==='transition') card.classList.add('regime-transition');
+  else if(currentConflictRegime.regime==='elevated') card.classList.add('regime-elevated');
+
+  // Update header text based on regime
+  if(hdr){
+    if(currentConflictRegime.regime==='transition'){
+      hdr.innerHTML='🔴 Transition Regime — '+currentConflictRegime.conflictCount+' conflicts ('+currentConflictRegime.backboneCount+' backbone) · Score capped';
+    } else if(currentConflictRegime.regime==='elevated'){
+      hdr.innerHTML='⚠ Elevated Conflict — '+currentConflictRegime.conflictCount+' conflicts ('+currentConflictRegime.backboneCount+' backbone)';
+    } else {
+      hdr.innerHTML='⚠ Indicator Conflicts Detected';
+    }
+  }
+
   conflicts.forEach(cf=>{
-    const d=document.createElement('div'); d.className='conflict-item';
-    d.innerHTML=`<div class="ci-icon">⚡</div>
-      <div class="ci-text"><strong>${cf.aName}</strong> (${cf.aSig.txt}) vs <strong>${cf.bName}</strong> (${cf.bSig.txt})<br><span style="color:var(--text3);font-size:10px">${cf.desc} — gap: ${cf.diff} pts. These are the most meaningful divergences to investigate.</span></div>
+    const icon=cf.tier==='backbone'?'🔑':'⚡';
+    const tierLabel=cf.tier==='backbone'?' <span class="ci-backbone-tag">BACKBONE</span>':'';
+    const d=document.createElement('div'); d.className='conflict-item'+(cf.tier==='backbone'?' backbone':'');
+    d.innerHTML=`<div class="ci-icon">${icon}</div>
+      <div class="ci-text"><strong>${cf.aName}</strong> (${cf.aSig.txt}) vs <strong>${cf.bName}</strong> (${cf.bSig.txt})${tierLabel}<br><span style="color:var(--text3);font-size:10px">${cf.desc} — gap: ${cf.diff} pts.</span></div>
       <div class="ci-severity ${cf.severity}">${cf.severity.toUpperCase()}</div>`;
     list.appendChild(d);
   });
@@ -3913,6 +3977,14 @@ function detectDualSignalCommentary(){
     parts.push(`Indicator disagreement is elevated (dispersion: ${dispersion}) — the score of ${wScore} is an average of conflicting signals, not a consensus. The conflict between indicator families is itself the most important information here.`);
   }
 
+  // ── CONFLICT REGIME ──
+  const cr = currentConflictRegime;
+  if(cr.regime === 'transition'){
+    parts.push(`<strong>⚠ Transition Regime detected</strong> — ${cr.conflictCount} indicator conflicts are active (${cr.backboneCount} backbone pairs: the deepest trend-vs-exhaustion tensions). The composite score has been capped toward neutral because the market is in transition between regimes. The conflict pattern itself is the primary signal — these conditions often precede breakouts, reversals, or volatility spikes.`);
+  } else if(cr.regime === 'elevated'){
+    parts.push(`Conflict level is elevated — ${cr.conflictCount} indicator conflicts detected (${cr.backboneCount} backbone). Conviction is reduced but the score is not capped. The key backbone conflicts (SMA 200 vs RSI, DeMark vs SMA 200, OBV vs SMA 200) represent the deepest structural tensions in the system.`);
+  }
+
   // ── CANDLESTICK ──
   if(candle <= 25 || candle >= 75){
     const candleDir = candle >= 75 ? 'bullish' : 'bearish';
@@ -3938,7 +4010,7 @@ function detectDualSignalCommentary(){
 }
 
 // ═══ GAUGE ═══
-function drawGauge(score, dispersion){
+function drawGauge(score, dispersion, rawScore){
   const cv=document.getElementById('gaugeCanvas'),ctx=cv.getContext('2d');
   ctx.clearRect(0,0,cv.width,cv.height);
   const cx=cv.width/2,cy=cv.height-8,r=72;
@@ -3969,6 +4041,23 @@ function drawGauge(score, dispersion){
     const fill=document.getElementById('gdisp-fill');
     if(el){el.textContent=lbl+' (σ='+d.toFixed(0)+')';el.style.color=col;}
     if(fill){fill.style.width=agreement+'%';fill.style.background=col;}
+  }
+  // Conflict regime badge
+  const badge=document.getElementById('gregime-badge');
+  if(badge){
+    const cr=currentConflictRegime;
+    if(cr.regime==='transition'){
+      const rawRound=rawScore!=null?Math.round(rawScore):null;
+      badge.className='gregime-badge transition';
+      badge.textContent='🔴 TRANSITION REGIME'+(rawRound!=null&&rawRound!==Math.round(score)?' · raw score '+rawRound+' → capped to '+Math.round(score):'');
+      badge.style.display='';
+    } else if(cr.regime==='elevated'){
+      badge.className='gregime-badge elevated';
+      badge.textContent='⚠ ELEVATED CONFLICT · '+cr.backboneCount+' backbone';
+      badge.style.display='';
+    } else {
+      badge.style.display='none';
+    }
   }
   // Update verdict summary bar
   const vbs=document.getElementById('vbar-score'),vbv=document.getElementById('vbar-verdict'),vbc=document.getElementById('vbar-conf');
@@ -4908,10 +4997,12 @@ function resetAll(){
   ['high','med'].forEach(b=>INDS[b].forEach(i=>i.iW=BASELINE_IW[i.id]));
   const tfSel=document.getElementById('timeframe-sel');if(tfSel)tfSel.value='position';
   const tfBadge=document.getElementById('tf-badge');if(tfBadge){tfBadge.textContent='Timeframe: '+TF_PRESETS.position.label;}
-  document.getElementById('conflict-card').classList.remove('has-conflicts');
+  document.getElementById('conflict-card').classList.remove('has-conflicts','regime-elevated','regime-transition');
   document.getElementById('confluence-card').classList.remove('has-confluences');
   document.getElementById('knife-card').classList.remove('active');
   confluenceMultipliers = {};
+  currentConflictRegime = {regime:'clear',conflictCount:0,backboneCount:0,label:'',scoreCap:null};
+  const regBadge=document.getElementById('gregime-badge'); if(regBadge) regBadge.style.display='none';
   adxOverlay = { adx: null, plusDI: null, minusDI: null, multiplier: 1.0, label: 'N/A' };
   ['high','med'].forEach(b=>INDS[b].forEach(i=>{
     const row=document.getElementById('row-'+i.id);
@@ -4932,10 +5023,12 @@ function resetAll(){
 function buildRpt(){
   const ticker=document.getElementById('ticker-input').value.toUpperCase();
   const bs={high:bScore('high'),med:bScore('med')};
-  const t=bs.high*customBW.high+bs.med*customBW.med,v=verd(t);
+  const rawT=bs.high*customBW.high+bs.med*customBW.med;
+  const t=applyConflictCap(rawT,currentConflictRegime);
+  const v=verd(t);
   const ais=[...INDS.high.map(i=>({...i,bkt:'HIGH'})),...INDS.med.map(i=>({...i,bkt:'MED'}))];
   const conflictList=[];
-  CONFLICT_PAIRS.forEach(([a,b,desc])=>{if(Math.abs((vals[a]??50)-(vals[b]??50))>=CONFLICT_THRESH)conflictList.push(desc);});
+  CONFLICT_PAIRS.forEach(([a,b,desc,tier])=>{if(Math.abs((vals[a]??50)-(vals[b]??50))>=CONFLICT_THRESH)conflictList.push({desc,tier});});
   // Collect active confluences for report
   const confluenceList=[];
   CONFLUENCE_DEFS.forEach(def=>{
@@ -4947,7 +5040,8 @@ function buildRpt(){
   });
   return{
     meta:{ticker,price:document.getElementById('price-val').textContent,assetClass:getAC(),timeframe:TF_PRESETS[getTF()]?.label||'Position (1-3 mo)',runDate:nowStamp(),generated:new Date().toISOString()},
-    weightedScore:Math.round(t*10)/10,verdict:v.l,confidence:v.c,
+    weightedScore:Math.round(t*10)/10,rawWeightedScore:Math.round(rawT*10)/10,verdict:v.l,confidence:v.c,
+    conflictRegime:currentConflictRegime,
     bucketScores:{high:Math.round(bs.high*10)/10,med:Math.round(bs.med*10)/10},
     indicators:ais.map(i=>({id:i.id,name:i.name,bucket:i.bkt,signal:vals[i.id],label:getSig(vals[i.id]).txt,notes:(document.getElementById('nt-'+i.id)||{}).value||''})),
     conflicts:conflictList,
@@ -4968,9 +5062,10 @@ function copyReport(){
   const lines=['════════════════════════════════════════','TA WEIGHTED SCORE REPORT v5','════════════════════════════════════════',
     `Symbol     : ${d.meta.ticker}`,`Asset Class: ${d.meta.assetClass.toUpperCase()}`,`Timeframe  : ${d.meta.timeframe}`,`Price      : ${d.meta.price}`,`Run Date   : ${d.meta.runDate}`,
     `F&G Index  : ${d.fearGreed?d.fearGreed.value+'/100 ('+d.fearGreed.sentiment+')':'not loaded'}`,'',
-    `WEIGHTED SCORE : ${d.weightedScore} / 100`,`VERDICT        : ${d.verdict}`,`CONFIDENCE     : ${d.confidence}`,'',
-    'BUCKET SCORES',`  HIGH (60%) : ${d.bucketScores.high}`,`  MED  (40%) : ${d.bucketScores.med}`];
-  if(d.conflicts.length>0){lines.push('','⚠ CONFLICTS DETECTED',...d.conflicts.map(c=>`  • ${c}`));}
+    `WEIGHTED SCORE : ${d.weightedScore} / 100${d.conflictRegime.regime==='transition'?' (capped from '+d.rawWeightedScore+')':''}`,`VERDICT        : ${d.verdict}`,`CONFIDENCE     : ${d.confidence}`,
+    d.conflictRegime.regime!=='clear'?`CONFLICT REGIME: ${d.conflictRegime.label} (${d.conflictRegime.conflictCount} conflicts, ${d.conflictRegime.backboneCount} backbone)`:null,'',
+    'BUCKET SCORES',`  HIGH (60%) : ${d.bucketScores.high}`,`  MED  (40%) : ${d.bucketScores.med}`].filter(l=>l!==null);
+  if(d.conflicts.length>0){lines.push('','⚠ CONFLICTS DETECTED',...d.conflicts.map(c=>`  ${c.tier==='backbone'?'🔑':'•'} ${c.desc}`));}
   if(d.confluences.length>0){lines.push('','🔒 CONFLUENCES CONFIRMED',...d.confluences.map(c=>`  • ${c}`));}
   if(d.fallingKnife){lines.push('',`🔪 ${d.fallingKnife} ALERT ACTIVE`,'  Multiple exhaustion indicators firing against a bearish candlestick pattern.');}
   lines.push('','INDICATOR READINGS','────────────────────────────────────────',
@@ -5026,8 +5121,9 @@ async function exportPDF(){
     // Conflicts
     if(d.conflicts.length>0){
       doc.setTextColor(255,107,53); doc.setFontSize(9); doc.setFont('courier','bold');
-      doc.text('⚠ CONFLICTS DETECTED',margin,y);y+=5;
-      d.conflicts.forEach(c=>{doc.setTextColor(255,150,100);doc.setFontSize(7);doc.setFont('courier','normal');doc.text('• '+c,margin+3,y);y+=4;});
+      const regLabel=d.conflictRegime.regime!=='clear'?' — '+d.conflictRegime.label:'';
+      doc.text('⚠ CONFLICTS DETECTED'+regLabel,margin,y);y+=5;
+      d.conflicts.forEach(c=>{doc.setTextColor(255,150,100);doc.setFontSize(7);doc.setFont('courier','normal');doc.text((c.tier==='backbone'?'🔑 ':'• ')+c.desc,margin+3,y);y+=4;});
       y+=3;
     }
 
