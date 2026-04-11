@@ -507,6 +507,139 @@ body {
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* ── SCAN CONTROLS ── */
+.scan-card { border-color: #f0b42944; }
+.dot-scan { background: var(--warn); }
+
+/* ── EMAIL RECIPIENTS ── */
+.email-card { border-color: #58a6ff44; }
+.dot-email { background: var(--accent); }
+.email-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.email-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: var(--surface3);
+  border: 1px solid var(--border);
+  transition: all .15s;
+}
+.email-row.disabled { opacity: .45; }
+.email-row .email-addr {
+  flex: 1;
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--text2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.email-row.disabled .email-addr { text-decoration: line-through; }
+/* Toggle switch */
+.toggle {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  flex-shrink: 0;
+}
+.toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.toggle-track {
+  position: absolute;
+  inset: 0;
+  background: var(--border2);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background .2s;
+}
+.toggle-track::after {
+  content: '';
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  left: 3px;
+  top: 3px;
+  background: var(--text3);
+  border-radius: 50%;
+  transition: all .2s;
+}
+.toggle input:checked + .toggle-track {
+  background: var(--bull);
+}
+.toggle input:checked + .toggle-track::after {
+  transform: translateX(16px);
+  background: #fff;
+}
+.email-row .x-btn {
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  color: var(--text3);
+  font-size: 13px;
+  line-height: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all .15s;
+}
+.email-row:hover .x-btn { color: var(--bear); background: var(--bear-dim); }
+.email-add-row {
+  display: flex;
+  gap: 8px;
+}
+.email-source {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text3);
+  margin-top: 8px;
+}
+.email-active-count {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--bull);
+  margin-top: 4px;
+}
+.scan-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.scan-btn .scan-icon { font-size: 11px; }
+.scan-btn.running {
+  background: var(--warn);
+  border-color: var(--warn);
+  pointer-events: none;
+  animation: scanPulse 1.2s ease-in-out infinite;
+}
+@keyframes scanPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .6; }
+}
+.scan-status {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--text2);
+  margin-top: 10px;
+  line-height: 1.6;
+  display: none;
+}
+.scan-status.active { display: block; }
+.scan-status .scan-ok { color: var(--bull); font-weight: 600; }
+.scan-status .scan-err { color: var(--bear); }
+.scan-status .scan-dim { color: var(--text3); }
+
 /* ── RESPONSIVE ── */
 @media (max-width: 500px) {
   .hdr { padding: 14px 12px; }
@@ -516,6 +649,10 @@ body {
   .sym-chip { font-size: 12px; padding: 3px 8px; }
   .sym-chip .chip-name { display: none; }
   .li-meta { display: none; }
+  .scan-row { flex-direction: column; }
+  .scan-row .btn { width: 100%; text-align: center; padding: 12px; font-size: 14px; }
+  .email-add-row { flex-direction: column; }
+  .email-add-row .btn { width: 100%; text-align: center; padding: 12px; }
 }
 </style>
 </head>
@@ -533,6 +670,38 @@ body {
     <div class="status-pill" id="st-conn"><span class="spinner"></span> Connecting…</div>
     <div class="status-pill" id="st-count">Symbols: <b>—</b></div>
     <div class="status-pill" id="st-cap">Cap: <b>200</b></div>
+  </div>
+
+  <!-- Scan Controls -->
+  <div class="card scan-card">
+    <div class="card-title"><span class="dot dot-scan"></span> Scanner Controls</div>
+    <div class="scan-row">
+      <button class="btn primary scan-btn" id="scan-btn" onclick="runFullScan()">
+        <span class="scan-icon">▶</span> Run Scan Now
+      </button>
+      <button class="btn" id="resend-btn" onclick="resendEmail()">
+        ✉ Re-send Last Email
+      </button>
+      <a class="btn" href="https://mdorm33-ta.github.io/signalcatcher/" target="_blank">
+        📊 Signal Catcher
+      </a>
+    </div>
+    <div class="scan-status" id="scan-status"></div>
+  </div>
+
+  <!-- Email Recipients -->
+  <div class="card email-card">
+    <div class="card-title"><span class="dot dot-email"></span> Email Recipients</div>
+    <div class="email-list" id="email-list">
+      <span style="color:var(--text3)">Loading…</span>
+    </div>
+    <div class="email-add-row">
+      <input class="add-input" id="email-input" type="email" placeholder="Add email address…"
+             autocomplete="off" spellcheck="false">
+      <button class="btn primary" onclick="addEmail()">+ Add</button>
+    </div>
+    <div class="email-source" id="email-source"></div>
+    <div class="email-active-count" id="email-active"></div>
   </div>
 
   <!-- Symbol Lookup -->
@@ -944,8 +1113,169 @@ function toast(msg, cls) {
   el._t = setTimeout(() => el.className = 'toast', 3000);
 }
 
+// ═══════════════════════════════════════
+//  SCANNER CONTROLS
+// ═══════════════════════════════════════
+async function runFullScan() {
+  const btn = document.getElementById('scan-btn');
+  const status = document.getElementById('scan-status');
+  btn.innerHTML = '<span class="spinner"></span> Scanning ' + symbols.length + ' symbols…';
+  btn.classList.add('running');
+  status.className = 'scan-status active';
+  status.innerHTML = '<span class="scan-dim">Scan in progress — this may take 30–60 seconds…</span>';
+  const t0 = Date.now();
+  try {
+    const r = await fetch(API + '/scan', { method: 'POST' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const data = await r.json();
+    const elapsed = ((Date.now() - t0) / 1000).toFixed(1);
+    const parts = [];
+    parts.push('<span class="scan-ok">✓ Scan complete</span> — ' + elapsed + 's');
+    parts.push(data.scanned + ' scanned · <strong>' + data.alertCount + ' alert' + (data.alertCount !== 1 ? 's' : '') + '</strong> · ' + data.errors + ' error' + (data.errors !== 1 ? 's' : ''));
+    if (data.alertCount > 0) {
+      parts.push('Alerts: ' + data.alerts.map(a => a.symbol).join(', '));
+      parts.push('<span class="scan-dim">Email sent automatically</span>');
+    } else {
+      parts.push('<span class="scan-dim">No alerts — no email sent</span>');
+    }
+    status.innerHTML = parts.join('<br>');
+  } catch (e) {
+    status.innerHTML = '<span class="scan-err">✗ Scan failed: ' + esc(e.message) + '</span>';
+  }
+  btn.innerHTML = '<span class="scan-icon">▶</span> Run Scan Now';
+  btn.classList.remove('running');
+}
+
+async function resendEmail() {
+  const btn = document.getElementById('resend-btn');
+  const status = document.getElementById('scan-status');
+  btn.disabled = true;
+  btn.textContent = '✉ Sending…';
+  status.className = 'scan-status active';
+  try {
+    const r = await fetch(API + '/send-email', { method: 'POST' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const data = await r.json();
+    if (data.ok) {
+      status.innerHTML = '<span class="scan-ok">✓ Email re-sent</span> — ' + data.alertCount + ' alert' + (data.alertCount !== 1 ? 's' : '');
+    } else {
+      status.innerHTML = '<span class="scan-dim">No alerts in last scan — nothing to send</span>';
+    }
+  } catch (e) {
+    status.innerHTML = '<span class="scan-err">✗ Send failed: ' + esc(e.message) + '</span>';
+  }
+  btn.disabled = false;
+  btn.textContent = '✉ Re-send Last Email';
+}
+
+// ═══════════════════════════════════════
+//  EMAIL RECIPIENTS
+// ═══════════════════════════════════════
+let emailRecipients = []; // [{email, enabled}]
+
+async function loadEmailConfig() {
+  try {
+    const r = await fetch(API + '/email-config');
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const data = await r.json();
+    emailRecipients = data.recipients || [];
+    renderEmails();
+    const src = document.getElementById('email-source');
+    src.textContent = 'Source: ' + (data.source === 'kv' ? 'KV (editable)' : 'Worker secret (edit here to override)');
+  } catch (e) {
+    document.getElementById('email-list').innerHTML = '<span style="color:var(--bear)">Failed to load</span>';
+  }
+}
+
+function renderEmails() {
+  const el = document.getElementById('email-list');
+  if (emailRecipients.length === 0) {
+    el.innerHTML = '<span style="color:var(--text3)">No recipients configured</span>';
+    updateActiveCount();
+    return;
+  }
+  el.innerHTML = emailRecipients.map((r, i) =>
+    '<div class="email-row' + (r.enabled ? '' : ' disabled') + '">' +
+      '<label class="toggle">' +
+        '<input type="checkbox"' + (r.enabled ? ' checked' : '') +
+        ' onchange="toggleEmail(' + i + ', this.checked)">' +
+        '<span class="toggle-track"></span>' +
+      '</label>' +
+      '<span class="email-addr">' + esc(r.email) + '</span>' +
+      '<button class="x-btn" onclick="removeEmail(' + i + ')" title="Remove">×</button>' +
+    '</div>'
+  ).join('');
+  updateActiveCount();
+}
+
+function updateActiveCount() {
+  const active = emailRecipients.filter(r => r.enabled).length;
+  const total = emailRecipients.length;
+  const el = document.getElementById('email-active');
+  if (total === 0) { el.textContent = ''; return; }
+  el.textContent = active + ' of ' + total + ' active — ' +
+    (active === total ? 'all recipients will receive alerts' :
+     active === 0 ? 'no emails will be sent' :
+     'only active recipients will receive alerts');
+  el.style.color = active === 0 ? 'var(--bear)' : 'var(--bull)';
+}
+
+async function toggleEmail(index, enabled) {
+  emailRecipients[index].enabled = enabled;
+  await saveEmails();
+}
+
+async function addEmail() {
+  const input = document.getElementById('email-input');
+  const email = input.value.trim().toLowerCase();
+  if (!email || !email.includes('@') || !email.includes('.')) {
+    toast('Enter a valid email address', 'fail');
+    return;
+  }
+  if (emailRecipients.some(r => r.email === email)) {
+    toast('Already in list', 'fail');
+    return;
+  }
+  emailRecipients.push({ email, enabled: true });
+  await saveEmails();
+  input.value = '';
+}
+
+async function removeEmail(index) {
+  const email = emailRecipients[index].email;
+  if (emailRecipients.length === 1) {
+    if (!confirm('Remove the last recipient? Scans will run but no emails will be sent.')) return;
+  }
+  emailRecipients.splice(index, 1);
+  await saveEmails();
+  toast('Removed ' + email, 'ok');
+}
+
+async function saveEmails() {
+  try {
+    const r = await fetch(API + '/email-config', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ recipients: emailRecipients })
+    });
+    const data = await r.json();
+    if (!data.ok) throw new Error(data.reason || 'API error');
+    emailRecipients = data.recipients;
+    renderEmails();
+    document.getElementById('email-source').textContent = 'Source: KV (editable)';
+  } catch (e) {
+    toast('Save failed: ' + e.message, 'fail');
+    renderEmails(); // revert UI
+  }
+}
+
+document.getElementById('email-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') addEmail();
+});
+
 // ─── BOOT ───
 loadWatchlist();
+loadEmailConfig();
 </script>
 </body>
 </html>
