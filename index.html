@@ -3933,9 +3933,9 @@ function buildModalChart(indId, container){
   // ── Candlestick — OHLC bars for last 50 bars when pattern detected ──
   if(indId === 'candle_signal'){
     const cs = CI.candle;
-    const tail = bars.slice(-50);
+    const tail = bars.slice(-63);
     const tailLabels = tail.map(b => b.t || '');
-    rangeLabel.textContent = `Daily · ${tail[0]?.t||''} — ${tail[tail.length-1]?.t||''} (last 50 bars)`;
+    rangeLabel.textContent = `Daily · ${tail[0]?.t||''} — ${tail[tail.length-1]?.t||''} (3 months)`;
     // Build colored bar data: each bar = [open, close], colored by direction
     const bodies = tail.map(b => [Math.min(b.o, b.c), Math.max(b.o, b.c)]);
     const colors = tail.map(b => b.c >= b.o ? '#00d97e' : '#ff4560');
@@ -3948,7 +3948,7 @@ function buildModalChart(indId, container){
     ];
     // Mark the pattern bar if detected
     const annotations = {};
-    if(cs && cs.barsAgo != null && cs.barsAgo < 50){
+    if(cs && cs.barsAgo != null && cs.barsAgo < 63){
       const patIdx = tail.length - 1 - cs.barsAgo;
       annotations.pat = { type: 'line', xMin: patIdx, xMax: patIdx, borderColor: '#f0b429', borderWidth: 2, label: { content: cs.type, display: true, position: 'start', font: { size: 9, weight: 'bold' }, color: '#f0b429', backgroundColor: '#f0b42920' } };
     }
@@ -6206,8 +6206,8 @@ document.addEventListener('DOMContentLoaded',()=>{
 <h2>📖 Signal Catcher Guide</h2>
 
 <h3>What Is Signal Catcher?</h3>
-<p>Signal Catcher takes daily price and trading volume data from Yahoo's free dataset — Open, High, Low, Close, Volume (OHLCV) — and computes 10 widely followed technical trading indicators. These technical indicators are normally viewed on a chart with price, but Signal Catcher converts chart analysis into rule-based scoring.</p>
-<p>For each stock, ten indicators evaluate price and volume data. Each applies a fixed condition (e.g., price vs. 200-day moving average, RSI above or below thresholds) and outputs a 0–100 score.</p>
+<p>Signal Catcher takes daily price and trading volume data from Yahoo's free dataset — Open, High, Low, Close, Volume (OHLCV) — and computes 9 widely followed technical trading indicators. These technical indicators are normally viewed on a chart with price, but Signal Catcher converts chart analysis into rule-based scoring.</p>
+<p>For each stock, nine indicators evaluate price and volume data. Each applies a fixed condition (e.g., price vs. 200-day moving average, RSI above or below thresholds) and outputs a 0–100 score.</p>
 <p>Scores are combined using a weighted formula. Structural indicators (trend, volume) carry more weight than timing signals. Agreement across indicators increases the composite score. Conflicts are explicitly flagged.</p>
 <p>The result is a single 0–100 score reflecting the degree and strength of alignment in the data. Identical inputs produce identical outputs. No interpretation required.</p>
 <p>There is no AI speculation inside the scoring engine. No fundamental analysis. No subjective chart drawings or analyst opinions. Just clean, deterministic mathematics — the same input data will always produce the exact same score, no matter who computes it or when.</p>
@@ -6224,7 +6224,7 @@ Technicals answer the <strong>"when"</strong> — is the price action confirming
 Together, they help you avoid the classic "great company, terrible entry" trap.
 </div>
 
-<h3>The 10 Indicators</h3>
+<h3>The 9 Indicators</h3>
 <p>Each indicator was chosen because it provides unique information no other indicator in the system covers, and each has a long institutional track record. Here's what each one does and why it matters:</p>
 
 <h4>Trend Direction</h4>
@@ -6246,7 +6246,7 @@ Together, they help you avoid the classic "great company, terrible entry" trap.
 <p><strong>ADX</strong> — The Average Directional Index doesn't produce a score. Instead, it tells the system <em>how much to trust</em> the trend-following indicators. In strong trends (ADX above 25), trend signals get boosted. In choppy, range-bound markets (ADX below 20), they get dampened. It's the "trust gate" for the entire trend family.</p>
 
 <h3>Two Families of Indicators</h3>
-<p>These 10 indicators fall into two philosophical families. Every market speaks in two voices at once:</p>
+<p>These 9 indicators fall into two philosophical families. Every market speaks in two voices at once:</p>
 <table>
 <tr><th>Family</th><th>What It Measures</th><th>Indicators</th></tr>
 <tr><td><strong>Trend-Following</strong></td><td>Persistence &amp; strength of the current move</td><td>SMA 200, MA Cross 50/200</td></tr>
