@@ -3322,8 +3322,8 @@ async function fetchOHLCForCharts(ticker){
     }
     return out;
   };
-  // Daily only — 3y range = ~756 bars — plenty for SMA200 + chart display
-  const daily = await fetchBars('1d','3y');
+  // Daily — fetch 5y so SMA200 warmup (200 bars) completes before 3yr display window
+  const daily = await fetchBars('1d','5y');
   ohlcCache = { ticker, daily, weekly: [] };
   return ohlcCache;
 }
