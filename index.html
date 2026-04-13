@@ -4570,86 +4570,84 @@ function detectDualSignalCommentary(){
   const mean = allScores.reduce((s,v)=>s+v,0)/allScores.length;
   const dispersion = Math.round(Math.sqrt(allScores.reduce((s,v)=>s+(v-mean)**2,0)/allScores.length));
 
+  const adxVal_c = adxOverlay.adx ?? 0;
+  const trendDir = trendBullCount > trendBearCount ? 'bullish' : trendBearCount > trendBullCount ? 'bearish' : null;
+
   const parts = [];
 
   // ── TREND ASSESSMENT ──
   if(trendBullCount >= 2){
-    parts.push(`<strong>${tickerDisplay} confirmed uptrend</strong> — the 200-day Simple Moving Average (SMA 200) and Moving Average Crossover (MA Cross) are both bullish${adxOverlay.adx >= 25 ? '. The Average Directional Index (ADX) confirms trend strength' : ''}.`);
+    if(adxVal_c >= 25){
+      parts.push(`<strong>${tickerDisplay} is in a confirmed uptrend</strong> — price is above its key moving averages and the trend is strong. The broad direction favors buyers.`);
+    } else {
+      parts.push(`<strong>${tickerDisplay} confirmed uptrend</strong> — price is above its key moving averages. The overall direction is up.`);
+    }
   } else if(trendBearCount >= 2){
-    parts.push(`<strong>${tickerDisplay} confirmed downtrend</strong> — the 200-day Simple Moving Average (SMA 200) and Moving Average Crossover (MA Cross) are both bearish${adxOverlay.adx >= 25 ? '. The Average Directional Index (ADX) confirms trend strength' : ''}.`);
+    if(adxVal_c >= 25){
+      parts.push(`<strong>${tickerDisplay} is in a confirmed downtrend</strong> — price is below its key moving averages and selling pressure is strong.`);
+    } else {
+      parts.push(`<strong>${tickerDisplay} confirmed downtrend</strong> — price is below its key moving averages. The overall direction is down.`);
+    }
   } else if(trendBullCount >= 1 && trendBearCount === 0){
-    parts.push(`<strong>${tickerDisplay} leans bullish</strong> — one trend indicator up, other neutral. Developing but not confirmed.`);
+    parts.push(`<strong>${tickerDisplay} leans bullish</strong> — one trend measure is positive, but the trend isn't fully confirmed yet.`);
   } else if(trendBearCount >= 1 && trendBullCount === 0){
-    parts.push(`<strong>${tickerDisplay} leans bearish</strong> — one trend indicator down, other neutral. Developing but not confirmed.`);
+    parts.push(`<strong>${tickerDisplay} leans bearish</strong> — one trend measure is negative, but the downtrend isn't fully confirmed yet.`);
   } else {
-    parts.push(`<strong>${tickerDisplay} no clear trend</strong> — indicators mixed or neutral${adxOverlay.adx < 20 ? '. Average Directional Index (ADX) below 20 confirms choppy conditions' : ''}. Consolidating or transitioning.`);
+    parts.push(`<strong>${tickerDisplay} — no clear trend</strong> — indicators are mixed or flat${adxVal_c < 20 ? ', and trend strength is very low' : ''}. The market is choppy or transitioning.`);
   }
 
   // ── EXHAUSTION / CONTRARIAN ──
   if(exhBullCount >= 3){
-    parts.push(`<strong>Exhaustion: oversold</strong> — the Relative Strength Index (RSI), DeMark Sequential, and Bollinger Bands all suggest selling may be overdone.`);
+    parts.push(`Momentum indicators suggest <strong>selling has been overdone</strong> — the drop may be nearing exhaustion. Watch for a bounce.`);
   } else if(exhBearCount >= 3){
-    parts.push(`<strong>Exhaustion: overbought</strong> — the Relative Strength Index (RSI), DeMark Sequential, and Bollinger Bands all suggest the rally is stretched.`);
+    parts.push(`Momentum indicators suggest the <strong>rally is stretched</strong> — buying enthusiasm may be running out of steam.`);
   } else if(exhBullCount >= 2){
-    parts.push(`Contrarian indicators leaning oversold — downward pressure may be getting stretched.`);
+    parts.push(`Some indicators suggest selling pressure may be fading — a potential floor could be forming.`);
   } else if(exhBearCount >= 2){
-    parts.push(`Contrarian indicators leaning overbought — upward push may be getting stretched.`);
+    parts.push(`Some indicators suggest the upward push may be getting stretched — the rally could be due for a breather.`);
   }
 
   // ── KEY TENSION ──
   if(trendBearCount >= 2 && exhBullCount >= 2){
-    parts.push(`<strong>Tension:</strong> trend says "still falling" while exhaustion says "sellers tiring." Watch for a trend indicator to flip.`);
+    parts.push(`<strong>This creates a tension worth watching</strong> — the downtrend is still in place, but sellers may be running out of energy. If a trend indicator flips, it could mark a turning point.`);
   } else if(trendBullCount >= 2 && exhBearCount >= 2){
-    parts.push(`<strong>Tension:</strong> uptrend intact but rally overextended. Tighten stops rather than reversing.`);
+    parts.push(`<strong>This creates a tension worth watching</strong> — the uptrend is intact but the rally looks overextended. In strong trends this can persist for weeks, but this is typically not the best time to add new positions at full size. Tighten stops rather than reversing.`);
   } else if(trendBullCount >= 2 && exhBullCount <= 1 && exhBearCount <= 1){
-    parts.push(`Trend uncontested — no exhaustion pushback. Path of least resistance is up.`);
+    parts.push(`Trend is running cleanly — no pushback from momentum indicators. Path of least resistance is up.`);
   } else if(trendBearCount >= 2 && exhBullCount <= 1 && exhBearCount <= 1){
-    parts.push(`Trend uncontested — selling pressure not yet overdone. Path of least resistance still down.`);
+    parts.push(`Selling pressure isn't overdone yet — no bounce signals firing. Path of least resistance is still down.`);
   }
 
   // ── VOLUME FLOW ──
-  const trendDir = trendBullCount > trendBearCount ? 'bullish' : trendBearCount > trendBullCount ? 'bearish' : null;
   if(trendDir){
     const volConfirms = (trendDir === 'bullish' && obv >= 60) || (trendDir === 'bearish' && obv <= 40);
     const volDiverges = (trendDir === 'bullish' && obv <= 38) || (trendDir === 'bearish' && obv >= 62);
     if(volConfirms){
-      parts.push(`On-Balance Volume (OBV) confirms ${trendDir} direction — institutional money aligned with trend.`);
+      parts.push(`Volume confirms the ${trendDir === 'bullish' ? 'buying' : 'selling'} — big money appears to be moving in the same direction as the trend.`);
     } else if(volDiverges){
-      parts.push(`<strong>On-Balance Volume (OBV) diverges from trend</strong> — institutional money may be positioning against current direction.`);
+      parts.push(`<strong>Volume tells a different story</strong> — big money may be quietly positioning against the current price direction. Worth watching closely.`);
     }
-  }
-
-  // ── ADX CONTEXT ──
-  const adxVal_c = adxOverlay.adx ?? 0;
-  // Only spell out if ADX wasn't already mentioned in trend assessment
-  const adxIntro = (trendBullCount >= 2 || trendBearCount >= 2) && adxVal_c >= 25 ? 'ADX' : 'Average Directional Index (ADX)';
-  if(adxVal_c >= 40){
-    parts.push(`${adxIntro} ${adxVal_c} — very strong trend. Trend weights boosted ${adxOverlay.multiplier}×. Contrarian signals less reliable.`);
-  } else if(adxVal_c >= 25){
-    parts.push(`${adxIntro} ${adxVal_c} — trending market. Trend weights boosted ${adxOverlay.multiplier}×.`);
-  } else if(adxVal_c > 0 && adxVal_c < 20){
-    parts.push(`${adxIntro} ${adxVal_c} — weak/choppy. Trend weights dampened ${adxOverlay.multiplier}×. Contrarian signals more reliable.`);
   }
 
   // ── AGREEMENT/DISAGREEMENT ──
   if(dispersion < 15){
-    parts.push(`High indicator agreement (disp: ${dispersion}) — score of ${wScore} reflects genuine consensus.`);
+    parts.push(`Indicators broadly agree — the score of ${wScore} reflects a clear consensus, not an average of conflicting signals.`);
   } else if(dispersion > 28){
-    parts.push(`Elevated disagreement (disp: ${dispersion}) — score of ${wScore} averages conflicting signals, not consensus.`);
+    parts.push(`Indicators are sending mixed messages — the score of ${wScore} is an average of disagreeing signals, so take it with a grain of salt.`);
   }
 
   // ── CONFLICT REGIME ──
   const cr = currentConflictRegime;
   if(cr.regime === 'transition'){
-    parts.push(`<strong>⚠ Transition Regime</strong> — ${cr.conflictCount} conflicts (${cr.backboneCount} backbone). Score capped toward neutral. Conflict pattern is the primary signal — often precedes breakouts or reversals.`);
+    parts.push(`<strong>⚠ High conflict detected</strong> — several indicators are pulling in opposite directions. The score has been pulled toward neutral. When this many signals disagree, it often means a breakout or reversal is building.`);
   } else if(cr.regime === 'elevated'){
-    parts.push(`Elevated conflicts — ${cr.conflictCount} detected (${cr.backboneCount} backbone). Conviction reduced but score not capped.`);
+    parts.push(`Some indicator conflicts detected — a few signals disagree with each other, so confidence is a bit lower than usual.`);
   }
 
   // ── CANDLESTICK ──
   if(candle <= 25 || candle >= 75){
     const candleDir = candle >= 75 ? 'bullish' : 'bearish';
-    parts.push(`Recent candlestick pattern adds short-term ${candleDir} context — timing signal, stronger when aligned with trend.`);
+    parts.push(`A recent candlestick reversal pattern adds short-term ${candleDir} context — these are timing signals, not directional calls on their own. They carry more weight when aligned with the bigger picture above.`);
   }
 
   // Fallback
