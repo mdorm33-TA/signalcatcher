@@ -5259,8 +5259,9 @@ async function runAnalysis(){
     const _vc = verd(_sc).l, _cc = sCol(_sc);
     const _cnc = window._lastSymbolName ? ` · ${window._lastSymbolName}` : '';
     const priceC = document.getElementById('price-val').textContent || '';
+    const _dcC = window._dailyChangeText ? ` <span style="color:${window._dailyChangeColor||''};font-size:12px">${window._dailyChangeText}</span>` : '';
     dot.className='sdot active';st.className='stext active';st.style.animation='';st.style.color='';
-    st.innerHTML=`<span class="sticker">${ticker}</span>${_cnc} · ${priceC} · ${nowStamp()}`;
+    st.innerHTML=`<span class="sticker">${ticker}</span>${_cnc} — <span style="color:${_cc};font-weight:600">${_vc}</span> · ${priceC}${_dcC} · OHLC scored · ${nowStamp()}`;
     so.textContent='Waiting for AI (divNote + fundamentals)…';
     btn.disabled=false;btn.classList.remove('loading');
     console.log('runAnalysis: ALL DONE. Score:', _sc);
@@ -5391,8 +5392,9 @@ All values plain text only — no HTML, no citations. N/A if unknown.`;
       const _cname=window._lastSymbolName?` · ${window._lastSymbolName}`:'';
       const _aiScore = Math.round(bScore('high')*customBW.high + bScore('med')*customBW.med);
       const _aiVerdict = verd(_aiScore).l, _aiCol = sCol(_aiScore);
+      const _dcAi = window._dailyChangeText ? ` <span style="color:${window._dailyChangeColor||''};font-size:12px">${window._dailyChangeText}</span>` : '';
       dot.className='sdot active';st.className='stext active';st.style.animation='';st.style.color='';
-      st.innerHTML=`<span class="sticker">${parsed.ticker||ticker}</span>${_cname} · ${priceText} · ${nowStamp()}`;
+      st.innerHTML=`<span class="sticker">${parsed.ticker||ticker}</span>${_cname} — <span style="color:${_aiCol};font-weight:600">${_aiVerdict}</span> · ${priceText}${_dcAi} · OHLC scored · ${nowStamp()}`;
       console.log('AI call complete for', ticker, '— divNote + fundamentals loaded');
       // If name arrived late, do another status bar update
       if(!window._lastSymbolName){
@@ -5403,7 +5405,8 @@ All values plain text only — no HTML, no citations. N/A if unknown.`;
               const _s2 = Math.round(bScore('high')*customBW.high + bScore('med')*customBW.med);
               const _v2 = verd(_s2).l, _c2 = sCol(_s2);
               const priceNow = document.getElementById('price-val').textContent || '';
-              cur.innerHTML=`<span class="sticker">${ticker}</span> · ${window._lastSymbolName} · ${priceNow} · ${nowStamp()}`;
+              const _dcLate = window._dailyChangeText ? ` <span style="color:${window._dailyChangeColor||''};font-size:12px">${window._dailyChangeText}</span>` : '';
+              cur.innerHTML=`<span class="sticker">${ticker}</span> · ${window._lastSymbolName} — <span style="color:${_c2};font-weight:600">${_v2}</span> · ${priceNow}${_dcLate} · OHLC scored · ${nowStamp()}`;
             }
           }
         }, 3000);
