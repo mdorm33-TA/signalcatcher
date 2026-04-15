@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mike's Indicator Page - Testing</title>
+<title>Signal Catcher v14 — Dashboard</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -70,7 +70,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:18
 .hdr-svg{width:100%;height:auto;display:block;filter:drop-shadow(0 12px 32px rgba(0,0,0,0.35));}
 .hdr-controls{display:flex;align-items:center;gap:8px;padding:5px 18px;flex-wrap:wrap;background:var(--surface2);border-top:1px solid var(--border);}
 .logo{font-family:var(--mono);font-size:30px;font-weight:700;color:var(--hdr-text);letter-spacing:.04em;white-space:nowrap;}
-.hdr-logo-img{height:140px;width:auto;border-radius:6px;object-fit:contain;flex-shrink:0;}
+.hdr-logo-img{height:220px;width:auto;border-radius:6px;object-fit:contain;flex-shrink:0;}
 .logo-sub{font-size:9px;color:var(--hdr-text);font-family:var(--mono);margin-top:2px;opacity:0.7;}.logo-subtitle{font-size:22px;font-weight:700;font-style:italic;color:var(--hdr-text);font-family:var(--mono);margin-top:8px;letter-spacing:.03em;text-align:center;width:100%;line-height:1.3;opacity:0.85;}
 /* SignalCatch SVG animation styles */
 .sc-chart-card{fill:rgba(26,77,128,0.35);stroke:rgba(77,163,255,0.35);stroke-width:1.5}
@@ -164,7 +164,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:18
 .mob-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
 
 /* ── LAYOUT ── */
-.layout{display:grid;grid-template-columns:2fr 1fr;min-height:calc(100vh - 110px);background:var(--bg);}
+.layout{display:grid;grid-template-columns:1.65fr 1fr;min-height:calc(100vh - 110px);background:var(--bg);}
 .ind-panel{padding:14px 18px;overflow-y:auto;border-right:1px solid var(--border);}
 .score-panel{padding:14px;display:flex;flex-direction:column;gap:12px;background:var(--bg);position:sticky;top:0;height:calc(100vh - 110px);overflow-y:auto;}
 
@@ -223,6 +223,62 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:18
 .ind-row.just-updated{animation:rowFlash .6s ease-out;}
 @keyframes rowFlash{0%{background:#4c8ef720;}100%{background:transparent;}}
 
+/* ── DASHBOARD GRID ── */
+.dash-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:0 auto 0;max-width:580px;}
+.dash-tile{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px 8px 10px;cursor:pointer;text-align:center;transition:all .2s ease;position:relative;overflow:hidden;}
+.dash-tile:hover{transform:scale(1.04);box-shadow:0 4px 20px rgba(0,0,0,.15);}
+.dash-tile::after{content:'🔍 Tap for details';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.65);color:#fff;font:600 11px/1 var(--mono);letter-spacing:.03em;border-radius:12px;opacity:0;transition:opacity .2s;pointer-events:none;}
+.dash-tile:hover::after{opacity:1;}
+.dash-tile .dt-group-dot{position:absolute;top:6px;left:8px;width:5px;height:5px;border-radius:50%;opacity:.7;}
+.dash-tile .dt-bucket{position:absolute;top:5px;right:6px;font:700 8px/1 var(--mono);color:var(--text3);letter-spacing:.05em;}
+.dash-tile .dt-score-circle{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 6px;transition:all .3s;}
+.dash-tile .dt-score{font:700 16px/1 var(--mono);}
+.dash-tile .dt-name{font:600 11px/1.2 var(--mono);color:var(--text);margin-top:0;}
+.dash-tile .dt-label{font:500 9px/1 var(--mono);margin-top:3;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 2px;}
+@keyframes dtIn{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)}}
+.dash-tile{animation:dtIn .3s ease both;}
+.dash-tile:nth-child(1){animation-delay:.00s}.dash-tile:nth-child(2){animation-delay:.04s}.dash-tile:nth-child(3){animation-delay:.08s}
+.dash-tile:nth-child(4){animation-delay:.12s}.dash-tile:nth-child(5){animation-delay:.16s}.dash-tile:nth-child(6){animation-delay:.20s}
+.dash-tile:nth-child(7){animation-delay:.24s}.dash-tile:nth-child(8){animation-delay:.28s}.dash-tile:nth-child(9){animation-delay:.32s}
+
+/* ── DASHBOARD TILE MODAL ── */
+.dt-modal-overlay{position:fixed;inset:0;z-index:1200;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:16px;animation:dtFadeIn .2s ease;}
+.dt-modal{background:var(--surface);border-radius:16px;padding:24px;max-width:580px;width:100%;max-height:85vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.4);animation:dtSlideUp .25s ease;}
+.dt-modal-hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;}
+.dt-modal-tags{display:flex;align-items:center;gap:6px;margin-bottom:6px;}
+.dt-modal-tag{font:600 10px/1 var(--mono);padding:2px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:.05em;}
+.dt-modal-close{background:none;border:none;color:var(--text3);font-size:22px;cursor:pointer;padding:4px 8px;border-radius:6px;line-height:1;}
+.dt-modal-close:hover{color:var(--text);background:var(--surface3);}
+.dt-modal-score-row{display:flex;align-items:center;gap:16px;border-radius:12px;padding:14px 18px;margin-bottom:16px;}
+.dt-modal-chart{background:var(--bg);border-radius:10px;padding:8px;margin-bottom:14px;border:1px solid var(--border);min-height:180px;}
+.dt-modal-desc{font:400 13px/1.65 var(--sans);color:var(--text2);margin:0;}
+@keyframes dtFadeIn{from{opacity:0}to{opacity:1}}
+@keyframes dtSlideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── ADX BAR ── */
+.adx-bar-card{max-width:580px;margin:14px auto 0;padding:14px 16px;background:var(--surface2);border-radius:12px;border:1px solid var(--border);}
+.adx-bar-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.adx-bar-title{font:700 12px/1 var(--mono);color:var(--text);}
+.adx-bar-tag{font:600 10px/1 var(--mono);color:var(--text3);background:var(--surface3);border:1px solid var(--border);padding:1px 6px;border-radius:4px;}
+.adx-bar-dir{font:600 11px/1 var(--mono);}
+.adx-bar-rising{font:500 10px/1 var(--mono);}
+.adx-bar-track{position:relative;height:28px;margin-bottom:6px;}
+.adx-bar-zones{display:flex;height:12px;border-radius:6px;overflow:hidden;position:absolute;top:8px;left:0;right:0;}
+.adx-bar-zone{height:100%;border-right:1px solid var(--border);}
+.adx-bar-zone:last-child{border-right:none;}
+.adx-bar-fill{position:absolute;top:8px;left:0;height:12px;border-radius:6px;transition:width .5s ease;}
+.adx-bar-needle{position:absolute;top:2px;transform:translateX(-50%);width:3px;height:24px;border-radius:2px;background:var(--text);box-shadow:0 0 6px rgba(230,237,243,.4);transition:left .5s ease;}
+.adx-bar-labels{display:flex;position:relative;height:14px;margin-bottom:8px;}
+.adx-bar-lbl{position:absolute;transform:translateX(-50%);font:600 8px/1 var(--mono);text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;}
+.adx-bar-stats{display:flex;justify-content:space-between;align-items:center;padding-top:8px;border-top:1px solid var(--border);}
+.adx-bar-stat{font:400 10px/1 var(--mono);color:var(--text3);}
+.adx-bar-stat b{font-weight:700;}
+.adx-bar-regime{font:600 10px/1 var(--mono);padding:2px 8px;border-radius:4px;}
+.adx-bar-note{font:400 9px/1.4 var(--mono);color:var(--text3);margin:8px 0 0;}
+
+/* Hide old slider groups when dashboard is active */
+.dash-active .ind-group{display:none !important;}
+.dash-active .adx-row{display:none !important;}
 /* ── TOOLTIP POPUP ── */
 /* tooltip-popup removed — now pure CSS via .tip-wrap/.tip-box */
 .tp-name{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--accent);margin-bottom:4px;}
@@ -318,11 +374,11 @@ body.dark-mode .ci-backbone-tag{background:#f0883e18;color:#f0883e;border-color:
 /* ── SCORE PANEL CARDS ── */
 .stitle{font-family:var(--mono);font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);margin-bottom:8px;font-weight:600;padding-bottom:4px;border-bottom:1px solid var(--border);}
 .gauge-card{background:linear-gradient(145deg,var(--surface) 0%,var(--surface2) 100%);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center;box-shadow:var(--card-shadow);}
-.gcw{position:relative;width:180px;margin:0 auto 8px;}
+.gcw{position:relative;width:210px;margin:0 auto 8px;}
 .gcenter{position:absolute;bottom:4px;left:50%;transform:translateX(-50%);text-align:center;pointer-events:none;}
-.gscore{font-family:var(--mono);font-size:26px;font-weight:600;line-height:1;transition:color .3s;}
-.gunit{font-size:10px;color:var(--text3);font-family:var(--mono);}
-.gverdict{font-family:var(--mono);font-size:14px;font-weight:600;letter-spacing:.05em;margin-bottom:2px;transition:color .3s;}
+.gscore{font-family:var(--mono);font-size:30px;font-weight:600;line-height:1;transition:color .3s;}
+.gunit{font-size:11px;color:var(--text3);font-family:var(--mono);}
+.gverdict{font-family:var(--mono);font-size:15px;font-weight:600;letter-spacing:.05em;margin-bottom:2px;transition:color .3s;}
 .gconf{font-size:13px;color:var(--text3);font-family:var(--mono);}
 .gconf span{color:var(--text2);}
 .gdisp{font-size:13px;color:var(--text3);font-family:var(--mono);margin-top:3px;}
@@ -406,7 +462,7 @@ body.dark-mode .ci-backbone-tag{background:#f0883e18;color:#f0883e;border-color:
 .lvl-info-btn:hover{background:var(--high-dim);border-color:var(--accent);color:var(--accent);transform:scale(1.1);}
 .lvl-info-popup{display:none;background:var(--surface);border:1px solid var(--border2);border-radius:10px;padding:12px 14px;margin-bottom:8px;box-shadow:0 4px 20px rgba(0,0,0,.18);font-family:var(--sans);font-size:13px;color:var(--text2);line-height:1.7;}
 .lvl-info-popup.visible{display:block;}
-.scoring-info-btn{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:6px;background:var(--surface3);border:1.5px solid var(--border2);font-size:12px;color:var(--text3);font-family:var(--mono);font-weight:600;cursor:pointer;transition:all .15s;user-select:none;letter-spacing:.04em;}
+.scoring-info-btn{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:6px;background:var(--surface3);border:1.5px solid var(--border2);font-size:12px;color:var(--text3);font-family:var(--mono);font-weight:600;cursor:pointer;transition:all .15s;user-select:none;letter-spacing:.04em;}
 .scoring-info-btn:hover{background:var(--high-dim);border-color:var(--accent);color:var(--accent);transform:scale(1.03);}
 .scoring-info-popup{display:none;background:var(--surface);border:1px solid var(--border2);border-radius:10px;padding:14px 16px;margin-top:10px;box-shadow:0 4px 20px rgba(0,0,0,.22);font-family:var(--sans);font-size:12.5px;color:var(--text2);line-height:1.7;text-align:left;max-height:420px;overflow-y:auto;}
 .scoring-info-popup.visible{display:block;}
@@ -611,7 +667,7 @@ body.dark-mode .ci-backbone-tag{background:#f0883e18;color:#f0883e;border-color:
   .hdr-controls{gap:6px;padding:6px 10px;flex-wrap:wrap;}
   .search-bar{max-width:100%;flex:1;}
   .hdr-logo-img{height:60px;}
-  .hdr-svg-wrap{max-width:100%;}
+  .hdr-svg-wrap{max-width:75%;}
   .sc-brand-s,.sc-brand-c{font-size:28px}
   .sc-tagline{font-size:18px}
   .logo-subtitle{font-size:14px;letter-spacing:.01em;}
@@ -624,6 +680,7 @@ body.dark-mode .ci-backbone-tag{background:#f0883e18;color:#f0883e;border-color:
   .vbar-buckets{margin-left:0;gap:8px;}
   .vbar-divider{height:24px;}
   .stext{font-size:12px;}
+  .stext.active{font-size:14px;}
   .sbar{padding:5px 10px;font-size:11px;}
   .signal-slider{width:100%;min-width:80px;}
   .sw{flex:1;min-width:0;}
@@ -633,6 +690,14 @@ body.dark-mode .ci-backbone-tag{background:#f0883e18;color:#f0883e;border-color:
   body{font-size:14px;}
   .run-btn{padding:7px 12px;font-size:12px;}
   .asel{font-size:12px;}
+  .dash-grid{gap:8px;max-width:100%;}
+  .dash-tile{padding:10px 6px 8px;}
+  .dash-tile .dt-score-circle{width:38px;height:38px;margin-bottom:4px;}
+  .dash-tile .dt-score{font-size:14px;}
+  .dash-tile .dt-name{font-size:10px;}
+  .dash-tile .dt-label{font-size:8px;}
+  .adx-bar-card{max-width:100%;}
+  .dt-modal{padding:18px;max-width:95vw;}
 }
 
 /* ── COASTAL CONDITIONS ── */
@@ -792,7 +857,7 @@ body.dark-mode .ci-backbone-tag{background:#f0883e18;color:#f0883e;border-color:
   </div>
   <!-- Controls row: ticker, asset class, price, analyze -->
   <div class="hdr-controls" style="justify-content:center;">
-    <input id="ticker-input" type="text" value="" placeholder="TICKER" maxlength="10" oninput="this.value=this.value.toUpperCase()" onfocus="this.value=''" onclick="this.value=''">
+    <input id="ticker-input" type="text" value="" placeholder="TICKER" maxlength="10" oninput="this.value=this.value.toUpperCase()" onfocus="this.value=''" onclick="this.value=''" onkeydown="if(event.key==='Enter'){event.preventDefault();runAnalysis();}">
     <span class="tip-wrap" style="position:relative;"><button class="tip-icon" style="width:18px;height:18px;font-size:10px;border:1px solid var(--border2);border-radius:50%;background:var(--surface3);color:var(--text3);cursor:pointer;padding:0;line-height:18px;">?</button><div class="tip-box" style="width:260px;left:-20px;"><div class="tp-name">Yahoo Finance Ticker Format</div><div class="tp-desc">Data is sourced from Yahoo Finance with a <strong>15-minute delay</strong> on all quotes.<br><br><strong>Stocks:</strong> Use standard symbols — AAPL, MSFT, TSLA<br><strong>Crypto:</strong> Append <strong>-USD</strong> — BTC-USD, ETH-USD, SOL-USD<br><strong>Indices:</strong> Prefix with <strong>^</strong> — ^GSPC (S&amp;P 500), ^DJI, ^IXIC<br><strong>Futures:</strong> Append <strong>=F</strong> — GC=F (gold), CL=F (oil), SI=F (silver)<br><strong>ETFs:</strong> Standard — SPY, QQQ, TLT, GLD</div></div></span>
     <div class="sdiv"></div>
     <select class="asel" id="asset-class" onchange="onACChange()">
@@ -895,29 +960,86 @@ body.dark-mode .ci-backbone-tag{background:#f0883e18;color:#f0883e;border-color:
       </div>
     </div>
 
-    <!-- SIGNAL COMMENTARY (moved above indicators in v12) -->
+    <!-- SIGNAL COMMENTARY -->
     <div class="commentary-card" id="commentary-card">
       <div class="stitle" style="color:#f0b429">📋 Signal Summary</div>
       <div id="commentary-list"></div>
     </div>
 
-    <!-- CONFLICT DETECTOR -->
+    <!-- ═══ DASHBOARD 3×3 GRID (v14 dashboard) ═══ -->
+    <div class="dash-grid" id="dash-grid"></div>
+    <div id="dash-hint" style="text-align:center;padding:8px 0 2px;font:600 11px/1 var(--mono);color:var(--accent);opacity:0;transition:opacity .5s;">
+      👆 Tap any gauge for indicator details and chart
+    </div>
+
+    <!-- ═══ ADX TREND STRENGTH BAR ═══ -->
+    <div class="adx-bar-card" id="adx-bar" style="display:none;">
+      <div class="adx-bar-hdr">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="adx-bar-title">ADX Trend Strength</span>
+          <span class="adx-bar-tag">OVERLAY</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="adx-bar-dir" id="adx-bar-dir">—</span>
+          <span class="adx-bar-rising" id="adx-bar-rising">—</span>
+        </div>
+      </div>
+      <div class="adx-bar-track">
+        <div class="adx-bar-zones" id="adx-bar-zones"></div>
+        <div class="adx-bar-fill" id="adx-bar-fill"></div>
+        <div class="adx-bar-needle" id="adx-bar-needle" style="left:0%"></div>
+      </div>
+      <div class="adx-bar-labels" id="adx-bar-labels"></div>
+      <div class="adx-bar-stats">
+        <div style="display:flex;gap:16px;">
+          <span class="adx-bar-stat">ADX <b id="adx-bar-val">—</b></span>
+          <span class="adx-bar-stat">+DI <b id="adx-bar-pdi">—</b></span>
+          <span class="adx-bar-stat">−DI <b id="adx-bar-mdi">—</b></span>
+        </div>
+        <span class="adx-bar-regime" id="adx-bar-regime">—</span>
+      </div>
+      <p class="adx-bar-note">ADX measures trend strength, not direction. Above 25 = trending (trend indicators boosted). Below 20 = choppy (contrarian signals more reliable).</p>
+    </div>
+
+    <!-- CONFLICT DETECTOR (below dashboard) -->
     <div class="conflict-card" id="conflict-card">
       <div class="stitle" id="conflict-header" style="color:var(--conflict)">⚠ Indicator Conflicts Detected</div>
       <div id="conflict-list"></div>
     </div>
 
-    <!-- CONFLUENCE DETECTOR -->
+    <!-- CONFLUENCE DETECTOR (below dashboard) -->
     <div class="confluence-card" id="confluence-card">
       <div class="stitle" style="color:var(--bull)">🔒 Indicator Confluence Confirmed</div>
       <div id="confluence-list"></div>
     </div>
 
-    <!-- ADX REGIME OVERLAY -->
-    <div class="adx-overlay-card" id="adx-overlay-card" style="background:linear-gradient(145deg,var(--surface) 0%,var(--surface2) 100%);border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:10px;font-family:var(--mono);display:flex;align-items:center;gap:10px;flex-wrap:wrap;position:relative;">
+    <!-- ADX REGIME OVERLAY (old — hidden by .dash-active) -->
+    <div class="adx-overlay-card adx-row" id="adx-overlay-card" style="background:linear-gradient(145deg,var(--surface) 0%,var(--surface2) 100%);border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:10px;font-family:var(--mono);display:flex;align-items:center;gap:10px;flex-wrap:wrap;position:relative;">
       <span style="font-size:11px;font-weight:700;color:var(--neu);">⚡ ADX Trend Overlay</span>
       <span id="adx-overlay-badge" style="font-size:11px;color:var(--text2);flex:1;">Awaiting OHLC data…</span>
-      <span class="tip-wrap"><button class="tip-icon" style="width:22px;height:22px;font-size:13px;border:1.5px solid var(--border2);border-radius:50%;background:var(--surface3);color:var(--text3);cursor:pointer;">?</button><div class="tip-box"><div class="tp-name">ADX Trend Overlay</div><div class="tp-desc"><strong>What is ADX?</strong> The Average Directional Index measures how strongly a stock is trending, regardless of direction. It ranges from 0–100; higher = stronger trend. It does NOT tell you if the trend is up or down — +DI vs -DI shows direction.<br><br>ADX is <strong>not</strong> a scored indicator — it acts as a <strong>regime overlay</strong> that multiplies the weights of trend-following indicators (SMA 200, Ichimoku, MA Cross).<br><br><strong>How it works:</strong><br>• ADX ≥ 40: Very Strong Trend → weights boosted 1.20×<br>• ADX ≥ 30: Strong Trend → weights boosted 1.12×<br>• ADX ≥ 25: Trending → weights boosted 1.06×<br>• ADX ≥ 20: Transitional → weights neutral (1.00×)<br>• ADX &lt; 20: Choppy → weights dampened 0.85×</div></div></span>
+      <span class="tip-wrap"><button class="tip-icon" style="width:22px;height:22px;font-size:13px;border:1.5px solid var(--border2);border-radius:50%;background:var(--surface3);color:var(--text3);cursor:pointer;">?</button><div class="tip-box"><div class="tp-name">ADX Trend Overlay</div><div class="tp-desc"><strong>What is ADX?</strong> The Average Directional Index measures how strongly a stock is trending, regardless of direction. It ranges from 0–100; higher = stronger trend. It does NOT tell you if the trend is up or down — +DI vs -DI shows direction.<br><br>ADX is <strong>not</strong> a scored indicator — it acts as a <strong>regime overlay</strong> that multiplies the weights of trend-following indicators (SMA 200, MA Cross).<br><br><strong>How it works:</strong><br>• ADX ≥ 40: Very Strong Trend → weights boosted 1.20×<br>• ADX ≥ 30: Strong Trend → weights boosted 1.12×<br>• ADX ≥ 25: Trending → weights boosted 1.06×<br>• ADX ≥ 20: Transitional → weights neutral (1.00×)<br>• ADX &lt; 20: Choppy → weights dampened 0.85×</div></div></span>
+    </div>
+
+    <!-- ═══ TILE DETAIL MODAL (injected by JS) ═══ -->
+    <div class="dt-modal-overlay" id="dt-modal-overlay" style="display:none;" onclick="closeTileModal()">
+      <div class="dt-modal" onclick="event.stopPropagation()">
+        <div class="dt-modal-hdr">
+          <div>
+            <div class="dt-modal-tags" id="dt-modal-tags"></div>
+            <h2 style="font:700 18px/1.2 var(--mono);color:var(--text);margin:0;" id="dt-modal-title">—</h2>
+          </div>
+          <button class="dt-modal-close" onclick="closeTileModal()">×</button>
+        </div>
+        <div class="dt-modal-score-row" id="dt-modal-score-row">
+          <div id="dt-modal-gauge-wrap" style="flex-shrink:0;"></div>
+          <div>
+            <div id="dt-modal-label" style="font:700 13px/1 var(--mono);margin-bottom:4px;">—</div>
+            <div id="dt-modal-signal" style="font:400 11px/1 var(--mono);color:var(--text3);">—</div>
+          </div>
+        </div>
+        <div class="dt-modal-chart" id="dt-modal-chart"></div>
+        <p class="dt-modal-desc" id="dt-modal-desc">—</p>
+      </div>
     </div>
 
     <!-- THEMATIC INDICATOR GROUPS (v12) — scoring buckets unchanged under the hood -->
@@ -987,7 +1109,7 @@ body.dark-mode .ci-backbone-tag{background:#f0883e18;color:#f0883e;border-color:
         <div class="stitle">Weighted Technical Score</div>
         <div style="font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:.04em;margin-top:2px;">No Fundamentals — Just The Price Action</div>
         <div class="gcw">
-          <canvas id="gaugeCanvas" width="180" height="108"></canvas>
+          <canvas id="gaugeCanvas" width="210" height="126"></canvas>
           <div class="gcenter"><div class="gscore" id="gscore">—</div><div class="gunit">/ 100</div></div>
         </div>
         <div class="gverdict" id="gverdict">LOADING…</div>
@@ -998,16 +1120,16 @@ body.dark-mode .ci-backbone-tag{background:#f0883e18;color:#f0883e;border-color:
         </div>
         <div class="scoring-info-popup" id="scoring-info-popup">
           <h4>How the Score Works</h4>
-          10 technical indicators are scored 0–100 individually, then combined using weighted averages across two confidence buckets:<br><br>
+          9 technical indicators are scored 0–100 individually, then combined using weighted averages across two confidence buckets:<br><br>
           <strong style="color:#4c8ef7">HIGH confidence (60%)</strong> — Volume Profile, SMA (Simple Moving Average) 200, MA Cross 50/200, RSI (Relative Strength Index) Extreme, OBV (On-Balance Volume) Trend<br>
-          <strong style="color:#a78bfa">MED confidence (40%)</strong> — Money Flow Index (MFI), Ichimoku Cloud, Bollinger Bands, DeMark Sequential, Candlestick Signal<br>
+          <strong style="color:#a78bfa">MED confidence (40%)</strong> — Money Flow Index (MFI), Bollinger Bands, DeMark Sequential, Candlestick Signal<br>
           <div class="si-section">
             <h4>ADX Trend Overlay</h4>
-            ADX (Average Directional Index) measures trend strength and adjusts the weights of trend-following indicators (SMA 200, Ichimoku, MA Cross). In strong trends these indicators get boosted; in choppy markets they get dampened.
+            ADX (Average Directional Index) measures trend strength and adjusts the weights of trend-following indicators (SMA 200, MA Cross). In strong trends these indicators get boosted; in choppy markets they get dampened.
           </div>
           <div class="si-section">
             <h4>Confluence &amp; Conflicts</h4>
-            When related indicators align (e.g. Triple Trend: SMA200 + Ichimoku + MA Cross), the score gets a confidence boost. When they diverge (e.g. trend vs. exhaustion), conflicts are flagged.<br><br>
+            When related indicators align (e.g. Dual Trend: SMA200 + MA Cross), the score gets a confidence boost. When they diverge (e.g. trend vs. exhaustion), conflicts are flagged.<br><br>
             <strong>Conflict Regime Tiers:</strong> Three "backbone" conflict pairs (SMA 200 vs RSI, DeMark vs SMA 200, OBV vs SMA 200) represent the deepest trend-vs-exhaustion tensions.<br>
             • <strong>Clear</strong> — 0–1 conflicts, 0 backbone: normal scoring<br>
             • <strong>Elevated</strong> — 2–3 conflicts OR 1 backbone: conviction reduced, warning shown<br>
@@ -1167,6 +1289,7 @@ body.dark-mode .ci-backbone-tag{background:#f0883e18;color:#f0883e;border-color:
       <div class="coast-content">
         <div class="coast-wx-row" id="coast-wx-pills"></div>
         <div class="coast-tide-status" id="coast-tide-status"></div>
+        <div style="font:600 10px/1 var(--mono);color:var(--text3);letter-spacing:.06em;text-transform:uppercase;padding:4px 0 2px;">🌊 Today's Tide Chart</div>
         <div class="coast-chart-wrap"><canvas id="coastTideChart"></canvas></div>
         <div id="coast-tide-table"></div>
         <div class="coast-links">
@@ -1454,46 +1577,6 @@ function scoreSuperTrend(st, price) {
   const flipBonus = st.barsSinceFlip <= 5 ? 8 : st.barsSinceFlip <= 40 ? Math.round(8 * (1 - (st.barsSinceFlip - 5) / 35)) : 0;
   if (st.direction === 1) return Math.min(95, (dist > 5 ? 82 : dist > 2 ? 72 : 65) + flipBonus);
   return Math.max(5, (dist > 5 ? 18 : dist > 2 ? 28 : 35) - flipBonus);
-}
-
-// ─── ICHIMOKU CLOUD ──────────────────────────────────────────
-function computeIchimoku(bars) {
-  const n = bars.length;
-  if (n < 80) return null;
-  const midHL = (arr, period, idx) => {
-    if (idx < period - 1) return null;
-    let hi = -Infinity, lo = Infinity;
-    for (let j = idx - period + 1; j <= idx; j++) { if (arr[j].h > hi) hi = arr[j].h; if (arr[j].l < lo) lo = arr[j].l; }
-    return (hi + lo) / 2;
-  };
-  const tenkan = midHL(bars, 9, n - 1), kijun = midHL(bars, 26, n - 1);
-  const kumoA = (() => { const t = midHL(bars, 9, n - 27), k = midHL(bars, 26, n - 27); return t && k ? (t + k) / 2 : null; })();
-  const kumoB = midHL(bars, 52, n - 27);
-  const chikou = bars[n - 1].c, priceRef = bars[n - 27]?.c ?? null, price = bars[n - 1].c;
-  const prevTenkan = midHL(bars, 9, n - 2), prevKijun = midHL(bars, 26, n - 2);
-  return { tenkan, kijun, kumoA, kumoB, chikou, priceRef, price, prevTenkan, prevKijun };
-}
-function scoreIchimoku(ich, price) {
-  if (!ich || ich.kumoA === null || ich.kumoB === null) return 50;
-  const kumoTop = Math.max(ich.kumoA, ich.kumoB), kumoBottom = Math.min(ich.kumoA, ich.kumoB);
-  const cloudBull = ich.kumoA > ich.kumoB;
-  const signals = [];
-  if (price > kumoTop) { const gap = (price - kumoTop) / kumoTop; signals.push({ w: 0.35, v: Math.min(1, 0.70 + gap * 2) }); }
-  else if (price < kumoBottom) { const gap = (kumoBottom - price) / kumoBottom; signals.push({ w: 0.35, v: Math.max(0, 0.30 - gap * 2) }); }
-  else { const pct = (price - kumoBottom) / (kumoTop - kumoBottom); signals.push({ w: 0.35, v: 0.35 + pct * 0.30 }); }
-  signals.push({ w: 0.20, v: cloudBull ? 0.75 : 0.25 });
-  if (ich.tenkan !== null && ich.kijun !== null) {
-    if (ich.prevTenkan !== null && ich.prevKijun !== null) {
-      const bullCross = ich.prevTenkan <= ich.prevKijun && ich.tenkan > ich.kijun;
-      const bearCross = ich.prevTenkan >= ich.prevKijun && ich.tenkan < ich.kijun;
-      if (bullCross) signals.push({ w: 0.25, v: price > kumoTop ? 0.90 : 0.72 });
-      else if (bearCross) signals.push({ w: 0.25, v: price < kumoBottom ? 0.10 : 0.28 });
-      else signals.push({ w: 0.25, v: ich.tenkan > ich.kijun ? 0.65 : 0.35 });
-    } else signals.push({ w: 0.25, v: ich.tenkan > ich.kijun ? 0.65 : 0.35 });
-  }
-  if (ich.priceRef !== null) signals.push({ w: 0.20, v: ich.chikou > ich.priceRef ? 0.70 : 0.30 });
-  const totalW = signals.reduce((s, x) => s + x.w, 0);
-  return totalW > 0 ? Math.max(5, Math.min(95, Math.round(signals.reduce((s, x) => s + x.v * x.w, 0) / totalW * 100))) : 50;
 }
 
 // ─── DEMARK SEQUENTIAL ──────────────────────────────────────
@@ -1844,7 +1927,6 @@ async function scoreSymbol(dailyBars, weeklyBars) {
   const mfi = safe('MFI', ()=>computeMFI(dailyBars));
   const obv = safe('OBV', ()=>computeOBV(dailyBars));
   await yld();
-  const ichimoku = safe('Ichimoku', ()=>computeIchimoku(dailyBars));
   const demark = safe('DeMark', ()=>computeDeMark(dailyBars));
   const candle = safe('Candle', ()=>computeCandleSignal(dailyBars));
   await yld();
@@ -1860,13 +1942,12 @@ async function scoreSymbol(dailyBars, weeklyBars) {
     bollinger: safe('sBoll', ()=>scoreBollinger(boll, price, sma200)) ?? 50,
     mfi: safe('sMFI', ()=>scoreMFI(mfi)) ?? 50,
     obv: safe('sOBV', ()=>scoreOBV(obv, dailyBars)) ?? 50,
-    ichimoku: safe('sIchi', ()=>scoreIchimoku(ichimoku, price)) ?? 50,
     demark_seq: safe('sDM', ()=>scoreDeMark(demark)) ?? 50,
     candle_signal: safe('sCandle', ()=>scoreCandleSignal(candle)) ?? 50,
     sma_cross: safe('sCross', ()=>scoreSMACross(closes, sma50, sma200, cross)) ?? 50,
   };
   console.log('scoreSymbol: COMPLETE. Scores:', JSON.stringify(scores));
-  return { price, scores, adx, indicators: { rsi, sma200, sma50, boll, mfi, obv, ichimoku, demark, candle, adx, volProf, cross } };
+  return { price, scores, adx, indicators: { rsi, sma200, sma50, boll, mfi, obv, demark, candle, adx, volProf, cross } };
 }
 // ═══ END SCORING ENGINE ═══════════════════════════════════════
 
@@ -1886,10 +1967,9 @@ const TIPS = {
   rsi_extreme:  {name:'RSI Extreme',       desc:'<strong>RSI</strong> (Relative Strength Index) measures momentum on a 0–100 scale. This is a CONTRARIAN indicator: RSI below 30 = oversold → scored BULLISH (potential reversal up, sellers exhausted). RSI above 70 = overbought → scored BEARISH (potential reversal down, buyers exhausted). RSI 40–60 = neutral (no extreme signal). In strong trends RSI can remain extreme for extended periods — check trend context.'},
   demark_seq:   {name:'DeMark Sequential', desc:'<strong>TD</strong> (Tom DeMark) Sequential counts 9 consecutive closes vs the close 4 bars ago to identify price exhaustion. A completed Setup 9 — especially "perfected" — is a high-conviction reversal signal. Countdown 13 is the strongest signal. Computed from real OHLC data.'},
   mfi:          {name:'Money Flow Index',  desc:'<strong>MFI</strong> (Money Flow Index) is a volume-weighted RSI. It measures buying/selling pressure by combining price movement with volume — money flowing IN (price up on volume) vs money flowing OUT (price down on volume).<br><br><strong>CONTRARIAN scoring:</strong> MFI ≤ 20 → oversold (bullish buy signal); MFI ≥ 80 → overbought (bearish sell signal). MFI divergences from price are powerful reversal signals.<br><br><strong>Pairs with OBV:</strong> OBV confirms the big-picture volume trend; MFI times the exact entry on momentum extremes. Computed from real OHLCV data (14-period).'},
-  ichimoku:     {name:'Ichimoku Cloud', desc:'A complete trading system developed by Goichi Hosoda. Price above the cloud is bullish, below is bearish. The <strong>Kumo</strong> (cloud) acts as dynamic support/resistance. <strong>Tenkan-Sen</strong> (conversion line) crossing above <strong>Kijun-Sen</strong> (base line) = buy signal. Scored from 4 weighted components: price vs cloud (35%), cloud color (20%), TK cross (25%), <strong>Chikou</strong> (lagging span) confirmation (20%). Computed from real OHLC data.'},
   bollinger:    {name:'Bollinger Bands',   desc:'Bollinger Bands plot a middle <strong>SMA</strong> (Simple Moving Average) with upper and lower bands at 2 standard deviations. CONTRARIAN scoring: <strong>%B</strong> (percent bandwidth) near 0 (at lower band) → bullish reversal signal; %B near 1 (at upper band) → bearish reversal signal. Band squeeze (bandwidth below 4%) → neutral with breakout pending. In strong trends price can "walk the band" — check trend context. Computed from real OHLC data (20-period, 2σ).'},
   obv:          {name:'OBV Trend',         desc:'<strong>OBV</strong> (On-Balance Volume) tracks cumulative volume flow — it adds volume on up days and subtracts it on down days. Rising OBV with rising price confirms accumulation (bullish). Divergence — OBV falling while price rises — warns of distribution (smart money selling). Computed from real OHLC + volume data.'},
-  adx:          {name:'ADX Trend Overlay', desc:'<strong>ADX</strong> (Average Directional Index) measures TREND STRENGTH (not direction). Not scored directly — acts as an overlay multiplier on trend-following indicator weights (SMA 200, Ichimoku, MA Cross). Below 20 = no trend (choppy, weights dampened 0.85×). 20–25 = transitional (1.00×). 25–30 = trending (1.06×). 30–40 = strong trend (1.12×). Above 40 = very strong trend (1.20×). <strong>+DI</strong> (Positive Directional Indicator) vs <strong>-DI</strong> (Negative Directional Indicator) shows trend direction. Computed from real OHLC data using Wilder\'s <strong>DMI</strong> (Directional Movement Index), 14-period.'},
+  adx:          {name:'ADX Trend Overlay', desc:'<strong>ADX</strong> (Average Directional Index) measures TREND STRENGTH (not direction). Not scored directly — acts as an overlay multiplier on trend-following indicator weights (SMA 200, MA Cross). Below 20 = no trend (choppy, weights dampened 0.85×). 20–25 = transitional (1.00×). 25–30 = trending (1.06×). 30–40 = strong trend (1.12×). Above 40 = very strong trend (1.20×). <strong>+DI</strong> (Positive Directional Indicator) vs <strong>-DI</strong> (Negative Directional Indicator) shows trend direction. Computed from real OHLC data using Wilder\'s <strong>DMI</strong> (Directional Movement Index), 14-period.'},
   candle_signal: {name:'Candlestick Signal', desc:'Detects classic single-bar and two-bar reversal patterns on daily charts. <strong>Topping Tails</strong> (also called Shooting Stars) signal potential reversals after uptrends — long upper wick shows sellers rejecting higher prices. <strong>Bottoming Tails</strong> (Hammers) signal reversals after downtrends — long lower wick shows buyers stepping in. <strong>Engulfing</strong> candles confirm directional momentum shifts when one bar completely engulfs the prior bar. Stronger signals occur at key levels (VAH/VAL/SMA 200) and on elevated volume.'},
 };
 
@@ -1903,7 +1983,6 @@ const INDS={
   ],
   med:[
     {id:'mfi',          name:'Money Flow Index', sub:'14-period MFI — computing…',         iW:1.1},
-    {id:'ichimoku',    name:'Ichimoku Cloud',   sub:'Ichimoku — computing…',            iW:1.0},
     {id:'bollinger',   name:'Bollinger Bands',  sub:'20-period 2σ — computing…',        iW:0.9},
     {id:'demark_seq',  name:'DeMark Sequential',sub:'TD 9/13 — computing…',             iW:0.9},
     {id:'candle_signal',name:'Candlestick Signal',sub:'Scanning for reversal patterns…', iW:1.0},
@@ -1914,11 +1993,9 @@ const INDS={
 // tier: 'backbone' = deepest philosophical tensions; 'standard' = meaningful but less critical.
 const CONFLICT_PAIRS = [
   ['sma_200',    'rsi_extreme', 'Trend vs. Exhaustion: SMA200 trend and RSI contrarian signal disagree — trend says one direction, RSI says the move may be overdone. This is the classic trend-follower vs. mean-reversion tension.', 'backbone'],
-  ['ichimoku',   'mfi',         'Ichimoku trend and MFI money flow conflict — trend says one direction but volume-weighted momentum says the other.', 'standard'],
   ['obv',        'bollinger',   'OBV volume flow and Bollinger price position conflict — volume tells a different story than price bands.', 'standard'],
   ['demark_seq', 'sma_200',     'Exhaustion vs. Trend: DeMark signals a reversal while SMA200 confirms the current trend. If DeMark is perfected AND RSI confirms, the reversal signal gains credibility.', 'backbone'],
   ['mfi',        'rsi_extreme', 'Volume-weighted vs. Price-only: MFI and RSI disagree — money flow tells a different story than price momentum alone.', 'standard'],
-  ['sma_cross',  'ichimoku',    'MA Cross and Ichimoku trend direction conflict — both are trend systems, so this disagreement suggests a trend transition in progress.', 'standard'],
   ['obv',        'sma_200',     'Volume flow (OBV) and price trend (SMA200) diverging — smart money may be accumulating/distributing against the visible price trend.', 'backbone'],
   ['mfi',        'obv',         'MFI overbought/oversold vs OBV trend diverging — volume oscillator and cumulative volume flow tell different stories.', 'standard'],
 ];
@@ -1928,12 +2005,12 @@ const CONFLICT_THRESH = 40; // abs difference to flag
 // [ids[], threshold (all must be above or below this), description, type]
 const CONFLUENCE_DEFS = [
   {
-    ids: ['sma_200', 'ichimoku', 'sma_cross'],
-    thresh: 62, // all above 62 = triple bull; all below 38 = triple bear
-    bull: '🔒 Triple Trend Confirmed — SMA200 + Ichimoku + MA Cross aligned bullish. Highest-confidence trend reading.',
-    bear: '🔒 Triple Trend Confirmed — SMA200 + Ichimoku + MA Cross aligned bearish. Highest-confidence trend reading.',
+    ids: ['sma_200', 'sma_cross'],
+    thresh: 62, // all above 62 = dual bull; all below 38 = dual bear
+    bull: '🔒 Dual Trend Confirmed — SMA200 + MA Cross aligned bullish. High-confidence trend reading.',
+    bear: '🔒 Dual Trend Confirmed — SMA200 + MA Cross aligned bearish. High-confidence trend reading.',
     strength: 'strong',
-    multiplier: 1.12, // boost effective weight of these indicators
+    multiplier: 1.10, // slightly lower than old triple
   },
   {
     ids: ['demark_seq', 'bollinger'],
@@ -1990,10 +2067,10 @@ let confluenceMultipliers = {};
 
 // ── ADX OVERLAY ──
 // ADX is not a scored indicator. Instead, it modifies trend-follower weights:
-//   ADX > 25 (trending): boost SMA200, Ichimoku, MA Cross weights
+//   ADX > 25 (trending): boost SMA200, MA Cross weights
 //   ADX < 20 (choppy):   dampen those weights
 // The multiplier is applied during recalc alongside confluence multipliers.
-const ADX_TREND_IDS = ['sma_200', 'ichimoku', 'sma_cross'];
+const ADX_TREND_IDS = ['sma_200', 'sma_cross'];
 let adxOverlay = { adx: null, plusDI: null, minusDI: null, multiplier: 1.0, label: 'N/A' };
 
 function computeADXOverlayMultiplier(adxVal) {
@@ -2011,15 +2088,15 @@ const BW={high:.60,med:.40};
 const BASELINE_BW={high:.60,med:.40};
 const BASELINE_IW={
   vol_profile:1.1, sma_200:1.4,  sma_cross:1.1, rsi_extreme:1.2, obv:1.0,
-  mfi:1.0, ichimoku:1.0, bollinger:0.9, demark_seq:0.9, candle_signal:1.0
+  mfi:1.1, bollinger:0.9, demark_seq:0.9, candle_signal:1.0
 };
 // Custom weights — start at baseline, user can modify
 let customBW={...BASELINE_BW};
 // customIW is managed via INDS[b][i].iW directly; BASELINE_IW is read-only reference
 
 // ── TIMEFRAME PRESETS ──
-// Logic: shorter TF → RSI/Bollinger/DeMark matter more, SMA200/Ichimoku less.
-//        longer TF → SMA200/Ichimoku/VolProfile matter more, RSI/Bollinger less.
+// Logic: shorter TF → RSI/Bollinger/DeMark matter more, SMA200 less.
+//        longer TF → SMA200/VolProfile matter more, RSI/Bollinger less.
 // Note: ADX is an overlay multiplier (not scored), so it's not in iw.
 const TF_PRESETS = {
   swing: {
@@ -2028,7 +2105,7 @@ const TF_PRESETS = {
     bw: { high:0.55, med:0.45 },
     iw: {
       vol_profile:1.0, sma_200:0.8,  sma_cross:0.9,  rsi_extreme:1.5, obv:1.1,
-      mfi:1.3,         ichimoku:0.7,  bollinger:1.4,   demark_seq:1.4, candle_signal:1.2,
+      mfi:1.3,         bollinger:1.4,   demark_seq:1.4, candle_signal:1.2,
     }
   },
   position: {
@@ -2037,7 +2114,7 @@ const TF_PRESETS = {
     bw: { high:0.60, med:0.40 },
     iw: {
       vol_profile:1.1, sma_200:1.4,  sma_cross:1.1,  rsi_extreme:1.2, obv:1.0,
-      mfi:1.0,         ichimoku:1.0,  bollinger:0.9,   demark_seq:0.9, candle_signal:1.0,
+      mfi:1.1,         bollinger:0.9,   demark_seq:0.9, candle_signal:1.0,
     }
   },
   intermediate: {
@@ -2046,7 +2123,7 @@ const TF_PRESETS = {
     bw: { high:0.65, med:0.35 },
     iw: {
       vol_profile:1.3, sma_200:1.5,  sma_cross:1.3,  rsi_extreme:0.9, obv:1.1,
-      mfi:0.8,         ichimoku:1.3,  bollinger:0.7,   demark_seq:0.7, candle_signal:0.8,
+      mfi:0.8,         bollinger:0.7,   demark_seq:0.7, candle_signal:0.8,
     }
   },
   longterm: {
@@ -2055,7 +2132,7 @@ const TF_PRESETS = {
     bw: { high:0.65, med:0.35 },
     iw: {
       vol_profile:1.2, sma_200:1.8,  sma_cross:1.5,  rsi_extreme:0.6, obv:1.2,
-      mfi:0.6,         ichimoku:1.4,  bollinger:0.5,   demark_seq:0.5, candle_signal:0.6,
+      mfi:0.6,         bollinger:0.5,   demark_seq:0.5, candle_signal:0.6,
     }
   }
 };
@@ -2116,7 +2193,7 @@ let vals={}, fgVal=null;
 // MU preload
 const MU_PRELOAD={
   ticker:'MU', price:'422.90',
-  indicators:{vol_profile:72,sma_200:62,sma_cross:68,rsi_extreme:47,obv:75,demark_seq:62,mfi:55,ichimoku:70,bollinger:52,candle_signal:50},
+  indicators:{vol_profile:72,sma_200:62,sma_cross:68,rsi_extreme:47,obv:75,demark_seq:62,mfi:55,bollinger:52,candle_signal:50},
   levels:{r1:'$455–$471',r2:'$503–$515',s1:'$395–$415',s2:'$375',stop:'$390',target:'$500–$525'},
   divNote:'MU ~0.13% TTM yield. Total return is price-driven. Div-adj SMA 200 ≈ price-only.'
 };
@@ -2679,7 +2756,12 @@ async function runAllComputed(ticker){
     if(adx && adx.adx != null){
       const overlay = computeADXOverlayMultiplier(adx.adx);
       adxOverlay = { adx: adx.adx, plusDI: adx.plusDI, minusDI: adx.minusDI, multiplier: overlay.multiplier, label: overlay.label };
+      updateADXBar(adx);
     }
+
+    // Cache daily bars and indicator results for dashboard modal charts
+    window._cachedDailyBars = scoringBars;
+    window._cachedIndicators = I;
 
     // ── Distribute all 10 scores to sliders — synchronous, no rAF wrapper ──
     Object.entries(S).forEach(([id, score]) => {
@@ -2839,7 +2921,7 @@ async function runAllComputed(ticker){
       // Display in ADX overlay badge
       const adxBadge = document.getElementById('adx-overlay-badge');
       if(adxBadge) adxBadge.textContent = adxDetail;
-      if(adxBadge) adxBadge.title = `ADX Overlay: Multiplies trend-follower weights (SMA200, Ichimoku, MA Cross) by ${adxOverlay.multiplier}×`;
+      if(adxBadge) adxBadge.title = `ADX Overlay: Multiplies trend-follower weights (SMA200, MA Cross) by ${adxOverlay.multiplier}×`;
     }
 
     // Volume Profile
@@ -2864,30 +2946,6 @@ async function runAllComputed(ticker){
       if(vpSub) vpSub.textContent = vpDetail;
       const vpNote = document.getElementById('nt-vol_profile');
       if(vpNote && !vpNote.value) vpNote.value = `[Computed from ${Math.min(n,252)} daily bars] POC:$${vp.poc.toFixed(2)} VAH:$${vp.vah.toFixed(2)} VAL:$${vp.val.toFixed(2)} · ${vpDetail}`;
-    }
-
-    // Ichimoku
-    const ich = I.ichimoku;
-    if(ich && ich.kumoA !== null && ich.kumoB !== null){
-      const kumoTop = Math.max(ich.kumoA, ich.kumoB), kumoBottom = Math.min(ich.kumoA, ich.kumoB);
-      const cloudBull = ich.kumoA > ich.kumoB;
-      let ichLabels = [];
-      if(price > kumoTop) ichLabels.push('Price above cloud');
-      else if(price < kumoBottom) ichLabels.push('Price below cloud');
-      else ichLabels.push('Price inside cloud');
-      ichLabels.push(cloudBull ? 'Green cloud' : 'Red cloud');
-      if(ich.tenkan !== null && ich.kijun !== null){
-        if(ich.prevTenkan !== null && ich.prevKijun !== null){
-          if(ich.prevTenkan <= ich.prevKijun && ich.tenkan > ich.kijun) ichLabels.push('TK bullish cross');
-          else if(ich.prevTenkan >= ich.prevKijun && ich.tenkan < ich.kijun) ichLabels.push('TK bearish cross');
-          else ichLabels.push(ich.tenkan > ich.kijun ? 'Tenkan > Kijun' : 'Tenkan < Kijun');
-        } else ichLabels.push(ich.tenkan > ich.kijun ? 'Tenkan > Kijun' : 'Tenkan < Kijun');
-      }
-      const ichDetail = ichLabels.slice(0,2).join(' · ');
-      const ichSub = document.getElementById('sub-ichimoku');
-      if(ichSub) ichSub.textContent = ichDetail;
-      const ichNote = document.getElementById('nt-ichimoku');
-      if(ichNote && !ichNote.value) ichNote.value = `[Computed from ${n} bars] Kumo ${kumoBottom.toFixed(2)}–${kumoTop.toFixed(2)} · TK ${ich.tenkan?.toFixed(2)}/${ich.kijun?.toFixed(2)} · ${ichDetail}`;
     }
 
     // DeMark Sequential
@@ -2943,11 +3001,10 @@ async function runAllComputed(ticker){
     const _fvc = verd(_fsc).l, _fcc = sCol(_fsc);
     const _fcn = window._lastSymbolName ? ` · ${window._lastSymbolName}` : '';
     const _fpr = document.getElementById('price-val').textContent || '';
-    const _fchg = window._lastPriceChange ? ` · <span style="color:${window._lastPriceChangePos?'var(--bull)':'var(--bear)'};font-weight:600">${window._lastPriceChange}</span>` : '';
     const dot2=document.getElementById('sdot'), st2=document.getElementById('stext'), so2=document.getElementById('sstream');
     const btn2=document.getElementById('run-btn');
     dot2.className='sdot active'; st2.className='stext active'; st2.style.animation=''; st2.style.color='';
-    st2.innerHTML=`<span class="sticker">${ticker}</span>${_fcn} — <span style="color:${_fcc};font-weight:600">${_fvc}</span> · ${_fpr}${_fchg} · OHLC scored · ${new Date().toLocaleString()}`;
+    st2.innerHTML=`<span class="sticker">${ticker}</span>${_fcn} — <span style="color:${_fcc};font-weight:600">${_fvc}</span> · ${_fpr} · OHLC scored · ${new Date().toLocaleString()}`;
     so2.textContent='Waiting for AI…';
     btn2.disabled=false; btn2.classList.remove('loading');
     console.log('runAllComputed: UI force-updated. Score:', _fsc);
@@ -3267,8 +3324,8 @@ async function fetchOHLCForCharts(ticker){
     }
     return out;
   };
-  // Daily only — 3y range = ~756 bars — plenty for SMA200 + chart display
-  const daily = await fetchBars('1d','3y');
+  // Daily — fetch 5y so SMA200 warmup (200 bars) completes before 3yr display window
+  const daily = await fetchBars('1d','5y');
   ohlcCache = { ticker, daily, weekly: [] };
   return ohlcCache;
 }
@@ -3564,7 +3621,7 @@ function setSl(id,v,anim=true){
 
 // v12: Thematic grouping — display-only, scoring buckets unchanged
 const IND_GROUPS = [
-  { container: 'grp-trend',      ids: ['sma_200', 'sma_cross', 'ichimoku'] },
+  { container: 'grp-trend',      ids: ['sma_200', 'sma_cross'] },
   { container: 'grp-volume',     ids: ['vol_profile', 'obv', 'mfi'] },
   { container: 'grp-contrarian', ids: ['rsi_extreme', 'demark_seq', 'bollinger', 'candle_signal'] },
 ];
@@ -3585,7 +3642,607 @@ function buildAll(){
     });
   });
   updWB();
+  buildDashboard();
+  document.body.classList.add('dash-active');
 }
+
+// ═══ DASHBOARD 3×3 HEAT MAP ═══
+
+const DASH_ORDER = [
+  'sma_200', 'sma_cross', 'vol_profile',
+  'obv',     'rsi_extreme','demark_seq',
+  'bollinger','mfi',       'candle_signal'
+];
+
+const DASH_GROUP = {
+  sma_200:      {color:'#4c8ef7', label:'Trend'},
+  sma_cross:    {color:'#4c8ef7', label:'Trend'},
+  vol_profile:  {color:'#a78bfa', label:'Volume'},
+  obv:          {color:'#a78bfa', label:'Volume'},
+  mfi:          {color:'#a78bfa', label:'Volume'},
+  rsi_extreme:  {color:'#f0b429', label:'Contrarian'},
+  demark_seq:   {color:'#f0b429', label:'Contrarian'},
+  bollinger:    {color:'#f0b429', label:'Contrarian'},
+  candle_signal:{color:'#f0b429', label:'Contrarian'},
+};
+
+function buildDashboard(){
+  const grid = document.getElementById('dash-grid');
+  if(!grid) return;
+  grid.innerHTML = '';
+  DASH_ORDER.forEach(id => {
+    const ind = IND_BY_ID[id];
+    if(!ind) return;
+    const bkt = IND_BUCKET[id] || 'med';
+    const grp = DASH_GROUP[id];
+    const tile = document.createElement('div');
+    tile.className = 'dash-tile';
+    tile.id = 'dt-' + id;
+    tile.onclick = () => {
+      if(!window._cachedDailyBars){ return; }
+      showTileModal(id);
+    };
+    tile.innerHTML = `
+      <div class="dt-group-dot" style="background:${grp.color}"></div>
+      <div class="dt-bucket">${bkt.toUpperCase()}</div>
+      <div class="dt-gauge-wrap" id="dtg-${id}">${tileGaugeSVG(50, '#f0b429', 60)}</div>
+      <div class="dt-name">${ind.name}</div>
+      <div class="dt-label" id="dtl-${id}">—</div>
+    `;
+    // Dim tiles before analysis
+    tile.style.opacity = '0.4';
+    grid.appendChild(tile);
+  });
+}
+
+// Called after analysis to enable tile interactivity
+function enableDashTiles(){
+  DASH_ORDER.forEach(id => {
+    const tile = document.getElementById('dt-'+id);
+    if(tile){ tile.style.opacity = '1'; tile.style.cursor = 'pointer'; }
+  });
+  // Show tap hint
+  const hint = document.getElementById('dash-hint');
+  if(hint) hint.style.opacity = '1';
+}
+
+// Generate SVG mini gauge for a dashboard tile
+function tileGaugeSVG(score, color, size){
+  const s = size || 60;
+  const cx = s/2, cy = s/2 + 2, r = s/2 - 6;
+  const h = s/2 + 10;
+  const isDark = document.body.classList.contains('dark-mode');
+  const track = isDark ? '#30363d' : '#d0d6e0';
+  const needle = isDark ? '#e6edf3' : '#1a1d23';
+  // Arc helper
+  function arc(startDeg, endDeg){
+    const s1 = startDeg * Math.PI/180, s2 = endDeg * Math.PI/180;
+    const x1 = cx + r*Math.cos(s1), y1 = cy + r*Math.sin(s1);
+    const x2 = cx + r*Math.cos(s2), y2 = cy + r*Math.sin(s2);
+    const large = (endDeg - startDeg) > 180 ? 1 : 0;
+    return `M ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2}`;
+  }
+  const valAngle = 180 + (score/100)*180;
+  const na = valAngle * Math.PI/180;
+  const nx = cx + (r-10)*Math.cos(na), ny = cy + (r-10)*Math.sin(na);
+  return `<svg width="${s}" height="${h}" viewBox="0 0 ${s} ${h}" style="display:block;margin:0 auto;">
+    <path d="${arc(180,360)}" fill="none" stroke="${track}" stroke-width="5" stroke-linecap="round"/>
+    <path d="${arc(180,valAngle)}" fill="none" stroke="${color}" stroke-width="5" stroke-linecap="round"/>
+    <line x1="${cx}" y1="${cy}" x2="${nx}" y2="${ny}" stroke="${needle}" stroke-width="1.5" stroke-linecap="round"/>
+    <circle cx="${cx}" cy="${cy}" r="2" fill="${needle}"/>
+    <text x="${cx}" y="${cy-1}" text-anchor="middle" fill="${color}" font-size="${s*0.26}" font-weight="700" font-family="var(--mono)">${Math.round(score)}</text>
+  </svg>`;
+}
+
+function updateDashTiles(){
+  if(!window._cachedDailyBars) return; // Don't update tiles before analysis
+  enableDashTiles();
+  DASH_ORDER.forEach(id => {
+    const score = vals[id] ?? 50;
+    const color = sCol(score);
+    const sig = getSig(score);
+    // Redraw gauge SVG
+    const gaugeWrap = document.getElementById('dtg-'+id);
+    if(gaugeWrap) gaugeWrap.innerHTML = tileGaugeSVG(score, color, 60);
+    // Label — use sub-line text if available, else signal text
+    const dtl = document.getElementById('dtl-'+id);
+    if(dtl){
+      const subEl = document.getElementById('sub-'+id);
+      const subText = subEl ? subEl.textContent : '';
+      const isPlaceholder = subText.includes('computing') || subText.includes('Scanning') || subText.includes('div-adj') || subText.includes('Golden / Death');
+      dtl.textContent = (!isPlaceholder && subText.length > 2) ? subText : sig.txt;
+      dtl.style.color = color;
+    }
+    // Tile hover border color
+    const tile = document.getElementById('dt-'+id);
+    if(tile) tile.style.borderColor = `${color}30`;
+  });
+}
+
+// ── Tile Detail Modal ──
+
+function showTileModal(id){
+  const overlay = document.getElementById('dt-modal-overlay');
+  if(!overlay) return;
+  // Hide tap hint after first use
+  const hint = document.getElementById('dash-hint');
+  if(hint) hint.style.opacity = '0';
+  const ind = IND_BY_ID[id];
+  if(!ind) return;
+  const score = vals[id] ?? 50;
+  const color = sCol(score);
+  const sig = getSig(score);
+  const bkt = IND_BUCKET[id] || 'med';
+  const grp = DASH_GROUP[id];
+  const tip = TIPS[id];
+
+  // Tags
+  const tagsEl = document.getElementById('dt-modal-tags');
+  tagsEl.innerHTML = `
+    <span class="dt-modal-tag" style="color:${grp.color};background:${grp.color}18;border:1px solid ${grp.color}40;">${grp.label}</span>
+    <span class="dt-modal-tag" style="color:var(--text3);background:var(--surface3);border:1px solid var(--border);">${bkt.toUpperCase()}</span>
+  `;
+
+  // Title
+  document.getElementById('dt-modal-title').textContent = ind.name;
+
+  // Score row
+  const scoreRow = document.getElementById('dt-modal-score-row');
+  const r=parseInt(color.slice(1,3),16), g=parseInt(color.slice(3,5),16), b=parseInt(color.slice(5,7),16);
+  scoreRow.style.background = `rgba(${r},${g},${b},0.08)`;
+  scoreRow.style.border = `1px solid ${color}25`;
+
+  // Mini gauge in modal
+  const gaugeWrap = document.getElementById('dt-modal-gauge-wrap');
+  gaugeWrap.innerHTML = `<canvas id="dt-modal-gauge-cv" width="90" height="58"></canvas>`;
+  setTimeout(() => drawTileGauge(document.getElementById('dt-modal-gauge-cv'), score), 10);
+
+  // Label + signal
+  const subEl = document.getElementById('sub-'+id);
+  const subText = subEl ? subEl.textContent : sig.txt;
+  const isPlaceholder = subText.includes('computing') || subText.includes('Scanning');
+  document.getElementById('dt-modal-label').textContent = (!isPlaceholder && subText.length > 2) ? subText : sig.txt;
+  document.getElementById('dt-modal-label').style.color = color;
+  document.getElementById('dt-modal-signal').textContent = `Signal: ${Math.round(score)} / 100`;
+
+  // Chart — build indicator-specific chart in modal
+  const chartArea = document.getElementById('dt-modal-chart');
+  chartArea.innerHTML = '';
+  const chartWrap = document.createElement('div');
+  chartWrap.style.height = 'clamp(160px, 30vh, 300px)';
+  chartArea.appendChild(chartWrap);
+  buildModalChart(id, chartWrap);
+
+  // Description from TIPS
+  const descEl = document.getElementById('dt-modal-desc');
+  descEl.innerHTML = tip ? tip.desc : 'No description available.';
+
+  overlay.style.display = 'flex';
+}
+
+function closeTileModal(){
+  const overlay = document.getElementById('dt-modal-overlay');
+  if(overlay) overlay.style.display = 'none';
+  // Destroy any chart we created in the modal
+  if(window._dtModalChart){ window._dtModalChart.destroy(); window._dtModalChart = null; }
+}
+// Escape key closes tile modal
+document.addEventListener('keydown', e => { if(e.key === 'Escape') closeTileModal(); });
+
+function drawTileGauge(cv, score){
+  if(!cv) return;
+  const ctx = cv.getContext('2d');
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  const cx = cv.width/2, cy = cv.height - 4, r = 36;
+  const isDark = document.body.classList.contains('dark-mode');
+  const trackColor = isDark ? '#30363d' : '#d0d6e0';
+  const needleColor = isDark ? '#e6edf3' : '#1a1d23';
+  // Track
+  ctx.beginPath(); ctx.arc(cx, cy, r, Math.PI, 0); ctx.lineWidth = 6; ctx.strokeStyle = trackColor; ctx.lineCap = 'round'; ctx.stroke();
+  // Gradient fill
+  const gr = ctx.createLinearGradient(cx-r, cy, cx+r, cy);
+  gr.addColorStop(0,'#ff4560'); gr.addColorStop(.25,'#ff9a7c'); gr.addColorStop(.5,'#f0b429'); gr.addColorStop(.75,'#4dd9a0'); gr.addColorStop(1,'#00d97e');
+  ctx.beginPath(); ctx.arc(cx, cy, r, Math.PI, Math.PI + (score/100)*Math.PI); ctx.lineWidth = 6; ctx.strokeStyle = gr; ctx.lineCap = 'round'; ctx.stroke();
+  // Needle
+  const na = Math.PI + (score/100)*Math.PI;
+  ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + (r-12)*Math.cos(na), cy + (r-12)*Math.sin(na));
+  ctx.lineWidth = 1.5; ctx.strokeStyle = needleColor; ctx.lineCap = 'round'; ctx.stroke();
+  ctx.beginPath(); ctx.arc(cx, cy, 2.5, 0, Math.PI*2); ctx.fillStyle = needleColor; ctx.fill();
+}
+
+// Build a fresh Chart.js chart inside the modal for the given indicator
+function buildModalChart(indId, container){
+  if(window._dtModalChart){ window._dtModalChart.destroy(); window._dtModalChart = null; }
+  if(!window._cachedDailyBars || !window._cachedDailyBars.length){
+    container.innerHTML = `<div style="padding:20px;text-align:center;color:var(--text3);font:400 12px/1.5 var(--mono);">Enter a ticker and click <strong style="color:var(--accent);">Analyze</strong> to load indicator charts</div>`;
+    return;
+  }
+  const bars = window._cachedDailyBars;
+  const canvas = document.createElement('canvas');
+  container.innerHTML = '';
+
+  const chartBars = bars;
+
+  // Date range label
+  const startDate = chartBars[0]?.t || '';
+  const endDate = chartBars[chartBars.length-1]?.t || '';
+  const rangeLabel = document.createElement('div');
+  rangeLabel.style.cssText = 'font:500 9px/1 var(--mono);color:var(--text3);text-align:center;padding:2px 0 4px;';
+  rangeLabel.textContent = `Daily · ${startDate} — ${endDate} (${chartBars.length} bars)`;
+  container.appendChild(rangeLabel);
+  container.appendChild(canvas);
+
+  const labels = chartBars.map(b => b.t || '');
+  const closes = chartBars.map(b => b.c);
+  const isDark = document.body.classList.contains('dark-mode');
+  const gridColor = isDark ? '#21262d' : '#e8eaed';
+  const textColor = isDark ? '#8b949e' : '#6e7681';
+  const CI = window._cachedIndicators || {};
+  const hasAnnotation = Chart.registry?.plugins?.get('annotation');
+
+  // ── Oscillator charts (RSI, MFI) — 0–100 scale with thresholds ──
+  if(indId === 'rsi_extreme' || indId === 'mfi'){
+    const series = indId === 'rsi_extreme' ? chartRSI(closes, 14) : chartMFI(bars, 14);
+    const overbought = indId === 'rsi_extreme' ? 70 : 80;
+    const oversold = indId === 'rsi_extreme' ? 30 : 20;
+    const lineColor = indId === 'rsi_extreme' ? '#3b82f6' : '#a78bfa';
+    window._dtModalChart = new Chart(canvas, {
+      type: 'line',
+      data: { labels, datasets: [{ label: indId === 'rsi_extreme' ? 'RSI(14)' : 'MFI(14)', data: series, borderColor: lineColor, borderWidth: 1.5, pointRadius: 0, tension: 0.3, fill: false }] },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          annotation: hasAnnotation ? { annotations: {
+            ob: { type: 'line', yMin: overbought, yMax: overbought, borderColor: '#ff456080', borderWidth: 1, borderDash: [4,3], label: { content: 'Overbought', display: true, position: 'end', font: { size: 8 }, color: '#ff4560' } },
+            os: { type: 'line', yMin: oversold, yMax: oversold, borderColor: '#00d97e80', borderWidth: 1, borderDash: [4,3], label: { content: 'Oversold', display: true, position: 'end', font: { size: 8 }, color: '#00d97e' } },
+            mid: { type: 'line', yMin: 50, yMax: 50, borderColor: gridColor, borderWidth: 1, borderDash: [2,4] },
+          }} : {},
+        },
+        scales: {
+          x: { display: true, grid: { color: gridColor }, ticks: { color: textColor, font: { size: 9 }, maxTicksLimit: 6 } },
+          y: { display: true, min: 0, max: 100, grid: { color: gridColor }, ticks: { color: textColor, font: { size: 9 }, stepSize: 20 } }
+        },
+        interaction: { intersect: false, mode: 'index' },
+      }
+    });
+    return;
+  }
+
+  // ── OBV — cumulative volume with SMA overlay ──
+  if(indId === 'obv'){
+    const obvSeries = chartOBV(bars);
+    const obvSMA = chartSMA(obvSeries, 20);
+    window._dtModalChart = new Chart(canvas, {
+      type: 'line',
+      data: { labels, datasets: [
+        { label: 'OBV', data: obvSeries, borderColor: '#a78bfa', borderWidth: 1.5, pointRadius: 0, tension: 0.3, fill: false },
+        { label: 'OBV SMA(20)', data: obvSMA, borderColor: '#f0b429', borderWidth: 1, pointRadius: 0, borderDash: [4,3] },
+      ]},
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { display: true, grid: { color: gridColor }, ticks: { color: textColor, font: { size: 9 }, maxTicksLimit: 6 } },
+          y: { display: true, grid: { color: gridColor }, ticks: { color: textColor, font: { size: 9 }, maxTicksLimit: 5, callback: v => (v/1e6).toFixed(1)+'M' } }
+        },
+        interaction: { intersect: false, mode: 'index' },
+      }
+    });
+    return;
+  }
+
+  // ── Candlestick — OHLC bars for last 50 bars when pattern detected ──
+  if(indId === 'candle_signal'){
+    const cs = CI.candle;
+    const tail = bars.slice(-63);
+    const tailLabels = tail.map(b => b.t || '');
+    rangeLabel.textContent = `Daily · ${tail[0]?.t||''} — ${tail[tail.length-1]?.t||''} (3 months)`;
+    // Build colored bar data: each bar = [open, close], colored by direction
+    const bodies = tail.map(b => [Math.min(b.o, b.c), Math.max(b.o, b.c)]);
+    const colors = tail.map(b => b.c >= b.o ? '#00d97e' : '#ff4560');
+    const highs = tail.map(b => b.h);
+    const lows = tail.map(b => b.l);
+    const datasets = [
+      { label: 'Body', data: bodies, backgroundColor: colors, borderColor: colors, borderWidth: 1, type: 'bar', barPercentage: 0.6, categoryPercentage: 0.8, borderSkipped: false },
+      { label: 'High', data: highs, borderColor: isDark ? '#484f5860' : '#b0bac860', borderWidth: 0.5, pointRadius: 0, type: 'line', fill: false },
+      { label: 'Low', data: lows, borderColor: isDark ? '#484f5860' : '#b0bac860', borderWidth: 0.5, pointRadius: 0, type: 'line', fill: false },
+    ];
+    // Mark the pattern bar if detected
+    const annotations = {};
+    if(cs && cs.barsAgo != null && cs.barsAgo < 63){
+      const patIdx = tail.length - 1 - cs.barsAgo;
+      annotations.pat = { type: 'line', xMin: patIdx, xMax: patIdx, borderColor: '#f0b429', borderWidth: 2, label: { content: cs.type, display: true, position: 'start', font: { size: 9, weight: 'bold' }, color: '#f0b429', backgroundColor: '#f0b42920' } };
+    }
+    window._dtModalChart = new Chart(canvas, {
+      type: 'bar',
+      data: { labels: tailLabels, datasets },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false }, annotation: hasAnnotation ? { annotations } : {} },
+        scales: {
+          x: { display: true, grid: { color: gridColor }, ticks: { color: textColor, font: { size: 8 }, maxTicksLimit: 6 } },
+          y: { display: true, grid: { color: gridColor }, ticks: { color: textColor, font: { size: 9 }, maxTicksLimit: 5 } }
+        },
+        interaction: { intersect: false, mode: 'index' },
+      }
+    });
+    return;
+  }
+
+  // ── Price-based charts ──
+  const datasets = [{ label: 'Close', data: closes, borderColor: sCol(vals[indId]??50), borderWidth: 1.5, pointRadius: 0, tension: 0.3, fill: false }];
+  const annotations = {};
+
+  // SMA 200 — compute from FULL bars, then trim to where line exists
+  if(indId === 'sma_200'){
+    const fullCloses = bars.map(b => b.c);
+    const fullSma200 = chartSMA(fullCloses, 200);
+    const smaStart = fullSma200.findIndex(v => v !== null);
+    if(smaStart >= 0){
+      const trimLabels = bars.slice(smaStart).map(b => b.t || '');
+      const trimCloses = fullCloses.slice(smaStart);
+      const trimSma = fullSma200.slice(smaStart);
+      // Update range label
+      rangeLabel.textContent = `Daily · ${bars[smaStart]?.t||''} — ${endDate} (${trimLabels.length} bars)`;
+      datasets[0] = { label: 'Close', data: trimCloses, borderColor: sCol(vals[indId]??50), borderWidth: 1.5, pointRadius: 0, tension: 0.3, fill: false };
+      datasets.push({ label: 'SMA 200', data: trimSma, borderColor: '#a855f7', borderWidth: 1.5, pointRadius: 0, borderDash: [4,3] });
+      // Override labels for this chart
+      labels.length = 0; trimLabels.forEach(l => labels.push(l));
+    } else {
+      datasets.push({ label: 'SMA 200', data: chartSMA(closes, 200), borderColor: '#a855f7', borderWidth: 1.5, pointRadius: 0, borderDash: [4,3] });
+    }
+  }
+
+  // MA Cross 50/200 — compute from FULL bars, trim to where 200 exists
+  if(indId === 'sma_cross'){
+    const fullCloses = bars.map(b => b.c);
+    const fullSma200 = chartSMA(fullCloses, 200);
+    const fullSma50 = chartSMA(fullCloses, 50);
+    const smaStart = fullSma200.findIndex(v => v !== null);
+    if(smaStart >= 0){
+      const trimLabels = bars.slice(smaStart).map(b => b.t || '');
+      const trimCloses = fullCloses.slice(smaStart);
+      const trimSma200 = fullSma200.slice(smaStart);
+      const trimSma50 = fullSma50.slice(smaStart);
+      rangeLabel.textContent = `Daily · ${bars[smaStart]?.t||''} — ${endDate} (${trimLabels.length} bars)`;
+      datasets[0] = { label: 'Close', data: trimCloses, borderColor: sCol(vals[indId]??50), borderWidth: 1.5, pointRadius: 0, tension: 0.3, fill: false };
+      datasets.push({ label: 'SMA 200', data: trimSma200, borderColor: '#a855f7', borderWidth: 1.5, pointRadius: 0, borderDash: [4,3] });
+      datasets.push({ label: 'SMA 50', data: trimSma50, borderColor: '#f0b429', borderWidth: 1.5, pointRadius: 0, borderDash: [4,3] });
+      labels.length = 0; trimLabels.forEach(l => labels.push(l));
+    } else {
+      datasets.push({ label: 'SMA 200', data: chartSMA(closes, 200), borderColor: '#a855f7', borderWidth: 1.5, pointRadius: 0, borderDash: [4,3] });
+      datasets.push({ label: 'SMA 50', data: chartSMA(closes, 50), borderColor: '#f0b429', borderWidth: 1.5, pointRadius: 0, borderDash: [4,3] });
+    }
+  }
+
+  // Volume Profile — price + POC/VAH/VAL horizontal lines
+  if(indId === 'vol_profile' && CI.volProf && hasAnnotation){
+    const vp = CI.volProf;
+    if(vp.poc) annotations.poc = { type: 'line', yMin: vp.poc, yMax: vp.poc, borderColor: '#f0b429', borderWidth: 1.5, borderDash: [6,3], label: { content: `POC $${vp.poc.toFixed(2)}`, display: true, position: 'start', font: { size: 8 }, color: '#f0b429', backgroundColor: '#f0b42920' } };
+    if(vp.vah) annotations.vah = { type: 'line', yMin: vp.vah, yMax: vp.vah, borderColor: '#ff456090', borderWidth: 1, borderDash: [4,3], label: { content: `VAH $${vp.vah.toFixed(2)}`, display: true, position: 'start', font: { size: 8 }, color: '#ff4560' } };
+    if(vp.val) annotations.val = { type: 'line', yMin: vp.val, yMax: vp.val, borderColor: '#00d97e90', borderWidth: 1, borderDash: [4,3], label: { content: `VAL $${vp.val.toFixed(2)}`, display: true, position: 'start', font: { size: 8 }, color: '#00d97e' } };
+  }
+
+  // DeMark — price chart + setup count marker
+  if(indId === 'demark_seq' && CI.demark){
+    const dm = CI.demark;
+    // Mark the setup completion or current count position
+    if(dm.setupCount > 0 && dm.barsSinceSetup != null && dm.barsSinceSetup < bars.length){
+      const setupIdx = bars.length - 1 - (dm.barsSinceSetup || 0);
+      const countLabel = dm.setupCount >= 9 ? `${dm.lastSetup?.toUpperCase()||'?'} 9 ✓` : `${(dm.lastSetup||'?').toUpperCase()} ${dm.setupCount}/9`;
+      if(hasAnnotation) annotations.setup = { type: 'point', xValue: setupIdx, yValue: closes[setupIdx], backgroundColor: dm.lastSetup === 'buy' ? '#00d97e' : '#ff4560', radius: 6, borderColor: '#fff', borderWidth: 1.5 };
+      if(hasAnnotation) annotations.setupLbl = { type: 'label', xValue: setupIdx, yValue: closes[setupIdx], content: countLabel, font: { size: 9, weight: 'bold' }, color: dm.lastSetup === 'buy' ? '#00d97e' : '#ff4560', yAdjust: -16 };
+    }
+    // Also mark countdown 13 if present
+    if(dm.lastCd && dm.barsSinceCd != null && dm.barsSinceCd < bars.length && hasAnnotation){
+      const cdIdx = bars.length - 1 - dm.barsSinceCd;
+      annotations.cd13 = { type: 'point', xValue: cdIdx, yValue: closes[cdIdx], backgroundColor: '#f0b429', radius: 7, borderColor: '#fff', borderWidth: 2 };
+      annotations.cd13Lbl = { type: 'label', xValue: cdIdx, yValue: closes[cdIdx], content: `CD13 ${dm.lastCd.toUpperCase()}`, font: { size: 9, weight: 'bold' }, color: '#f0b429', yAdjust: -18 };
+    }
+  }
+
+  // Bollinger Bands — price + upper/middle/lower
+  if(indId === 'bollinger'){
+    const bb = chartBollinger(closes, 20, 2);
+    datasets.push({ label: 'Upper', data: bb.upper, borderColor: '#ff4560', borderWidth: 1, pointRadius: 0, borderDash: [3,3] });
+    datasets.push({ label: 'Middle', data: bb.middle, borderColor: '#8b949e', borderWidth: 1, pointRadius: 0, borderDash: [2,2] });
+    datasets.push({ label: 'Lower', data: bb.lower, borderColor: '#00d97e', borderWidth: 1, pointRadius: 0, borderDash: [3,3] });
+  }
+
+  window._dtModalChart = new Chart(canvas, {
+    type: 'line',
+    data: { labels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, annotation: hasAnnotation ? { annotations } : {} },
+      scales: {
+        x: { display: true, grid: { color: gridColor }, ticks: { color: textColor, font: { size: 9 }, maxTicksLimit: 6 } },
+        y: { display: true, grid: { color: gridColor }, ticks: { color: textColor, font: { size: 9 }, maxTicksLimit: 5 } }
+      },
+      interaction: { intersect: false, mode: 'index' },
+    }
+  });
+}
+
+// Helper: SMA array for modal charts (not the single-value scoring version)
+function chartSMA(data, period){
+  const result = new Array(data.length).fill(null);
+  for(let i = period - 1; i < data.length; i++){
+    let sum = 0;
+    for(let j = i - period + 1; j <= i; j++) sum += data[j];
+    result[i] = sum / period;
+  }
+  return result;
+}
+
+// Helper: Bollinger Bands array for modal charts (not the single-value scoring version)
+function chartBollinger(data, period, mult){
+  const upper = new Array(data.length).fill(null);
+  const middle = new Array(data.length).fill(null);
+  const lower = new Array(data.length).fill(null);
+  for(let i = period - 1; i < data.length; i++){
+    let sum = 0;
+    for(let j = i - period + 1; j <= i; j++) sum += data[j];
+    const avg = sum / period;
+    let sqSum = 0;
+    for(let j = i - period + 1; j <= i; j++) sqSum += (data[j] - avg) ** 2;
+    const std = Math.sqrt(sqSum / period);
+    middle[i] = avg;
+    upper[i] = avg + mult * std;
+    lower[i] = avg - mult * std;
+  }
+  return { upper, middle, lower };
+}
+
+// Helper: RSI array for modal charts (Wilder's smoothing, 14-period)
+function chartRSI(closes, period){
+  const result = new Array(closes.length).fill(null);
+  if(closes.length < period + 1) return result;
+  let gainSum = 0, lossSum = 0;
+  for(let i = 1; i <= period; i++){
+    const d = closes[i] - closes[i-1];
+    if(d > 0) gainSum += d; else lossSum -= d;
+  }
+  let avgGain = gainSum / period, avgLoss = lossSum / period;
+  result[period] = avgLoss === 0 ? 100 : 100 - 100/(1 + avgGain/avgLoss);
+  for(let i = period + 1; i < closes.length; i++){
+    const d = closes[i] - closes[i-1];
+    avgGain = (avgGain * (period-1) + (d > 0 ? d : 0)) / period;
+    avgLoss = (avgLoss * (period-1) + (d < 0 ? -d : 0)) / period;
+    result[i] = avgLoss === 0 ? 100 : 100 - 100/(1 + avgGain/avgLoss);
+  }
+  return result;
+}
+
+// Helper: MFI array for modal charts (14-period, volume-weighted RSI)
+function chartMFI(bars, period){
+  const result = new Array(bars.length).fill(null);
+  if(bars.length < period + 1) return result;
+  const tp = bars.map(b => (b.h + b.l + b.c) / 3);
+  for(let i = period; i < bars.length; i++){
+    let posFlow = 0, negFlow = 0;
+    for(let j = i - period + 1; j <= i; j++){
+      const flow = tp[j] * (bars[j].v || 0);
+      if(tp[j] > tp[j-1]) posFlow += flow;
+      else negFlow += flow;
+    }
+    result[i] = negFlow === 0 ? 100 : 100 - 100/(1 + posFlow/negFlow);
+  }
+  return result;
+}
+
+// Helper: OBV cumulative array for modal charts
+function chartOBV(bars){
+  const result = new Array(bars.length).fill(null);
+  if(bars.length < 2) return result;
+  result[0] = 0;
+  for(let i = 1; i < bars.length; i++){
+    const vol = bars[i].v || 0;
+    if(bars[i].c > bars[i-1].c) result[i] = result[i-1] + vol;
+    else if(bars[i].c < bars[i-1].c) result[i] = result[i-1] - vol;
+    else result[i] = result[i-1];
+  }
+  return result;
+}
+
+// ═══ ADX BAR UPDATE ═══
+
+const ADX_ZONES = [
+  {label:'Choppy',  end:15, color:'#484f58'},
+  {label:'Weak',    end:25, color:'#f0b429'},
+  {label:'Trending',end:40, color:'#4dd9a0'},
+  {label:'Strong',  end:60, color:'#00d97e'},
+  {label:'Extreme', end:70, color:'#4c8ef7'},
+];
+
+function buildADXBarZones(){
+  const zonesEl = document.getElementById('adx-bar-zones');
+  const labelsEl = document.getElementById('adx-bar-labels');
+  if(!zonesEl || !labelsEl) return;
+  zonesEl.innerHTML = '';
+  labelsEl.innerHTML = '';
+  ADX_ZONES.forEach((z, i) => {
+    const prevEnd = i === 0 ? 0 : ADX_ZONES[i-1].end;
+    const widthPct = ((z.end - prevEnd) / 70) * 100;
+    const zone = document.createElement('div');
+    zone.className = 'adx-bar-zone';
+    zone.style.width = widthPct + '%';
+    zone.style.background = z.color + '20';
+    zonesEl.appendChild(zone);
+    // Label
+    const midPct = ((prevEnd + z.end) / 2 / 70) * 100;
+    const lbl = document.createElement('span');
+    lbl.className = 'adx-bar-lbl';
+    lbl.style.left = midPct + '%';
+    lbl.textContent = z.label;
+    lbl.id = 'adx-zone-lbl-' + i;
+    labelsEl.appendChild(lbl);
+  });
+}
+
+function updateADXBar(adxData){
+  if(!adxData || adxData.adx == null) return;
+  const card = document.getElementById('adx-bar');
+  if(!card) return;
+  card.style.display = 'block';
+  const val = adxData.adx;
+  const pdi = adxData.plusDI;
+  const mdi = adxData.minusDI;
+  const rising = adxData.adxRising;
+  const pct = Math.min(val / 70, 1) * 100;
+  const regime = ADX_ZONES.find(z => val <= z.end) || ADX_ZONES[ADX_ZONES.length - 1];
+  const direction = pdi > mdi ? 'bull' : pdi < mdi ? 'bear' : 'flat';
+  const dirColor = direction === 'bull' ? '#00d97e' : direction === 'bear' ? '#ff4560' : '#f0b429';
+  const dirLabel = direction === 'bull' ? '+DI Leading' : direction === 'bear' ? '−DI Leading' : 'Flat';
+
+  // Direction + rising
+  const dirEl = document.getElementById('adx-bar-dir');
+  if(dirEl){ dirEl.textContent = dirLabel; dirEl.style.color = dirColor; }
+  const risEl = document.getElementById('adx-bar-rising');
+  if(risEl){ risEl.textContent = rising ? '▲ Rising' : '▼ Falling'; risEl.style.color = rising ? '#4dd9a0' : '#ff9a7c'; }
+
+  // Fill bar
+  const fill = document.getElementById('adx-bar-fill');
+  if(fill){
+    fill.style.width = pct + '%';
+    fill.style.background = `linear-gradient(90deg, ${ADX_ZONES[0].color}80, ${regime.color})`;
+    fill.style.boxShadow = `0 0 8px ${regime.color}40`;
+  }
+
+  // Needle
+  const needle = document.getElementById('adx-bar-needle');
+  if(needle) needle.style.left = pct + '%';
+
+  // Stats
+  const valEl = document.getElementById('adx-bar-val');
+  if(valEl){ valEl.textContent = Math.round(val); valEl.style.color = regime.color; }
+  const pdiEl = document.getElementById('adx-bar-pdi');
+  if(pdiEl){ pdiEl.textContent = Math.round(pdi); pdiEl.style.color = pdi > mdi ? '#00d97e' : '#6e7681'; }
+  const mdiEl = document.getElementById('adx-bar-mdi');
+  if(mdiEl){ mdiEl.textContent = Math.round(mdi); mdiEl.style.color = mdi > pdi ? '#ff4560' : '#6e7681'; }
+
+  // Regime pill
+  const regimeEl = document.getElementById('adx-bar-regime');
+  if(regimeEl){
+    const suffix = val >= 25 ? (direction === 'bull' ? ' ▲ Uptrend' : ' ▼ Downtrend') : '';
+    regimeEl.textContent = regime.label + suffix;
+    regimeEl.style.color = regime.color;
+    regimeEl.style.background = regime.color + '15';
+  }
+
+  // Highlight active zone label
+  ADX_ZONES.forEach((z, i) => {
+    const lbl = document.getElementById('adx-zone-lbl-'+i);
+    if(!lbl) return;
+    const prevEnd = i === 0 ? 0 : ADX_ZONES[i-1].end;
+    const isActive = val > prevEnd && val <= z.end;
+    lbl.style.color = isActive ? z.color : '#484f58';
+  });
+}
+
+// Build ADX zones on page load
+setTimeout(buildADXBarZones, 0);
 
 // ═══ CALCULATE ═══
 function bScore(b){
@@ -3616,6 +4273,7 @@ function recalc(){
   // Apply conflict regime score cap (Transition clamps toward neutral)
   const t=applyConflictCap(rawT,currentConflictRegime);
   drawGauge(t,dispersion,rawT); updBD(bs,t); updWB(); detectFallingKnife(); detectDualSignalCommentary();
+  updateDashTiles();
 }
 function sCol(s){if(s>=70)return'#00d97e';if(s>=60)return'#4dd9a0';if(s>=55)return'#a0cfb8';if(s>=45)return'#f0b429';if(s>=40)return'#ff9a7c';if(s>=30)return'#ff7c8a';return'#ff4560';}
 function verd(s){
@@ -3872,13 +4530,14 @@ function detectDualSignalCommentary(){
   list.innerHTML = '';
 
   const ticker = document.getElementById('ticker-input').value.trim().toUpperCase() || '—';
+  const coName = window._lastSymbolName || '';
+  const tickerDisplay = coName ? `${coName} (${ticker})` : ticker;
 
   // Read all indicator scores
   const rsi      = vals.rsi_extreme ?? 50;
   const demark   = vals.demark_seq ?? 50;
   const candle   = vals.candle_signal ?? 50;
   const sma200   = vals.sma_200 ?? 50;
-  const ichi     = vals.ichimoku ?? 50;
   const obv      = vals.obv ?? 50;
   const boll     = vals.bollinger ?? 50;
   const mfiVal   = vals.mfi ?? 50;
@@ -3896,8 +4555,8 @@ function detectDualSignalCommentary(){
   const wScore=Math.round(allInds.reduce((s,i)=>s+((vals[i.id]||50)/100)*(effectiveW2(i)/tw2),0)*100);
 
   // ── Classify indicator families ──
-  // Trend-following: SMA200, Ichimoku, MA Cross (ADX amplifies/dampens these via overlay)
-  const trendScores = [sma200, ichi, maCross];
+  // Trend-following: SMA200, MA Cross (ADX amplifies/dampens these via overlay)
+  const trendScores = [sma200, maCross];
   const trendAvg = Math.round(trendScores.reduce((s,v)=>s+v,0)/trendScores.length);
   const trendBullCount = trendScores.filter(s => s >= 60).length;
   const trendBearCount = trendScores.filter(s => s <= 40).length;
@@ -3913,78 +4572,78 @@ function detectDualSignalCommentary(){
   const mean = allScores.reduce((s,v)=>s+v,0)/allScores.length;
   const dispersion = Math.round(Math.sqrt(allScores.reduce((s,v)=>s+(v-mean)**2,0)/allScores.length));
 
+  const adxVal_c = adxOverlay.adx ?? 0;
+  const trendDir = trendBullCount > trendBearCount ? 'bullish' : trendBearCount > trendBullCount ? 'bearish' : null;
+
   const parts = [];
 
   // ── TREND ASSESSMENT ──
-  if(trendBullCount >= 3){
-    parts.push(`<strong>${ticker} is in a confirmed uptrend</strong> — all 3 trend-following indicators (the 200-day Moving Average, Ichimoku Cloud, and Moving Average Crossover) are bullish${adxOverlay.adx >= 25 ? ', and the Average Directional Index (ADX) confirms strong trend strength' : ''}. This means the broad direction of price is up, and institutional positioning favors buyers.`);
-  } else if(trendBearCount >= 3){
-    parts.push(`<strong>${ticker} is in a confirmed downtrend</strong> — all 3 trend-following indicators (the 200-day Moving Average, Ichimoku Cloud, and Moving Average Crossover) are bearish${adxOverlay.adx >= 25 ? ', and the Average Directional Index (ADX) confirms strong trend strength' : ''}. This means the broad direction of price is down, and the weight of evidence favors sellers.`);
-  } else if(trendBullCount >= 2 && trendBearCount === 0){
-    parts.push(`<strong>${ticker} leans bullish on trend</strong> — most trend indicators point up, though the signal is not unanimous. The uptrend is developing but not yet fully confirmed across all systems.`);
-  } else if(trendBearCount >= 2 && trendBullCount === 0){
-    parts.push(`<strong>${ticker} leans bearish on trend</strong> — most trend indicators point down, though the signal is not unanimous. The downtrend is developing but not yet confirmed across all systems.`);
+  if(trendBullCount >= 2){
+    if(adxVal_c >= 25){
+      parts.push(`<strong>${tickerDisplay} is in a confirmed uptrend</strong> — price is above its key moving averages and the trend is strong. The broad direction favors buyers.`);
+    } else {
+      parts.push(`<strong>${tickerDisplay} confirmed uptrend</strong> — price is above its key moving averages. The overall direction is up.`);
+    }
+  } else if(trendBearCount >= 2){
+    if(adxVal_c >= 25){
+      parts.push(`<strong>${tickerDisplay} is in a confirmed downtrend</strong> — price is below its key moving averages and selling pressure is strong.`);
+    } else {
+      parts.push(`<strong>${tickerDisplay} confirmed downtrend</strong> — price is below its key moving averages. The overall direction is down.`);
+    }
+  } else if(trendBullCount >= 1 && trendBearCount === 0){
+    parts.push(`<strong>${tickerDisplay} leans bullish</strong> — one trend measure is positive, but the trend isn't fully confirmed yet.`);
+  } else if(trendBearCount >= 1 && trendBullCount === 0){
+    parts.push(`<strong>${tickerDisplay} leans bearish</strong> — one trend measure is negative, but the downtrend isn't fully confirmed yet.`);
   } else {
-    parts.push(`<strong>${ticker} shows no clear trend</strong> — trend indicators are mixed or neutral${adxOverlay.adx < 20 ? ' (the Average Directional Index below 20 confirms choppy/trendless conditions)' : ''}. This typically means the stock is consolidating, transitioning between regimes, or choppy. Trend-following signals carry less conviction here.`);
+    parts.push(`<strong>${tickerDisplay} — no clear trend</strong> — indicators are mixed or flat${adxVal_c < 20 ? ', and trend strength is very low' : ''}. The market is choppy or transitioning.`);
   }
 
-  // ── EXHAUSTION / CONTRARIAN ASSESSMENT ──
+  // ── EXHAUSTION / CONTRARIAN ──
   if(exhBullCount >= 3){
-    parts.push(`Meanwhile, <strong>exhaustion signals are flashing oversold</strong> — all 3 contrarian indicators (the Relative Strength Index, DeMark Sequential, and Bollinger Bands) say the recent move down may be overdone. These are "mean reversion" signals that suggest the selling is stretched, not necessarily that it's over.`);
+    parts.push(`Momentum indicators suggest <strong>selling has been overdone</strong> — the drop may be nearing exhaustion. Watch for a bounce.`);
   } else if(exhBearCount >= 3){
-    parts.push(`Meanwhile, <strong>exhaustion signals are flashing overbought</strong> — all 3 contrarian indicators (the Relative Strength Index, DeMark Sequential, and Bollinger Bands) say the recent move up may be stretched. These signals warn that the rally could be running out of steam, not necessarily that it's reversing.`);
+    parts.push(`Momentum indicators suggest the <strong>rally is stretched</strong> — buying enthusiasm may be running out of steam.`);
   } else if(exhBullCount >= 2){
-    parts.push(`Some contrarian indicators are starting to signal oversold conditions — suggesting the downward pressure may be getting stretched, though not yet at extreme levels.`);
+    parts.push(`Some indicators suggest selling pressure may be fading — a potential floor could be forming.`);
   } else if(exhBearCount >= 2){
-    parts.push(`Some contrarian indicators are starting to signal overbought conditions — suggesting the upward push may be getting stretched, though not yet at extreme levels.`);
+    parts.push(`Some indicators suggest the upward push may be getting stretched — the rally could be due for a breather.`);
   }
 
-  // ── THE KEY TENSION ──
-  if(trendBearCount >= 3 && exhBullCount >= 2){
-    parts.push(`<strong>This creates the core tension in technical analysis</strong> — trend says "still falling" while exhaustion says "sellers may be tiring." The trend indicators carry more weight in this system (HIGH confidence bucket), but the exhaustion signals are worth monitoring. This is not yet a buy signal, but it means the downtrend is being questioned by contrarian measures. Watch for a trend indicator to flip as the first sign of actual reversal.`);
-  } else if(trendBullCount >= 3 && exhBearCount >= 2){
-    parts.push(`<strong>This creates a tension worth watching</strong> — the uptrend is intact but the rally may be overextended. In strong trends, overbought readings can persist for weeks. The trend has the weight of evidence, but this is a poor time to add new positions at full size. Tighten stops rather than reversing.`);
-  } else if(trendBullCount >= 3 && exhBullCount <= 1 && exhBearCount <= 1){
-    parts.push(`No exhaustion signal is pushing back against the uptrend — the trend is uncontested. This is a "stay in the trade" environment where the path of least resistance is up.`);
-  } else if(trendBearCount >= 3 && exhBullCount <= 1 && exhBearCount <= 1){
-    parts.push(`No exhaustion signal is pushing back against the downtrend — the selling pressure is not yet overdone. This is a "respect the trend" environment where the path of least resistance is still down.`);
+  // ── KEY TENSION ──
+  if(trendBearCount >= 2 && exhBullCount >= 2){
+    parts.push(`<strong>This creates a tension worth watching</strong> — the downtrend is still in place, but sellers may be running out of energy. If a trend indicator flips, it could mark a turning point.`);
+  } else if(trendBullCount >= 2 && exhBearCount >= 2){
+    parts.push(`<strong>This creates a tension worth watching</strong> — the uptrend is intact but the rally looks overextended. In strong trends this can persist for weeks, but this is typically not the best time to add new positions at full size. Tighten stops rather than reversing.`);
+  } else if(trendBullCount >= 2 && exhBullCount <= 1 && exhBearCount <= 1){
+    parts.push(`Trend is running cleanly — no pushback from momentum indicators. Path of least resistance is up.`);
+  } else if(trendBearCount >= 2 && exhBullCount <= 1 && exhBearCount <= 1){
+    parts.push(`Selling pressure isn't overdone yet — no bounce signals firing. Path of least resistance is still down.`);
   }
 
   // ── VOLUME FLOW ──
-  const trendDir = trendBullCount > trendBearCount ? 'bullish' : trendBearCount > trendBullCount ? 'bearish' : null;
   if(trendDir){
     const volConfirms = (trendDir === 'bullish' && obv >= 60) || (trendDir === 'bearish' && obv <= 40);
     const volDiverges = (trendDir === 'bullish' && obv <= 38) || (trendDir === 'bearish' && obv >= 62);
     if(volConfirms){
-      parts.push(`On-Balance Volume (OBV) confirms the ${trendDir} direction — institutional money appears to be moving in agreement with the trend.`);
+      parts.push(`Volume confirms the ${trendDir === 'bullish' ? 'buying' : 'selling'} — big money appears to be moving in the same direction as the trend.`);
     } else if(volDiverges){
-      parts.push(`<strong>On-Balance Volume (OBV) diverges from the trend</strong> — this is often an early warning that institutional money is quietly positioning against the current price direction. Worth watching closely.`);
+      parts.push(`<strong>Volume tells a different story</strong> — big money may be quietly positioning against the current price direction. Worth watching closely.`);
     }
-  }
-
-  // ── ADX CONTEXT ──
-  const adxVal_c = adxOverlay.adx ?? 0;
-  if(adxVal_c >= 40){
-    parts.push(`The Average Directional Index (ADX) at ${adxVal_c} shows very high trend strength — whatever direction is in play has strong momentum behind it. Trend-follower weights are boosted ${adxOverlay.multiplier}×. Contrarian signals tend to be less reliable in this environment.`);
-  } else if(adxVal_c >= 25){
-    parts.push(`The Average Directional Index (ADX) at ${adxVal_c} confirms a trending market — trend-follower weights are boosted ${adxOverlay.multiplier}×.`);
-  } else if(adxVal_c > 0 && adxVal_c < 20){
-    parts.push(`The Average Directional Index (ADX) at ${adxVal_c} is weak — the market is range-bound or lacking directional conviction. Trend-follower weights are dampened (${adxOverlay.multiplier}×). Contrarian/mean-reversion signals tend to be more reliable in this environment.`);
   }
 
   // ── AGREEMENT/DISAGREEMENT ──
   if(dispersion < 15){
-    parts.push(`Indicator agreement is unusually high (dispersion: ${dispersion}) — most measures are pointing the same direction. The score of ${wScore} reflects genuine consensus, not an average of conflicting signals.`);
+    parts.push(`Indicators broadly agree — the score of ${wScore} reflects a clear consensus, not an average of conflicting signals.`);
   } else if(dispersion > 28){
-    parts.push(`Indicator disagreement is elevated (dispersion: ${dispersion}) — the score of ${wScore} is an average of conflicting signals, not a consensus. The conflict between indicator families is itself the most important information here.`);
+    parts.push(`Indicators are sending mixed messages — the score of ${wScore} is an average of disagreeing signals, so take it with a grain of salt.`);
   }
 
   // ── CONFLICT REGIME ──
   const cr = currentConflictRegime;
   if(cr.regime === 'transition'){
-    parts.push(`<strong>⚠ Transition Regime detected</strong> — ${cr.conflictCount} indicator conflicts are active (${cr.backboneCount} backbone pairs: the deepest trend-vs-exhaustion tensions). The composite score has been capped toward neutral because the market is in transition between regimes. The conflict pattern itself is the primary signal — these conditions often precede breakouts, reversals, or volatility spikes.`);
+    parts.push(`<strong>⚠ High conflict detected</strong> — several indicators are pulling in opposite directions. The score has been pulled toward neutral. When this many signals disagree, it often means a breakout or reversal is building.`);
   } else if(cr.regime === 'elevated'){
-    parts.push(`Conflict level is elevated — ${cr.conflictCount} indicator conflicts detected (${cr.backboneCount} backbone). Conviction is reduced but the score is not capped. The key backbone conflicts (SMA 200 vs RSI, DeMark vs SMA 200, OBV vs SMA 200) represent the deepest structural tensions in the system.`);
+    parts.push(`Some indicator conflicts detected — a few signals disagree with each other, so confidence is a bit lower than usual.`);
   }
 
   // ── CANDLESTICK ──
@@ -3995,7 +4654,7 @@ function detectDualSignalCommentary(){
 
   // Fallback
   if(parts.length === 0){
-    parts.push(`${ticker} is in a neutral state — indicators are mixed with no strong directional signal or notable tension. The score of ${wScore} reflects this indecision.`);
+    parts.push(`${tickerDisplay} neutral — indicators mixed with no strong directional signal. Score of ${wScore} reflects indecision.`);
   }
 
   card.classList.add('active');
@@ -4015,19 +4674,19 @@ function detectDualSignalCommentary(){
 function drawGauge(score, dispersion, rawScore){
   const cv=document.getElementById('gaugeCanvas'),ctx=cv.getContext('2d');
   ctx.clearRect(0,0,cv.width,cv.height);
-  const cx=cv.width/2,cy=cv.height-8,r=72;
+  const cx=cv.width/2,cy=cv.height-10,r=84;
   const isDark = document.body.classList.contains('dark-mode');
   const trackColor = isDark ? '#30363d' : '#d0d6e0';
   const tickColor  = isDark ? '#484f58' : '#b0bac8';
   const needleColor= isDark ? '#e6edf3' : '#1a1d23';
-  ctx.beginPath();ctx.arc(cx,cy,r,Math.PI,0);ctx.lineWidth=12;ctx.strokeStyle=trackColor;ctx.lineCap='round';ctx.stroke();
+  ctx.beginPath();ctx.arc(cx,cy,r,Math.PI,0);ctx.lineWidth=14;ctx.strokeStyle=trackColor;ctx.lineCap='round';ctx.stroke();
   const g=ctx.createLinearGradient(cx-r,cy,cx+r,cy);
   g.addColorStop(0,'#ff4560');g.addColorStop(.25,'#ff9a7c');g.addColorStop(.5,'#f0b429');g.addColorStop(.75,'#4dd9a0');g.addColorStop(1,'#00d97e');
-  ctx.beginPath();ctx.arc(cx,cy,r,Math.PI,Math.PI+(score/100)*Math.PI);ctx.lineWidth=12;ctx.strokeStyle=g;ctx.lineCap='round';ctx.stroke();
-  for(let i=0;i<=10;i++){const a=Math.PI+(i/10)*Math.PI;ctx.beginPath();ctx.moveTo(cx+(r-17)*Math.cos(a),cy+(r-17)*Math.sin(a));ctx.lineTo(cx+(r-9)*Math.cos(a),cy+(r-9)*Math.sin(a));ctx.lineWidth=i%5===0?2:1;ctx.strokeStyle=tickColor;ctx.stroke();}
+  ctx.beginPath();ctx.arc(cx,cy,r,Math.PI,Math.PI+(score/100)*Math.PI);ctx.lineWidth=14;ctx.strokeStyle=g;ctx.lineCap='round';ctx.stroke();
+  for(let i=0;i<=10;i++){const a=Math.PI+(i/10)*Math.PI;ctx.beginPath();ctx.moveTo(cx+(r-20)*Math.cos(a),cy+(r-20)*Math.sin(a));ctx.lineTo(cx+(r-10)*Math.cos(a),cy+(r-10)*Math.sin(a));ctx.lineWidth=i%5===0?2:1;ctx.strokeStyle=tickColor;ctx.stroke();}
   const na=Math.PI+(score/100)*Math.PI;
-  ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+(r-20)*Math.cos(na),cy+(r-20)*Math.sin(na));ctx.lineWidth=2;ctx.strokeStyle=needleColor;ctx.lineCap='round';ctx.stroke();
-  ctx.beginPath();ctx.arc(cx,cy,4,0,Math.PI*2);ctx.fillStyle=needleColor;ctx.fill();
+  ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+(r-24)*Math.cos(na),cy+(r-24)*Math.sin(na));ctx.lineWidth=2.5;ctx.strokeStyle=needleColor;ctx.lineCap='round';ctx.stroke();
+  ctx.beginPath();ctx.arc(cx,cy,5,0,Math.PI*2);ctx.fillStyle=needleColor;ctx.fill();
   const v=verd(score);
   document.getElementById('gscore').textContent=Math.round(score);document.getElementById('gscore').style.color=sCol(score);
   document.getElementById('gverdict').textContent=v.l;document.getElementById('gverdict').style.color=v.col;
@@ -4446,14 +5105,6 @@ async function fetchPrice(){
     if(!meta||!meta.regularMarketPrice) throw new Error('No price available');
     const price=meta.regularMarketPrice;
     document.getElementById('price-val').textContent='$'+Number(price).toFixed(2);syncPriceLvl();
-    // Store daily change for status bar
-    const prevClose=meta?.chartPreviousClose||meta?.previousClose||null;
-    if(prevClose && prevClose>0){
-      const chgAmt=price-prevClose, chgPct=chgAmt/prevClose*100;
-      const sign=chgAmt>=0?'+':'';
-      window._lastPriceChange=`${sign}${chgAmt.toFixed(2)} (${sign}${chgPct.toFixed(2)}%)`;
-      window._lastPriceChangePos=chgAmt>=0;
-    } else { window._lastPriceChange=null; }
     // Store company long name for display in status bar
     const ln=meta?.longName||meta?.shortName||'';
     if(ln) window._lastSymbolName=ln;
@@ -4526,8 +5177,6 @@ async function runAnalysis(){
   if(obvSub) obvSub.textContent='OBV — computing…';
   const vpSub = document.getElementById('sub-vol_profile');
   if(vpSub) vpSub.textContent='POC / VAH / VAL — computing…';
-  const ichSub = document.getElementById('sub-ichimoku');
-  if(ichSub) ichSub.textContent='Ichimoku — computing…';
   const csSub = document.getElementById('sub-candle_signal');
   if(csSub) csSub.textContent='Scanning for patterns…';
   // Reset orientation chart
@@ -4594,9 +5243,8 @@ async function runAnalysis(){
     const _vc = verd(_sc).l, _cc = sCol(_sc);
     const _cnc = window._lastSymbolName ? ` · ${window._lastSymbolName}` : '';
     const priceC = document.getElementById('price-val').textContent || '';
-    const _chgFrag1 = window._lastPriceChange ? ` · <span style="color:${window._lastPriceChangePos?'var(--bull)':'var(--bear)'};font-weight:600">${window._lastPriceChange}</span>` : '';
     dot.className='sdot active';st.className='stext active';st.style.animation='';st.style.color='';
-    st.innerHTML=`<span class="sticker">${ticker}</span>${_cnc} — <span style="color:${_cc};font-weight:600">${_vc}</span> · ${priceC}${_chgFrag1} · OHLC scored · ${nowStamp()}`;
+    st.innerHTML=`<span class="sticker">${ticker}</span>${_cnc} · ${priceC} · ${nowStamp()}`;
     so.textContent='Waiting for AI (divNote + fundamentals)…';
     btn.disabled=false;btn.classList.remove('loading');
     console.log('runAnalysis: ALL DONE. Score:', _sc);
@@ -4624,11 +5272,10 @@ async function runAnalysis(){
       const vc2 = verd(sc2).l, cc2 = sCol(sc2);
       const cn2 = window._lastSymbolName ? ` · ${window._lastSymbolName}` : '';
       const pr2 = document.getElementById('price-val').textContent || '';
-      const pr2chg = window._lastPriceChange ? ` · <span style="color:${window._lastPriceChangePos?'var(--bull)':'var(--bear)'};font-weight:600">${window._lastPriceChange}</span>` : '';
       document.getElementById('sdot').className='sdot active';
       const st3 = document.getElementById('stext');
       st3.className='stext active'; st3.style.animation=''; st3.style.color='';
-      st3.innerHTML=`<span class="sticker">${_savedTicker}</span>${cn2} — <span style="color:${cc2};font-weight:600">${vc2}</span> · ${pr2}${pr2chg} · OHLC scored · ${nowStamp()}`;
+      st3.innerHTML=`<span class="sticker">${_savedTicker}</span>${cn2} — <span style="color:${cc2};font-weight:600">${vc2}</span> · ${pr2} · OHLC scored · ${nowStamp()}`;
       document.getElementById('sstream').textContent='Waiting for AI…';
       document.getElementById('run-btn').disabled=false;
       document.getElementById('run-btn').classList.remove('loading');
@@ -4728,8 +5375,7 @@ All values plain text only — no HTML, no citations. N/A if unknown.`;
       const _aiScore = Math.round(bScore('high')*customBW.high + bScore('med')*customBW.med);
       const _aiVerdict = verd(_aiScore).l, _aiCol = sCol(_aiScore);
       dot.className='sdot active';st.className='stext active';st.style.animation='';st.style.color='';
-      const _chgFrag2 = window._lastPriceChange ? ` · <span style="color:${window._lastPriceChangePos?'var(--bull)':'var(--bear)'};font-weight:600">${window._lastPriceChange}</span>` : '';
-      st.innerHTML=`<span class="sticker">${parsed.ticker||ticker}</span>${_cname} — <span style="color:${_aiCol};font-weight:600">${_aiVerdict}</span> · ${priceText}${_chgFrag2} · OHLC scored · ${nowStamp()}`;
+      st.innerHTML=`<span class="sticker">${parsed.ticker||ticker}</span>${_cname} · ${priceText} · ${nowStamp()}`;
       console.log('AI call complete for', ticker, '— divNote + fundamentals loaded');
       // If name arrived late, do another status bar update
       if(!window._lastSymbolName){
@@ -4740,8 +5386,7 @@ All values plain text only — no HTML, no citations. N/A if unknown.`;
               const _s2 = Math.round(bScore('high')*customBW.high + bScore('med')*customBW.med);
               const _v2 = verd(_s2).l, _c2 = sCol(_s2);
               const priceNow = document.getElementById('price-val').textContent || '';
-              const _chgFrag3 = window._lastPriceChange ? ` · <span style="color:${window._lastPriceChangePos?'var(--bull)':'var(--bear)'};font-weight:600">${window._lastPriceChange}</span>` : '';
-              cur.innerHTML=`<span class="sticker">${ticker}</span> · ${window._lastSymbolName} — <span style="color:${_c2};font-weight:600">${_v2}</span> · ${priceNow}${_chgFrag3} · OHLC scored · ${nowStamp()}`;
+              cur.innerHTML=`<span class="sticker">${ticker}</span> · ${window._lastSymbolName} · ${priceNow} · ${nowStamp()}`;
             }
           }
         }, 3000);
@@ -5018,6 +5663,21 @@ function resetAll(){
   currentConflictRegime = {regime:'clear',conflictCount:0,backboneCount:0,label:'',scoreCap:null};
   const regBadge=document.getElementById('gregime-badge'); if(regBadge) regBadge.style.display='none';
   adxOverlay = { adx: null, plusDI: null, minusDI: null, multiplier: 1.0, label: 'N/A' };
+  // Clear dashboard cache and dim tiles
+  window._cachedDailyBars = null;
+  window._cachedIndicators = null;
+  DASH_ORDER.forEach(id => {
+    const tile = document.getElementById('dt-'+id);
+    if(tile) tile.style.opacity = '0.4';
+    const dtl = document.getElementById('dtl-'+id);
+    if(dtl){ dtl.textContent = '—'; dtl.style.color = '#f0b429'; }
+    const dtg = document.getElementById('dtg-'+id);
+    if(dtg) dtg.innerHTML = tileGaugeSVG(50, '#f0b429', 60);
+  });
+  const adxBar = document.getElementById('adx-bar');
+  if(adxBar) adxBar.style.display = 'none';
+  const dashHint = document.getElementById('dash-hint');
+  if(dashHint) dashHint.style.opacity = '0';
   ['high','med'].forEach(b=>INDS[b].forEach(i=>{
     const row=document.getElementById('row-'+i.id);
     if(row){ row.classList.remove('conflict-flag'); row.style.borderLeft=''; }
@@ -5548,8 +6208,8 @@ document.addEventListener('DOMContentLoaded',()=>{
 <h2>📖 Signal Catcher Guide</h2>
 
 <h3>What Is Signal Catcher?</h3>
-<p>Signal Catcher takes daily price and trading volume data from Yahoo's free dataset — Open, High, Low, Close, Volume (OHLCV) — and computes 10 widely followed technical trading indicators. These technical indicators are normally viewed on a chart with price, but Signal Catcher converts chart analysis into rule-based scoring.</p>
-<p>For each stock, ten indicators evaluate price and volume data. Each applies a fixed condition (e.g., price vs. 200-day moving average, RSI above or below thresholds) and outputs a 0–100 score.</p>
+<p>Signal Catcher takes daily price and trading volume data from Yahoo's free dataset — Open, High, Low, Close, Volume (OHLCV) — and computes 9 widely followed technical trading indicators. These technical indicators are normally viewed on a chart with price, but Signal Catcher converts chart analysis into rule-based scoring.</p>
+<p>For each stock, nine indicators evaluate price and volume data. Each applies a fixed condition (e.g., price vs. 200-day moving average, RSI above or below thresholds) and outputs a 0–100 score.</p>
 <p>Scores are combined using a weighted formula. Structural indicators (trend, volume) carry more weight than timing signals. Agreement across indicators increases the composite score. Conflicts are explicitly flagged.</p>
 <p>The result is a single 0–100 score reflecting the degree and strength of alignment in the data. Identical inputs produce identical outputs. No interpretation required.</p>
 <p>There is no AI speculation inside the scoring engine. No fundamental analysis. No subjective chart drawings or analyst opinions. Just clean, deterministic mathematics — the same input data will always produce the exact same score, no matter who computes it or when.</p>
@@ -5566,13 +6226,12 @@ Technicals answer the <strong>"when"</strong> — is the price action confirming
 Together, they help you avoid the classic "great company, terrible entry" trap.
 </div>
 
-<h3>The 10 Indicators</h3>
+<h3>The 9 Indicators</h3>
 <p>Each indicator was chosen because it provides unique information no other indicator in the system covers, and each has a long institutional track record. Here's what each one does and why it matters:</p>
 
 <h4>Trend Direction</h4>
 <p><strong>SMA 200 Trend</strong> — The 200-day Simple Moving Average is the single most widely watched level by institutional investors worldwide. Price above it = healthy uptrend; price below = downtrend. It's the dividing line between bull and bear markets. Carries the highest intra-weight (1.4×) for a reason.</p>
 <p><strong>MA Cross 50/200</strong> — When the 50-day Moving Average crosses above the 200-day, that's a Golden Cross (bullish structural shift); crossing below is a Death Cross (bearish). These events are rare and meaningful — they signal the trend itself is changing, not just price.</p>
-<p><strong>Ichimoku Cloud</strong> — A complete Japanese trading system that shows trend direction, momentum, and support/resistance in one view. It works in part because the Asian markets widely follow it — when millions of traders watch the same levels, those levels become self-reinforcing. Price above the cloud is bullish, below is bearish. The cloud itself acts as dynamic support and resistance. Scored from four components: price vs. cloud, cloud color, conversion/base line cross, and lagging span confirmation.</p>
 
 <h4>Volume &amp; Institutional Flow</h4>
 <p><strong>Volume Profile</strong> — Maps where the heaviest institutional trading occurred. The POC (Point of Control) is the price with the most volume — it acts as a magnet. VAH (Volume Area High) and VAL (Volume Area Low) bracket where 70% of volume traded. Price above POC = bullish structure.</p>
@@ -5589,10 +6248,10 @@ Together, they help you avoid the classic "great company, terrible entry" trap.
 <p><strong>ADX</strong> — The Average Directional Index doesn't produce a score. Instead, it tells the system <em>how much to trust</em> the trend-following indicators. In strong trends (ADX above 25), trend signals get boosted. In choppy, range-bound markets (ADX below 20), they get dampened. It's the "trust gate" for the entire trend family.</p>
 
 <h3>Two Families of Indicators</h3>
-<p>These 10 indicators fall into two philosophical families. Every market speaks in two voices at once:</p>
+<p>These 9 indicators fall into two philosophical families. Every market speaks in two voices at once:</p>
 <table>
 <tr><th>Family</th><th>What It Measures</th><th>Indicators</th></tr>
-<tr><td><strong>Trend-Following</strong></td><td>Persistence &amp; strength of the current move</td><td>SMA 200, MA Cross 50/200, Ichimoku Cloud</td></tr>
+<tr><td><strong>Trend-Following</strong></td><td>Persistence &amp; strength of the current move</td><td>SMA 200, MA Cross 50/200</td></tr>
 <tr><td><strong>Contrarian</strong></td><td>When a move has gone too far (exhaustion)</td><td>RSI Extreme, DeMark Sequential, Bollinger Bands, MFI</td></tr>
 </table>
 <p><strong>When both families agree →</strong> highest-conviction setup. The trend is strong AND it's not exhausted.<br>
@@ -5616,7 +6275,7 @@ Together, they help you avoid the classic "great company, terrible entry" trap.
 <table>
 <tr><th>Bucket</th><th>Weight</th><th>Indicators</th><th>Role</th></tr>
 <tr><td><strong>HIGH</strong></td><td>60%</td><td>Volume Profile, SMA 200, MA Cross, RSI Extreme, OBV (On-Balance Volume)</td><td>Structural, institutional-grade anchors</td></tr>
-<tr><td><strong>MED</strong></td><td>40%</td><td>MFI, Ichimoku, Bollinger Bands, DeMark, Candlestick</td><td>Interpretive timing tools</td></tr>
+<tr><td><strong>MED</strong></td><td>40%</td><td>MFI, Bollinger Bands, DeMark, Candlestick</td><td>Interpretive timing tools</td></tr>
 </table>
 <p>Each indicator has an <strong>intra-weight</strong> reflecting its authority. SMA 200 carries the highest (1.4×) — the most widely watched institutional level. RSI Extreme is second (1.2×) — the strongest contrarian signal.</p>
 
@@ -5635,7 +6294,7 @@ Together, they help you avoid the classic "great company, terrible entry" trap.
 <p><strong>7 confluence patterns</strong> boost weights when specific combinations align:</p>
 <table>
 <tr><th>Pattern</th><th>Indicators</th><th>Multiplier</th></tr>
-<tr><td>🔒 Triple Trend Confirmed</td><td>SMA 200 + Ichimoku + MA Cross</td><td>1.12×</td></tr>
+<tr><td>🔒 Dual Trend Confirmed</td><td>SMA 200 + MA Cross</td><td>1.10×</td></tr>
 <tr><td>⚡ Double Exhaustion</td><td>DeMark + Bollinger</td><td>1.10×</td></tr>
 <tr><td>📈 Dual Oscillator</td><td>MFI + RSI</td><td>1.08×</td></tr>
 <tr><td>🏦 Volume Confirms Trend</td><td>OBV + SMA 200</td><td>1.08×</td></tr>
@@ -5644,15 +6303,13 @@ Together, they help you avoid the classic "great company, terrible entry" trap.
 <tr><td>💪 Smart Money</td><td>OBV + MFI</td><td>1.10×</td></tr>
 </table>
 
-<p><strong>8 conflict pairs</strong> surface meaningful disagreements (40+ point divergence):</p>
+<p><strong>6 conflict pairs</strong> surface meaningful disagreements (40+ point divergence):</p>
 <table>
 <tr><th>Conflict</th><th>What It Means</th></tr>
 <tr><td>SMA 200 vs. RSI</td><td>Classic trend vs. exhaustion — the system's philosophical backbone</td></tr>
-<tr><td>Ichimoku vs. MFI</td><td>Trend direction and volume-weighted momentum disagree</td></tr>
 <tr><td>OBV vs. Bollinger</td><td>Institutional money vs. price bands tell different stories</td></tr>
 <tr><td>DeMark vs. SMA 200</td><td>Exhaustion says reverse; trend says continue</td></tr>
 <tr><td>MFI vs. RSI</td><td>Volume-weighted vs. price-only momentum diverge</td></tr>
-<tr><td>MA Cross vs. Ichimoku</td><td>Two trend systems disagree — transition in progress</td></tr>
 <tr><td>OBV vs. SMA 200</td><td>Volume flow diverging from price trend — early warning</td></tr>
 <tr><td>MFI vs. OBV</td><td>Short-term volume impulse vs. long-term volume trend</td></tr>
 </table>
