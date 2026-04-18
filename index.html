@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Signal Catcher v14 — Dashboard</title>
+<title>Signal Catcher v15.1 — Dashboard</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -157,6 +157,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:18
 @keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
 .sticker{color:var(--accent);font-weight:600;}
 .sstream{color:var(--text3);font-size:10px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-style:italic;min-width:140px;}
+.v-badge{font-family:var(--mono);font-size:10px;padding:2px 7px;border-radius:4px;background:var(--high-dim);color:var(--accent);border:1px solid var(--accent);letter-spacing:.04em;flex-shrink:0;font-weight:600;}
 
 /* ── MOBILE TABS ── */
 .mob-tabs{display:none;border-bottom:1px solid var(--border);background:var(--surface);}
@@ -251,6 +252,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:18
 .dt-modal-close:hover{color:var(--text);background:var(--surface3);}
 .dt-modal-score-row{display:flex;align-items:center;gap:16px;border-radius:12px;padding:14px 18px;margin-bottom:16px;}
 .dt-modal-chart{background:var(--bg);border-radius:10px;padding:8px;margin-bottom:14px;border:1px solid var(--border);min-height:180px;}
+.dt-modal-chart.stacked{min-height:360px;}
+.dt-stack-price{height:clamp(130px, 22vh, 200px);margin-bottom:4px;}
+.dt-stack-indicator{height:clamp(150px, 25vh, 240px);}
 .dt-modal-desc{font:400 13px/1.65 var(--sans);color:var(--text2);margin:0;}
 @keyframes dtFadeIn{from{opacity:0}to{opacity:1}}
 @keyframes dtSlideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
@@ -528,72 +532,12 @@ body.dark-mode .ci-backbone-tag{background:#f0883e18;color:#f0883e;border-color:
 ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
 
 /* ── MOBILE ── */
-/* ── WEIGHT EDITOR PANEL ── */
+/* ── TIMEFRAME BAR ── */
+.tf-bar{display:flex;align-items:center;gap:10px;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;margin-top:10px;font-family:var(--mono);}
+.tf-bar-lbl{font-size:11px;color:var(--text3);letter-spacing:.06em;text-transform:uppercase;}
+.tf-bar-sel{font-size:13px;font-weight:600;padding:5px 8px;background:var(--surface3);border:1px solid var(--border);border-radius:5px;color:var(--text);outline:none;cursor:pointer;}
+.tf-bar-sel:focus{border-color:var(--accent);}
 
-/* deviation summary */
-.dev-summary{background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:9px 11px;margin-bottom:12px;}
-.dev-title{font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px;}
-.dev-none{font-family:var(--mono);font-size:11px;color:var(--bull);}
-.dev-row{display:flex;align-items:center;justify-content:space-between;font-family:var(--mono);font-size:10px;padding:3px 0;border-bottom:1px solid var(--border);}
-.dev-row:last-child{border-bottom:none;}
-.dev-name{color:var(--text2);}
-.dev-vals{display:flex;align-items:center;gap:5px;}
-.dev-baseline{color:var(--text3);}
-.dev-current{color:var(--text);font-weight:500;}
-.dev-delta{font-size:10px;padding:1px 5px;border-radius:3px;font-weight:600;background:#a06a0018;color:var(--neu);}
-
-/* collapsible weight panel */
-.wt-panel{background:var(--surface2);border:1px solid var(--border);border-radius:10px;margin-top:10px;overflow:hidden;}
-.wt-panel-hdr{display:flex;align-items:center;justify-content:space-between;padding:10px 13px;cursor:pointer;user-select:none;transition:background .15s;}
-.wt-panel-hdr:hover{background:var(--surface3);}
-.wt-panel-title{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--text2);display:flex;align-items:center;gap:8px;}
-.wt-panel-badge{font-size:10px;padding:1px 6px;border-radius:3px;font-weight:400;}
-.wt-panel-badge.clean{background:#0a8a4e18;color:var(--bull);}
-.wt-panel-badge.modified{background:#a06a0018;color:var(--neu);}
-.wt-chevron{font-size:10px;color:var(--text3);transition:transform .2s;}
-.wt-chevron.open{transform:rotate(180deg);}
-.wt-panel-body{display:none;padding:12px 13px 13px;border-top:1px solid var(--border);}
-.wt-panel-body.open{display:block;}
-
-/* weight section */
-.wt-section{margin-bottom:14px;}
-.wt-section:last-child{margin-bottom:0;}
-.wt-sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;padding-bottom:5px;border-bottom:1px solid var(--border);}
-.wt-sec-title{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;}
-.wt-sec-title.bucket{color:var(--text2);}
-.wt-sec-title.high{color:var(--high);}
-.wt-sec-title.med{color:var(--med);}
-.wt-sec-title.low{color:var(--low);}
-.reset-bkt{font-family:var(--mono);font-size:9px;padding:2px 7px;border-radius:3px;border:1px solid var(--border2);background:none;color:var(--text3);cursor:pointer;transition:all .15s;}
-.reset-bkt:hover{border-color:var(--accent);color:var(--accent);}
-
-/* bucket % inputs */
-.bkt-wt-row{display:grid;grid-template-columns:1fr 52px 62px 52px;align-items:center;gap:7px;padding:5px 3px;margin-bottom:3px;}
-.bwlbl{font-family:var(--mono);font-size:10px;}
-.bw-base{font-family:var(--mono);font-size:10px;color:var(--text3);text-align:center;}
-.bw-inp{width:100%;background:var(--surface3);border:1.5px solid var(--border);color:var(--text);font-family:var(--mono);font-size:11px;padding:3px 5px;border-radius:4px;outline:none;text-align:center;transition:border-color .15s;}
-.bw-inp:focus{border-color:var(--accent);}
-.bw-inp.dev{border-color:var(--neu);background:#a06a0010;}
-.bw-inp.err{border-color:var(--bear);background:#cc284010;}
-.bw-delta{font-family:var(--mono);font-size:10px;text-align:center;}
-.bw-delta.pos,.bw-delta.neg{color:var(--neu);}
-.bw-delta.zero{color:var(--text3);}
-.sum-bar{font-family:var(--mono);font-size:10px;padding:4px 8px;border-radius:4px;margin:4px 0 10px;}
-.sum-bar.ok{background:#0a8a4e18;color:var(--bull);}
-.sum-bar.err{background:#cc284018;color:var(--bear);font-weight:600;}
-
-/* indicator weight rows */
-.iw-row{display:grid;grid-template-columns:1fr 48px 58px 48px;align-items:center;gap:6px;padding:4px 3px;border-radius:4px;margin-bottom:2px;}
-.iw-row:hover{background:var(--surface3);}
-.iw-nm{font-family:var(--mono);font-size:10px;color:var(--text2);}
-.iw-base{font-family:var(--mono);font-size:10px;color:var(--text3);text-align:center;}
-.iw-inp{width:100%;background:var(--surface3);border:1.5px solid var(--border);color:var(--text);font-family:var(--mono);font-size:11px;padding:3px 4px;border-radius:4px;outline:none;text-align:center;transition:border-color .15s;}
-.iw-inp:focus{border-color:var(--accent);}
-.iw-inp.dev{border-color:var(--neu);background:#a06a0010;}
-.iw-d{font-family:var(--mono);font-size:10px;text-align:center;}
-.iw-d.pos,.iw-d.neg{color:var(--neu);}
-.iw-d.zero{color:var(--text3);}
-.col-hdr{font-family:var(--mono);font-size:9px;color:var(--text3);text-align:center;letter-spacing:.06em;text-transform:uppercase;padding-bottom:4px;}
 /* ── INDICATOR CHARTS ── */
 .chart-btn{font-family:var(--mono);font-size:14px;padding:2px 7px;border-radius:4px;border:1px solid var(--border2);background:none;color:var(--text2);cursor:pointer;transition:all .15s;white-space:nowrap;margin-left:5px;flex-shrink:0;line-height:1;}
 .chart-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--high-dim);}
@@ -601,6 +545,9 @@ body.dark-mode .ci-backbone-tag{background:#f0883e18;color:#f0883e;border-color:
 .chart-wrap{display:none;padding:8px 0 4px;border-top:1px solid var(--border);}
 .chart-wrap.open{display:block;}
 .chart-container{position:relative;height:clamp(200px,35vh,400px);width:100%;background:var(--surface2);border-radius:6px;padding:6px;}
+.chart-container.stacked{height:clamp(300px,50vh,520px);display:flex;flex-direction:column;gap:4px;}
+.chart-container .rc-price{flex:0 0 42%;position:relative;}
+.chart-container .rc-indicator{flex:1;position:relative;}
 .chart-loading{font-family:var(--mono);font-size:10px;color:var(--text3);text-align:center;padding:20px;font-style:italic;}
 .chart-error{font-family:var(--mono);font-size:10px;color:var(--bear);text-align:center;padding:12px;}
 .fund-panel{background:var(--surface2);border:2px solid var(--accent);border-radius:10px;margin-top:10px;overflow:hidden;}.fund-panel-hdr{display:flex;align-items:center;justify-content:space-between;padding:12px 13px;cursor:pointer;user-select:none;transition:background .15s;border-radius:10px;}
@@ -886,6 +833,7 @@ body.dark-mode .ci-backbone-tag{background:#f0883e18;color:#f0883e;border-color:
   <div class="sdot active" id="sdot"></div>
   <span class="stext active" id="stext"></span>
   <span class="sstream" id="sstream"></span>
+  <span class="v-badge" title="Build version — if this doesn't match your expected version, do a hard refresh to clear cache">v15.1</span>
 </div>
 
 <!-- VERDICT SUMMARY BAR -->
@@ -973,7 +921,7 @@ body.dark-mode .ci-backbone-tag{background:#f0883e18;color:#f0883e;border-color:
       <div id="commentary-list"></div>
     </div>
 
-    <!-- ═══ DASHBOARD 3×3 GRID (v14 dashboard) ═══ -->
+    <!-- ═══ DASHBOARD 3×3 GRID (v15 dashboard) ═══ -->
     <div class="dash-grid" id="dash-grid"></div>
     <div id="dash-hint" style="text-align:center;padding:8px 0 2px;font:600 11px/1 var(--mono);color:var(--accent);opacity:0;transition:opacity .5s;">
       👆 Tap any gauge for indicator details and chart
@@ -1049,6 +997,18 @@ body.dark-mode .ci-backbone-tag{background:#f0883e18;color:#f0883e;border-color:
       </div>
     </div>
 
+    <!-- TIMEFRAME BAR — adjusts bucket/indicator weights for your trade horizon -->
+    <div class="tf-bar" title="Timeframe preset — adjusts bucket weights and individual indicator weights for your trade horizon">
+      <span class="tf-bar-lbl">Timeframe</span>
+      <select id="timeframe-sel" class="tf-bar-sel" onchange="onTFChange()">
+        <option value="swing">Swing (1–2 wk)</option>
+        <option value="position" selected>Position (1–3 mo)</option>
+        <option value="intermediate">Intermediate (3–12 mo)</option>
+        <option value="longterm">Long-Term (1 yr+)</option>
+      </select>
+      <span id="tf-badge-desc" style="font-size:11px;color:var(--text3);margin-left:auto;font-style:italic;">Balanced blend — the system default.</span>
+    </div>
+
     <!-- THEMATIC INDICATOR GROUPS (v12) — scoring buckets unchanged under the hood -->
     <div class="ind-group" id="group-trend">
       <div class="ind-group-hdr">
@@ -1077,29 +1037,6 @@ body.dark-mode .ci-backbone-tag{background:#f0883e18;color:#f0883e;border-color:
       <div class="ind-group-body" id="grp-contrarian"></div>
     </div>
 
-    <!-- WEIGHT EDITOR PANEL -->
-    <div class="wt-panel" id="wt-panel">
-      <div class="wt-panel-hdr" onclick="toggleWtPanel()">
-        <div class="wt-panel-title">
-          ⚖ Weight Editor
-          <span class="wt-panel-badge clean" id="wt-badge">✓ Baseline</span>
-          <span class="wt-panel-badge" id="tf-badge" style="background:#ff454018;color:var(--bear);font-size:14px;font-weight:700;padding:3px 10px;border:1px solid var(--bear);" title="Current timeframe preset">Timeframe: Position (1–3 mo)</span>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px;" onclick="event.stopPropagation()">
-          <select id="timeframe-sel" class="asel" onchange="onTFChange()" title="Timeframe preset — adjusts bucket weights and individual indicator weights for your trade horizon" style="font-size:13px;padding:5px 8px;font-weight:600;">
-            <option value="swing">Swing (1–2 wk)</option>
-            <option value="position" selected>Position (1–3 mo)</option>
-            <option value="intermediate">Intermediate (3–12 mo)</option>
-            <option value="longterm">Long-Term (1 yr+)</option>
-          </select>
-          <span class="wt-chevron" id="wt-chevron">▼</span>
-        </div>
-      </div>
-      <div class="wt-panel-body" id="wt-panel-body">
-        <!-- injected by renderWtPanel() -->
-      </div>
-    </div>
-
   </div>
 
   <!-- ═══ RIGHT: SCORE PANEL ═══ -->
@@ -1124,7 +1061,7 @@ body.dark-mode .ci-backbone-tag{background:#f0883e18;color:#f0883e;border-color:
           <h4>How the Score Works</h4>
           9 technical indicators are scored 0–100 individually, then combined using weighted averages across two confidence buckets:<br><br>
           <strong style="color:#4c8ef7">HIGH confidence (60%)</strong> — Volume Profile, SMA (Simple Moving Average) 200, MA Cross 50/200, RSI (Relative Strength Index) Extreme, OBV (On-Balance Volume) Trend<br>
-          <strong style="color:#a78bfa">MED confidence (40%)</strong> — Money Flow Index (MFI), Bollinger Bands, DeMark Sequential, Candlestick Signal<br>
+          <strong style="color:#a78bfa">MED confidence (40%)</strong> — Money Flow Index (MFI), Bollinger Bands, DeMark Sequential, MACD (Moving Average Convergence Divergence)<br>
           <div class="si-section">
             <h4>ADX Trend Overlay</h4>
             ADX (Average Directional Index) measures trend strength and adjusts the weights of trend-following indicators (SMA 200, MA Cross). In strong trends these indicators get boosted; in choppy markets they get dampened.
@@ -1149,10 +1086,6 @@ body.dark-mode .ci-backbone-tag{background:#f0883e18;color:#f0883e;border-color:
           </div>
           <div class="si-section" style="color:var(--text3);font-size:11.5px;">
             <strong>Note:</strong> Scores reflect technical indicator alignment, not a guarantee. RSI (Relative Strength Index) Extreme is contrarian — oversold = bullish, overbought = bearish. Only deterministically computable metrics are used — no subjective indicators.
-          </div>
-          <div class="si-section" style="font-size:11.5px;">
-            <strong style="color:var(--accent);">💡 Customize Your Weights</strong><br>
-            Don't agree with the default weighting? Use the <strong>Weight Editor</strong> below the indicators panel to adjust how much each indicator contributes to the final score. Your custom weights are preserved in shared links and PDF exports.
           </div>
         </div>
       </div>
@@ -1783,6 +1716,72 @@ function computeCandleSignal(bars) {
 }
 function scoreCandleSignal(cs) { return cs ? cs.score : 50; }
 
+// ─── MACD (12/26/9 daily) ────────────────────────────────────
+// v10: Replaces Candlestick Signal in MED bucket.
+// Pure-math momentum + trend indicator. No analyst judgment required.
+// Scoring axes: zero-line regime, signal-line position, histogram
+// dynamics, fresh crossovers. All deterministic.
+
+function computeMACD(bars, fast = 12, slow = 26, sig = 9) {
+  const n = bars.length;
+  if (n < slow + sig + 1) {
+    return { macd: 0, signal: 0, histogram: 0, histPrev: 0,
+      sigCrossBull: false, sigCrossBear: false,
+      zeroCrossBull: false, zeroCrossBear: false, valid: false };
+  }
+  const closes = bars.map(b => b.c);
+  const emaFast = emaCalc(closes, fast);
+  const emaSlow = emaCalc(closes, slow);
+  const macdLine = closes.map((_, i) => {
+    if (emaFast[i] === null || emaSlow[i] === null) return null;
+    return emaFast[i] - emaSlow[i];
+  });
+  const macdValid = macdLine.filter(v => v !== null);
+  const signalCompact = emaCalc(macdValid, sig);
+  const offset = macdLine.length - macdValid.length;
+  const signalLine = macdLine.map((_, i) => {
+    const j = i - offset;
+    return j < 0 ? null : signalCompact[j];
+  });
+  const last = n - 1, prev = n - 2;
+  const macd = macdLine[last], signal = signalLine[last];
+  const macdP = macdLine[prev], signalP = signalLine[prev];
+  if (macd === null || signal === null || macdP === null || signalP === null) {
+    return { macd: 0, signal: 0, histogram: 0, histPrev: 0,
+      sigCrossBull: false, sigCrossBear: false,
+      zeroCrossBull: false, zeroCrossBear: false, valid: false };
+  }
+  const histogram = macd - signal;
+  const histPrev  = macdP - signalP;
+  const EPS = 1e-8;
+  const sigCrossBull = histPrev <= EPS && histogram > EPS;
+  const sigCrossBear = histPrev >= -EPS && histogram < -EPS;
+  const zeroCrossBull = macdP <= EPS && macd > EPS;
+  const zeroCrossBear = macdP >= -EPS && macd < -EPS;
+  return { macd, signal, histogram, histPrev,
+    sigCrossBull, sigCrossBear, zeroCrossBull, zeroCrossBear, valid: true };
+}
+
+function scoreMACD(m) {
+  if (!m || !m.valid) return 50;
+  let score = 50;
+  if (m.macd > 0) score += 12;
+  else if (m.macd < 0) score -= 12;
+  if (m.macd > m.signal) score += 10;
+  else if (m.macd < m.signal) score -= 10;
+  const histExpanding = Math.abs(m.histogram) > Math.abs(m.histPrev);
+  if (m.histogram > 0) {
+    score += histExpanding ? 6 : -2;
+  } else if (m.histogram < 0) {
+    score += histExpanding ? -6 : 2;
+  }
+  if (m.sigCrossBull) score += 10;
+  else if (m.sigCrossBear) score -= 10;
+  if (m.zeroCrossBull) score += 15;
+  else if (m.zeroCrossBear) score -= 15;
+  return Math.max(5, Math.min(95, Math.round(score)));
+}
+
 // ─── ADX + DI ────────────────────────────────────────────────
 function computeADX(bars) {
   const n = bars.length;
@@ -1930,7 +1929,7 @@ async function scoreSymbol(dailyBars, weeklyBars) {
   const obv = safe('OBV', ()=>computeOBV(dailyBars));
   await yld();
   const demark = safe('DeMark', ()=>computeDeMark(dailyBars));
-  const candle = safe('Candle', ()=>computeCandleSignal(dailyBars));
+  const macd = safe('MACD', ()=>computeMACD(dailyBars));
   await yld();
   const adx = safe('ADX', ()=>computeADX(dailyBars)) || {adx:0,plusDI:0,minusDI:0,adxRising:false};
   const volProf = safe('VolProfile', ()=>computeVolumeProfile(dailyBars));
@@ -1945,11 +1944,11 @@ async function scoreSymbol(dailyBars, weeklyBars) {
     mfi: safe('sMFI', ()=>scoreMFI(mfi)) ?? 50,
     obv: safe('sOBV', ()=>scoreOBV(obv, dailyBars)) ?? 50,
     demark_seq: safe('sDM', ()=>scoreDeMark(demark)) ?? 50,
-    candle_signal: safe('sCandle', ()=>scoreCandleSignal(candle)) ?? 50,
+    macd: safe('sMACD', ()=>scoreMACD(macd)) ?? 50,
     sma_cross: safe('sCross', ()=>scoreSMACross(closes, sma50, sma200, cross)) ?? 50,
   };
   console.log('scoreSymbol: COMPLETE. Scores:', JSON.stringify(scores));
-  return { price, scores, adx, indicators: { rsi, sma200, sma50, boll, mfi, obv, demark, candle, adx, volProf, cross } };
+  return { price, scores, adx, indicators: { rsi, sma200, sma50, boll, mfi, obv, demark, macd, adx, volProf, cross } };
 }
 // ═══ END SCORING ENGINE ═══════════════════════════════════════
 
@@ -1968,11 +1967,11 @@ const TIPS = {
   sma_cross:    {name:'MA Cross 50/200',   desc:'<strong>MA</strong> (Moving Average) crossover system. Golden Cross (50-day SMA crosses above 200-day SMA) = bullish structural signal; Death Cross = bearish. Scored by recency — fresh cross (within 60 bars) scores 72–90/10–28. No recent cross is graded by SMA spread: wider gap = stronger trend. Computed from real <strong>OHLC</strong> (Open/High/Low/Close) data with 120-bar lookback.'},
   rsi_extreme:  {name:'RSI Extreme',       desc:'<strong>RSI</strong> (Relative Strength Index) measures momentum on a 0–100 scale. This is a CONTRARIAN indicator: RSI below 30 = oversold → scored BULLISH (potential reversal up, sellers exhausted). RSI above 70 = overbought → scored BEARISH (potential reversal down, buyers exhausted). RSI 40–60 = neutral (no extreme signal). In strong trends RSI can remain extreme for extended periods — check trend context.'},
   demark_seq:   {name:'DeMark Sequential', desc:'<strong>TD</strong> (Tom DeMark) Sequential counts 9 consecutive closes vs the close 4 bars ago to identify price exhaustion. A completed Setup 9 — especially "perfected" — is a high-conviction reversal signal. Countdown 13 is the strongest signal. Computed from real OHLC data.'},
-  mfi:          {name:'Money Flow Index',  desc:'<strong>MFI</strong> (Money Flow Index) is a volume-weighted RSI. It measures buying/selling pressure by combining price movement with volume — money flowing IN (price up on volume) vs money flowing OUT (price down on volume).<br><br><strong>CONTRARIAN scoring:</strong> MFI ≤ 20 → oversold (bullish buy signal); MFI ≥ 80 → overbought (bearish sell signal). MFI divergences from price are powerful reversal signals.<br><br><strong>Pairs with OBV:</strong> OBV confirms the big-picture volume trend; MFI times the exact entry on momentum extremes. Computed from real OHLCV data (14-period).'},
+  mfi:          {name:'Money Flow Index',  desc:'<strong>MFI</strong> (Money Flow Index) is a volume-weighted RSI. It measures buying/selling pressure by combining price movement with volume — money flowing IN (price up on volume) vs money flowing OUT (price down on volume).<br><br><strong>CONTRARIAN scoring:</strong> MFI ≤ 20 → oversold (bullish buy signal); MFI ≥ 80 → overbought (bearish sell signal). MFI divergences from price are powerful reversal signals.<br><br><strong>Pairs with On-Balance Volume (OBV):</strong> OBV confirms the big-picture volume trend; MFI times the exact entry on momentum extremes. Computed from real OHLCV data (14-period).'},
   bollinger:    {name:'Bollinger Bands',   desc:'Bollinger Bands plot a middle <strong>SMA</strong> (Simple Moving Average) with upper and lower bands at 2 standard deviations. CONTRARIAN scoring: <strong>%B</strong> (percent bandwidth) near 0 (at lower band) → bullish reversal signal; %B near 1 (at upper band) → bearish reversal signal. Band squeeze (bandwidth below 4%) → neutral with breakout pending. In strong trends price can "walk the band" — check trend context. Computed from real OHLC data (20-period, 2σ).'},
   obv:          {name:'OBV Trend',         desc:'<strong>OBV</strong> (On-Balance Volume) tracks cumulative volume flow — it adds volume on up days and subtracts it on down days. Rising OBV with rising price confirms accumulation (bullish). Divergence — OBV falling while price rises — warns of distribution (smart money selling). Computed from real OHLC + volume data.'},
   adx:          {name:'ADX Trend Overlay', desc:'<strong>ADX</strong> (Average Directional Index) measures TREND STRENGTH (not direction). Not scored directly — acts as an overlay multiplier on trend-following indicator weights (SMA 200, MA Cross). Below 20 = no trend (choppy, weights dampened 0.85×). 20–25 = transitional (1.00×). 25–30 = trending (1.06×). 30–40 = strong trend (1.12×). Above 40 = very strong trend (1.20×). <strong>+DI</strong> (Positive Directional Indicator) vs <strong>-DI</strong> (Negative Directional Indicator) shows trend direction. Computed from real OHLC data using Wilder\'s <strong>DMI</strong> (Directional Movement Index), 14-period.'},
-  candle_signal: {name:'Candlestick Signal', desc:'Detects classic single-bar and two-bar reversal patterns on daily charts. <strong>Topping Tails</strong> (also called Shooting Stars) signal potential reversals after uptrends — long upper wick shows sellers rejecting higher prices. <strong>Bottoming Tails</strong> (Hammers) signal reversals after downtrends — long lower wick shows buyers stepping in. <strong>Engulfing</strong> candles confirm directional momentum shifts when one bar completely engulfs the prior bar. Stronger signals occur at key levels (VAH/VAL/SMA 200) and on elevated volume.'},
+  macd:         {name:'MACD',              desc:'<strong>MACD</strong> (Moving Average Convergence Divergence) is a momentum + trend indicator built from exponential moving averages. The <strong>MACD line</strong> = 12-day <strong>EMA</strong> (Exponential Moving Average) minus 26-day EMA. The <strong>signal line</strong> = 9-day EMA of the MACD line. The <strong>histogram</strong> = MACD line minus signal line.<br><br><strong>Four scoring axes:</strong><br>• <strong>Zero line</strong> — MACD above zero = structurally bullish; below zero = bearish.<br>• <strong>Signal line</strong> — MACD above signal = momentum turning up; below = turning down.<br>• <strong>Histogram dynamics</strong> — expanding = accelerating; contracting = decelerating.<br>• <strong>Fresh crossovers</strong> — signal-line cross (one-bar window) adds a timing bonus; zero-line cross (regime flip) adds a bigger one.<br><br>All deterministic, no pattern-recognition judgment required. Fires more often than weekly MACD but with tighter edges — useful for position-size timing in trending markets.'},
 };
 
 const INDS={
@@ -1987,7 +1986,7 @@ const INDS={
     {id:'mfi',          name:'Money Flow Index', sub:'14-period MFI — computing…',         iW:1.1},
     {id:'bollinger',   name:'Bollinger Bands',  sub:'20-period 2σ — computing…',        iW:0.9},
     {id:'demark_seq',  name:'DeMark Sequential',sub:'TD 9/13 — computing…',             iW:0.9},
-    {id:'candle_signal',name:'Candlestick Signal',sub:'Scanning for reversal patterns…', iW:1.0},
+    {id:'macd',        name:'MACD',             sub:'12/26/9 daily — computing…',      iW:1.0},
   ],
 };
 
@@ -2072,7 +2071,7 @@ let confluenceMultipliers = {};
 //   ADX > 25 (trending): boost SMA200, MA Cross weights
 //   ADX < 20 (choppy):   dampen those weights
 // The multiplier is applied during recalc alongside confluence multipliers.
-const ADX_TREND_IDS = ['sma_200', 'sma_cross'];
+const ADX_TREND_IDS = ['sma_200', 'sma_cross', 'macd'];
 let adxOverlay = { adx: null, plusDI: null, minusDI: null, multiplier: 1.0, label: 'N/A' };
 
 function computeADXOverlayMultiplier(adxVal) {
@@ -2084,17 +2083,9 @@ function computeADXOverlayMultiplier(adxVal) {
   return { multiplier: 0.85, label: `ADX ${adxVal} — Choppy (0.85× dampen)` };
 }
 
-const BW={high:.60,med:.40};
-
-// ── Baseline weights (your recommended defaults — always preserved for reference) ──
-const BASELINE_BW={high:.60,med:.40};
-const BASELINE_IW={
-  vol_profile:1.1, sma_200:1.4,  sma_cross:1.1, rsi_extreme:1.2, obv:1.0,
-  mfi:1.1, bollinger:0.9, demark_seq:0.9, candle_signal:1.0
-};
-// Custom weights — start at baseline, user can modify
-let customBW={...BASELINE_BW};
-// customIW is managed via INDS[b][i].iW directly; BASELINE_IW is read-only reference
+// ── BUCKET WEIGHTS ──
+// Mutable: driven solely by timeframe preset. No user override.
+let BW = {high: 0.60, med: 0.40};
 
 // ── TIMEFRAME PRESETS ──
 // Logic: shorter TF → RSI/Bollinger/DeMark matter more, SMA200 less.
@@ -2107,7 +2098,7 @@ const TF_PRESETS = {
     bw: { high:0.55, med:0.45 },
     iw: {
       vol_profile:1.0, sma_200:0.8,  sma_cross:0.9,  rsi_extreme:1.5, obv:1.1,
-      mfi:1.3,         bollinger:1.4,   demark_seq:1.4, candle_signal:1.2,
+      mfi:1.3,         bollinger:1.4,   demark_seq:1.4, macd:1.2,
     }
   },
   position: {
@@ -2116,7 +2107,7 @@ const TF_PRESETS = {
     bw: { high:0.60, med:0.40 },
     iw: {
       vol_profile:1.1, sma_200:1.4,  sma_cross:1.1,  rsi_extreme:1.2, obv:1.0,
-      mfi:1.1,         bollinger:0.9,   demark_seq:0.9, candle_signal:1.0,
+      mfi:1.1,         bollinger:0.9,   demark_seq:0.9, macd:1.0,
     }
   },
   intermediate: {
@@ -2125,7 +2116,7 @@ const TF_PRESETS = {
     bw: { high:0.65, med:0.35 },
     iw: {
       vol_profile:1.3, sma_200:1.5,  sma_cross:1.3,  rsi_extreme:0.9, obv:1.1,
-      mfi:0.8,         bollinger:0.7,   demark_seq:0.7, candle_signal:0.8,
+      mfi:0.8,         bollinger:0.7,   demark_seq:0.7, macd:0.8,
     }
   },
   longterm: {
@@ -2134,7 +2125,7 @@ const TF_PRESETS = {
     bw: { high:0.65, med:0.35 },
     iw: {
       vol_profile:1.2, sma_200:1.8,  sma_cross:1.5,  rsi_extreme:0.6, obv:1.2,
-      mfi:0.6,         bollinger:0.5,   demark_seq:0.5, candle_signal:0.6,
+      mfi:0.6,         bollinger:0.5,   demark_seq:0.5, macd:0.6,
     }
   }
 };
@@ -2148,17 +2139,15 @@ function applyTFPreset(tf){
   if(!p) return;
   currentTF = tf;
   // Apply bucket weights
-  customBW = {...p.bw};
+  BW = {...p.bw};
   // Apply individual weights
   ['high','med'].forEach(b => INDS[b].forEach(i => {
     if(p.iw[i.id] !== undefined) i.iW = p.iw[i.id];
   }));
   recalc();
-  updWtBadge();
-  if(document.getElementById('wt-panel-body').classList.contains('open')) renderWtPanel();
-  // Update status hint
-  const badge = document.getElementById('tf-badge');
-  if(badge){ badge.textContent = 'Timeframe: ' + p.label; badge.title = p.desc; }
+  // Update timeframe-bar description
+  const tfDesc = document.getElementById('tf-badge-desc');
+  if(tfDesc){ tfDesc.textContent = p.desc; }
 }
 
 function onTFChange(){
@@ -2195,7 +2184,7 @@ let vals={}, fgVal=null;
 // MU preload
 const MU_PRELOAD={
   ticker:'MU', price:'422.90',
-  indicators:{vol_profile:72,sma_200:62,sma_cross:68,rsi_extreme:47,obv:75,demark_seq:62,mfi:55,bollinger:52,candle_signal:50},
+  indicators:{vol_profile:72,sma_200:62,sma_cross:68,rsi_extreme:47,obv:75,demark_seq:62,mfi:55,bollinger:52,macd:58},
   levels:{r1:'$455–$471',r2:'$503–$515',s1:'$395–$415',s2:'$375',stop:'$390',target:'$500–$525'},
   divNote:'MU ~0.13% TTM yield. Total return is price-driven. Div-adj SMA 200 ≈ price-only.'
 };
@@ -2251,199 +2240,6 @@ function toggleDarkMode(){
   }
 })();
 
-
-// ═══ WEIGHT EDITOR PANEL ═══
-function toggleWtPanel(){
-  const body=document.getElementById('wt-panel-body');
-  const chev=document.getElementById('wt-chevron');
-  const open=body.classList.toggle('open');
-  chev.classList.toggle('open',open);
-  if(open) renderWtPanel();
-}
-
-function updWtBadge(){
-  const devs=getWtDeviations();
-  const badge=document.getElementById('wt-badge');
-  if(!badge) return;
-  if(devs.length===0){badge.className='wt-panel-badge clean';badge.textContent='✓ Baseline';}
-  else{badge.className='wt-panel-badge modified';badge.textContent=devs.length+' modified';}
-}
-
-function getWtDeviations(){
-  const devs=[];
-  ['high','med'].forEach(b=>{
-    if(Math.abs(customBW[b]-BASELINE_BW[b])>0.005)
-      devs.push({name:{high:'HIGH bucket',med:'MED bucket'}[b],base:BASELINE_BW[b]*100,cur:customBW[b]*100});
-  });
-  ['high','med'].forEach(b=>INDS[b].forEach(i=>{
-    if(Math.abs(i.iW-BASELINE_IW[i.id])>0.05)
-      devs.push({name:i.name,base:BASELINE_IW[i.id],cur:i.iW});
-  }));
-  return devs;
-}
-
-function renderWtPanel(){
-  const body=document.getElementById('wt-panel-body');
-  body.innerHTML='';
-
-  // ── Deviation Summary ──
-  const devs=getWtDeviations();
-  const sumDiv=document.createElement('div'); sumDiv.className='dev-summary';
-  const dTitle=document.createElement('div'); dTitle.className='dev-title'; dTitle.textContent='Deviations from Recommended Baseline';
-  sumDiv.appendChild(dTitle);
-  if(devs.length===0){
-    const none=document.createElement('div'); none.className='dev-none'; none.textContent='✓ All weights at recommended baseline';
-    sumDiv.appendChild(none);
-  } else {
-    devs.forEach(d=>{
-      const delta=d.cur-d.base; const sign=delta>0?'+':'';
-      const row=document.createElement('div'); row.className='dev-row';
-      row.innerHTML=`<span class="dev-name">${d.name}</span>
-        <span class="dev-vals">
-          <span class="dev-baseline">${d.base.toFixed(1)}</span>
-          <span style="color:var(--text3)">→</span>
-          <span class="dev-current">${d.cur.toFixed(1)}</span>
-          <span class="dev-delta">${sign}${delta.toFixed(1)}</span>
-        </span>`;
-      sumDiv.appendChild(row);
-    });
-  }
-  // Reset note
-  const note=document.createElement('div');
-  note.style.cssText='font-family:var(--mono);font-size:9px;color:var(--text3);margin-top:7px;';
-  note.textContent='↺ Weights reset to baseline automatically on each Analyze run.';
-  sumDiv.appendChild(note);
-  body.appendChild(sumDiv);
-
-  // ── Bucket Weights ──
-  const bktSec=document.createElement('div'); bktSec.className='wt-section';
-  const bktHdr=document.createElement('div'); bktHdr.className='wt-sec-hdr';
-  const bktTitle=document.createElement('div'); bktTitle.className='wt-sec-title bucket'; bktTitle.textContent='Bucket Weights — must sum to 100%';
-  const bktRst=document.createElement('button'); bktRst.className='reset-bkt'; bktRst.textContent='Reset';
-  bktRst.onclick=()=>{customBW={...BASELINE_BW};recalc();renderWtPanel();updWtBadge();};
-  bktHdr.appendChild(bktTitle); bktHdr.appendChild(bktRst); bktSec.appendChild(bktHdr);
-
-  // col headers
-  const colHdr=document.createElement('div');
-  colHdr.style.cssText='display:grid;grid-template-columns:1fr 48px 62px 48px;gap:7px;padding:0 3px 4px;';
-  colHdr.innerHTML='<div></div><div class="col-hdr">Baseline</div><div class="col-hdr">Custom %</div><div class="col-hdr">Delta</div>';
-  bktSec.appendChild(colHdr);
-
-  const bktColors={high:'var(--high)',med:'var(--med)'};
-  const bktNames={high:'HIGH',med:'MEDIUM'};
-  const bktInps={};
-  ['high','med'].forEach(b=>{
-    const row=document.createElement('div'); row.className='bkt-wt-row';
-    const lbl=document.createElement('div'); lbl.className='bwlbl';
-    lbl.innerHTML=`<span style="color:${bktColors[b]};font-weight:600">${bktNames[b]}</span>`;
-    const base=document.createElement('div'); base.className='bw-base'; base.textContent=(BASELINE_BW[b]*100).toFixed(0)+'%';
-    const inp=document.createElement('input'); inp.type='number'; inp.min=1; inp.max=98; inp.step=1;
-    inp.value=Math.round(customBW[b]*100);
-    inp.className='bw-inp'+(customBW[b]!==BASELINE_BW[b]?' dev':'');
-    bktInps[b]=inp;
-    inp.oninput=()=>validateBucketSum(bktInps, sumBar, b);
-    inp.onchange=()=>validateBucketSum(bktInps, sumBar, b);
-    const delta=customBW[b]-BASELINE_BW[b];
-    const dEl=document.createElement('div');
-    dEl.id='bw-delta-'+b;
-    dEl.className='bw-delta '+(Math.abs(delta)<0.005?'zero':delta>0?'pos':'neg');
-    dEl.textContent=Math.abs(delta)<0.005?'—':(delta>0?'+':'')+Math.round(delta*100)+'%';
-    row.appendChild(lbl); row.appendChild(base); row.appendChild(inp); row.appendChild(dEl);
-    bktSec.appendChild(row);
-  });
-
-  // sum bar
-  const sumBar=document.createElement('div');
-  const total=Math.round((customBW.high+customBW.med)*100);
-  sumBar.className='sum-bar '+(total===100?'ok':'err');
-  sumBar.textContent=total===100?'✓ Bucket weights sum to 100%':'⚠ Currently sums to '+total+'% — must equal 100% before changes apply';
-  bktSec.appendChild(sumBar);
-  body.appendChild(bktSec);
-
-  // ── Indicator Intra-Weights per bucket ──
-  ['high','med'].forEach(b=>{
-    const sec=document.createElement('div'); sec.className='wt-section';
-    const hdr=document.createElement('div'); hdr.className='wt-sec-hdr';
-    const title=document.createElement('div'); title.className=`wt-sec-title ${b}`;
-    title.textContent={high:'High Confidence — Indicator Weights',med:'Medium Confidence — Indicator Weights'}[b];
-    const rst=document.createElement('button'); rst.className='reset-bkt'; rst.textContent='Reset';
-    rst.onclick=()=>{INDS[b].forEach(i=>i.iW=BASELINE_IW[i.id]);recalc();renderWtPanel();updWtBadge();};
-    hdr.appendChild(title); hdr.appendChild(rst); sec.appendChild(hdr);
-
-    const colH=document.createElement('div');
-    colH.style.cssText='display:grid;grid-template-columns:1fr 48px 58px 48px;gap:6px;padding:0 3px 4px;';
-    colH.innerHTML='<div class="col-hdr" style="text-align:left">Indicator</div><div class="col-hdr">Baseline</div><div class="col-hdr">Custom</div><div class="col-hdr">Delta</div>';
-    sec.appendChild(colH);
-
-    INDS[b].forEach(ind=>{
-      const row=document.createElement('div'); row.className='iw-row';
-      const nm=document.createElement('div'); nm.className='iw-nm'; nm.textContent=ind.name;
-      const bl=document.createElement('div'); bl.className='iw-base'; bl.textContent=BASELINE_IW[ind.id].toFixed(1);
-      const inp=document.createElement('input'); inp.type='number'; inp.min=0.1; inp.max=3.0; inp.step=0.1;
-      inp.value=ind.iW.toFixed(1);
-      inp.className='iw-inp'+(Math.abs(ind.iW-BASELINE_IW[ind.id])>0.05?' dev':'');
-      inp.oninput=()=>{
-        const v=parseFloat(inp.value);
-        if(isNaN(v)||v<0.1||v>3.0) return;
-        ind.iW=v; recalc(); renderWtPanel(); updWtBadge();
-      };
-      const delta=ind.iW-BASELINE_IW[ind.id];
-      const sign=delta>0?'+':'';
-      const dEl=document.createElement('div');
-      dEl.className='iw-d '+(Math.abs(delta)<0.05?'zero':delta>0?'pos':'neg');
-      dEl.textContent=Math.abs(delta)<0.05?'—':sign+delta.toFixed(1);
-      row.appendChild(nm); row.appendChild(bl); row.appendChild(inp); row.appendChild(dEl);
-      sec.appendChild(row);
-    });
-    body.appendChild(sec);
-  });
-
-  // Reset all footer
-  const footer=document.createElement('div'); footer.style.cssText='padding-top:10px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;';
-  const rstAll=document.createElement('button'); rstAll.className='btn'; rstAll.textContent='Reset All to Baseline';
-  rstAll.onclick=()=>{resetAllWeights();};
-  footer.appendChild(rstAll); body.appendChild(footer);
-}
-
-function validateBucketSum(inputs, sumBar, changedBucket){
-  // Read all current input values
-  const vals={};
-  ['high','med'].forEach(b=>{ vals[b]=parseInt(inputs[b].value)||0; });
-  const total=vals.high+vals.med;
-
-  // Update sum bar
-  if(total===100){
-    sumBar.className='sum-bar ok';
-    sumBar.textContent='✓ Bucket weights sum to 100%';
-    // Only apply when valid
-    ['high','med'].forEach(b=>{
-      customBW[b]=vals[b]/100;
-      inputs[b].className='bw-inp'+(vals[b]/100!==BASELINE_BW[b]?' dev':'');
-    });
-    recalc(); updWtBadge();
-    // update deltas
-    ['high','med'].forEach(b=>{
-      const el=document.getElementById('bw-delta-'+b);
-      if(!el) return;
-      const delta=customBW[b]-BASELINE_BW[b];
-      el.className='bw-delta '+(Math.abs(delta)<0.005?'zero':delta>0?'pos':'neg');
-      el.textContent=Math.abs(delta)<0.005?'—':(delta>0?'+':'')+Math.round(delta*100)+'%';
-    });
-  } else {
-    // Block — show red warning, don't apply
-    sumBar.className='sum-bar err';
-    sumBar.textContent='⚠ Sums to '+total+'% — must equal exactly 100% to apply';
-    inputs[changedBucket].className='bw-inp err';
-  }
-}
-
-function resetAllWeights(){
-  customBW={...BASELINE_BW};
-  ['high','med'].forEach(b=>INDS[b].forEach(i=>i.iW=BASELINE_IW[i.id]));
-  recalc(); updWtBadge();
-  if(document.getElementById('wt-panel-body').classList.contains('open')) renderWtPanel();
-  showToast('✓ All weights reset to baseline');
-}
 
 // ═══ FUNDAMENTALS DASHBOARD ═══
 
@@ -2970,19 +2766,27 @@ async function runAllComputed(ticker){
     if(dmNote && !dmNote.value) dmNote.value = `[Computed from ${n} daily bars] ${dmDetail}`;
     }
 
-    // Candlestick Signal
-    const cs = I.candle;
-    if(cs){
-      const ago = cs.barsAgo === 0 ? 'today' : `${cs.barsAgo}d ago`;
-      const conf = cs.confirmed && cs.confirmed !== 'today' ? ` · ${cs.confirmed}` : '';
-      const csDetail = `${cs.type} ${ago}${conf} — ${cs.detail}`;
-      const csSub = document.getElementById('sub-candle_signal');
-      if(csSub) csSub.textContent = csDetail;
-      const csNote = document.getElementById('nt-candle_signal');
-      if(csNote && !csNote.value) csNote.value = `[Computed] ${cs.type} ${ago} · Score:${cs.score} · ${cs.detail}`;
+    // MACD sub-label
+    const mc = I.macd;
+    if(mc && mc.valid){
+      const pos = mc.macd >= 0 ? 'above zero' : 'below zero';
+      const sig = mc.macd > mc.signal ? 'above signal' : mc.macd < mc.signal ? 'below signal' : 'at signal';
+      const histExp = Math.abs(mc.histogram) > Math.abs(mc.histPrev);
+      const histWord = histExp ? 'expanding' : 'contracting';
+      const crossNote = mc.zeroCrossBull ? ' · fresh zero cross ▲'
+        : mc.zeroCrossBear ? ' · fresh zero cross ▼'
+        : mc.sigCrossBull ? ' · fresh bull cross ▲'
+        : mc.sigCrossBear ? ' · fresh bear cross ▼'
+        : '';
+      const macdFmt = mc.macd.toFixed(2);
+      const macdDetail = `MACD ${mc.macd >= 0 ? '+' : ''}${macdFmt} · ${pos} · ${sig} · histogram ${histWord}${crossNote}`;
+      const mSub = document.getElementById('sub-macd');
+      if(mSub) mSub.textContent = macdDetail;
+      const mNote = document.getElementById('nt-macd');
+      if(mNote && !mNote.value) mNote.value = `[Computed] MACD ${macdFmt}, signal ${mc.signal.toFixed(2)}, histogram ${mc.histogram.toFixed(2)}${crossNote}`;
     } else {
-      const csSub = document.getElementById('sub-candle_signal');
-      if(csSub) csSub.textContent = 'No reversal pattern detected (last 5 bars)';
+      const mSub = document.getElementById('sub-macd');
+      if(mSub) mSub.textContent = 'Not enough bars to compute';
     }
 
     console.log('runAllComputed: ALL DONE — detail strings complete for', ticker);
@@ -2999,7 +2803,7 @@ async function runAllComputed(ticker){
     });
     recalc();
     // Status bar
-    const _fsc = Math.round(bScore('high')*customBW.high + bScore('med')*customBW.med);
+    const _fsc = Math.round(bScore('high')*BW.high + bScore('med')*BW.med);
     const _fvc = verd(_fsc).l, _fcc = sCol(_fsc);
     const _fcn = window._lastSymbolName ? ` · ${window._lastSymbolName}` : '';
     const _fpr = document.getElementById('price-val').textContent || '';
@@ -3361,6 +3165,9 @@ function ema(data, period){
 
 function destroyChart(id){
   if(chartInstances[id]){ chartInstances[id].destroy(); delete chartInstances[id]; }
+  // Stacked indicators (RSI, MACD) track a companion price chart under id+':price'
+  const pKey = id + ':price';
+  if(chartInstances[pKey]){ chartInstances[pKey].destroy(); delete chartInstances[pKey]; }
 }
 
 function toggleChart(id, btn){
@@ -3406,6 +3213,140 @@ async function renderChart(id){
     };
 
     cc.innerHTML = ''; // clear loading
+
+    // ── STACKED LAYOUT for RSI Extreme and MACD (price above, oscillator/momentum below) ──
+    const isStacked = (id === 'rsi_extreme' || id === 'macd');
+    cc.classList.toggle('stacked', isStacked);
+
+    if (isStacked) {
+      // Use last 63 bars (~3 months) for both panels
+      const W = 63;
+      const start = Math.max(0, d.length - W);
+      const tailD = d.slice(start);
+      const tailLabels = tailD.map(b => b.t);
+      const tailCloses = tailD.map(b => b.c);
+
+      // Price panel — close line colored by current indicator score
+      const priceWrap = document.createElement('div');
+      priceWrap.className = 'rc-price';
+      const priceCanvas = document.createElement('canvas');
+      priceWrap.appendChild(priceCanvas);
+      cc.appendChild(priceWrap);
+
+      const score = (typeof vals !== 'undefined' ? vals[id] : 50) ?? 50;
+      const priceColor = typeof sCol === 'function' ? sCol(score) : '#1a6fd4';
+
+      chartInstances[id + ':price'] = new Chart(priceCanvas.getContext('2d'), {
+        type: 'line',
+        data: { labels: tailLabels, datasets: [{
+          label: 'Close', data: tailCloses, borderColor: priceColor, borderWidth: 1.75,
+          pointRadius: 0, tension: 0.25, fill: false,
+        }]},
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          animation: { duration: 300 },
+          plugins: {
+            legend: { display: false },
+            tooltip: { mode: 'index', intersect: false, titleFont: { family: 'IBM Plex Mono', size: 10 }, bodyFont: { family: 'IBM Plex Mono', size: 10 }, callbacks: { label: ctx => `Close: ${ctx.parsed.y?.toFixed(2) ?? '—'}` } },
+          },
+          scales: {
+            x: { display: false, grid: { display: false } },
+            y: { position: 'right', ticks: { font: { family: 'IBM Plex Mono', size: 8 }, color: _cc.tick, maxTicksLimit: 5 }, grid: { color: _cc.grid } },
+          },
+          interaction: { intersect: false, mode: 'index' },
+        },
+      });
+
+      // Indicator panel — separate canvas, rendered below
+      const indWrap = document.createElement('div');
+      indWrap.className = 'rc-indicator';
+      const indCanvas = document.createElement('canvas');
+      indWrap.appendChild(indCanvas);
+      cc.appendChild(indWrap);
+      const indCtx = indCanvas.getContext('2d');
+
+      if (id === 'rsi_extreme') {
+        // Compute RSI 14 on full dataset, slice to last W
+        const gains = [], losses = [];
+        for (let i = 1; i < closes_d.length; i++) {
+          const diff = closes_d[i] - closes_d[i - 1];
+          gains.push(Math.max(diff, 0));
+          losses.push(Math.max(-diff, 0));
+        }
+        const rsiFull = [];
+        let avgG = gains.slice(0, 14).reduce((s, v) => s + v, 0) / 14;
+        let avgL = losses.slice(0, 14).reduce((s, v) => s + v, 0) / 14;
+        for (let i = 0; i < 14; i++) rsiFull.push(null);
+        rsiFull.push(avgL === 0 ? 100 : 100 - 100 / (1 + avgG / avgL));
+        for (let i = 14; i < gains.length; i++) {
+          avgG = (avgG * 13 + gains[i]) / 14;
+          avgL = (avgL * 13 + losses[i]) / 14;
+          rsiFull.push(avgL === 0 ? 100 : 100 - 100 / (1 + avgG / avgL));
+        }
+        const rsi = rsiFull.slice(start);
+
+        chartInstances[id] = new Chart(indCtx, {
+          type: 'line',
+          data: { labels: tailLabels, datasets: [
+            { label: 'RSI 14', data: rsi, borderColor: '#1a6fd4', borderWidth: 1.5, pointRadius: 0, tension: 0.2,
+              segment: { borderColor: ctx => rsi[ctx.p1DataIndex] <= 30 ? '#0a8a4e' : rsi[ctx.p1DataIndex] >= 70 ? '#cc2840' : '#1a6fd4' } },
+            { label: 'Overbought (70) → Bearish', data: Array(tailLabels.length).fill(70), borderColor: '#cc284055', borderWidth: 1, pointRadius: 0, borderDash: [4,4] },
+            { label: 'Oversold (30) → Bullish',  data: Array(tailLabels.length).fill(30), borderColor: '#0a8a4e55', borderWidth: 1, pointRadius: 0, borderDash: [4,4] },
+            { label: 'Midline (50)',              data: Array(tailLabels.length).fill(50), borderColor: '#d0d6e055', borderWidth: 1, pointRadius: 0, borderDash: [2,4] },
+          ]},
+          options: { ...baseOpts, scales: { ...baseOpts.scales, y: { ...baseOpts.scales.y, min: 0, max: 100 } } },
+        });
+      } else if (id === 'macd') {
+        // Compute MACD 12/26/9 on full dataset, slice to last W
+        const ema = (data, period) => {
+          const k = 2 / (period + 1);
+          const r = [];
+          let prev = null;
+          for (let i = 0; i < data.length; i++) {
+            if (i < period - 1) { r.push(null); continue; }
+            if (prev === null) { prev = data.slice(0, period).reduce((s, v) => s + v, 0) / period; r.push(prev); continue; }
+            prev = data[i] * k + prev * (1 - k);
+            r.push(prev);
+          }
+          return r;
+        };
+        const eFast = ema(closes_d, 12);
+        const eSlow = ema(closes_d, 26);
+        const macdFull = closes_d.map((_, i) => (eFast[i] === null || eSlow[i] === null) ? null : eFast[i] - eSlow[i]);
+        const macdValid = macdFull.filter(v => v !== null);
+        const sigCompact = ema(macdValid, 9);
+        const offset = macdFull.length - macdValid.length;
+        const signalFull = macdFull.map((_, i) => { const j = i - offset; return j < 0 ? null : sigCompact[j]; });
+        const histFull = macdFull.map((v, i) => (v === null || signalFull[i] === null) ? null : v - signalFull[i]);
+        const macdSlice = macdFull.slice(start);
+        const signalSlice = signalFull.slice(start);
+        const histSlice = histFull.slice(start);
+
+        const histColors = histSlice.map((h, i) => {
+          if (h === null) return 'rgba(128,128,128,0.3)';
+          const prev = i > 0 ? histSlice[i - 1] : h;
+          const expanding = Math.abs(h) > Math.abs(prev ?? h);
+          if (h >= 0) return expanding ? '#00d97e' : 'rgba(0,217,126,0.45)';
+          return expanding ? '#ff4560' : 'rgba(255,69,96,0.45)';
+        });
+
+        chartInstances[id] = new Chart(indCtx, {
+          type: 'bar',
+          data: { labels: tailLabels, datasets: [
+            { label: 'Histogram', type: 'bar',  data: histSlice,   backgroundColor: histColors, borderColor: histColors, borderWidth: 0, barPercentage: 0.8, categoryPercentage: 0.9, order: 3 },
+            { label: 'MACD',      type: 'line', data: macdSlice,   borderColor: '#4c8ef7', borderWidth: 1.75, pointRadius: 0, tension: 0.25, fill: false, order: 1 },
+            { label: 'Signal',    type: 'line', data: signalSlice, borderColor: '#f0b429', borderWidth: 1.25, pointRadius: 0, borderDash: [4,3], tension: 0.25, fill: false, order: 2 },
+          ]},
+          options: { ...baseOpts,
+            plugins: { ...baseOpts.plugins,
+              annotation: { annotations: { zero: { type: 'line', yMin: 0, yMax: 0, borderColor: _cc.grid, borderWidth: 1.25, borderDash: [2,4] } } },
+            },
+          },
+        });
+      }
+      return;  // stacked path complete, skip the single-canvas path below
+    }
+
     const canvas = document.createElement('canvas');
     cc.appendChild(canvas);
     const ctx = canvas.getContext('2d');
@@ -3521,7 +3462,7 @@ function clearChartCache(){
 // ═══ BUILD ROWS ═══
 const CHARTABLE = {
   vol_profile:true, sma_200:true, sma_cross:true,  // sma_cross also gets computed override
-  rsi_extreme:true, mfi:true, bollinger:true
+  rsi_extreme:true, mfi:true, bollinger:true, macd:true
 };
 function buildRow(ind,bkt,container){
   const c=container||document.getElementById('bucket-'+bkt);
@@ -3623,10 +3564,11 @@ function setSl(id,v,anim=true){
 }
 
 // v12: Thematic grouping — display-only, scoring buckets unchanged
+// v15: MACD moved from Contrarian to Trend Direction (MACD is a trend/momentum indicator)
 const IND_GROUPS = [
-  { container: 'grp-trend',      ids: ['sma_200', 'sma_cross'] },
+  { container: 'grp-trend',      ids: ['sma_200', 'sma_cross', 'macd'] },
   { container: 'grp-volume',     ids: ['vol_profile', 'obv', 'mfi'] },
-  { container: 'grp-contrarian', ids: ['rsi_extreme', 'demark_seq', 'bollinger', 'candle_signal'] },
+  { container: 'grp-contrarian', ids: ['rsi_extreme', 'demark_seq', 'bollinger'] },
 ];
 // Build a lookup: id → bucket name
 const IND_BUCKET = {};
@@ -3654,19 +3596,19 @@ function buildAll(){
 const DASH_ORDER = [
   'sma_200', 'sma_cross', 'vol_profile',
   'obv',     'rsi_extreme','demark_seq',
-  'bollinger','mfi',       'candle_signal'
+  'bollinger','mfi',       'macd'
 ];
 
 const DASH_GROUP = {
   sma_200:      {color:'#4c8ef7', label:'Trend'},
   sma_cross:    {color:'#4c8ef7', label:'Trend'},
+  macd:         {color:'#4c8ef7', label:'Trend'},
   vol_profile:  {color:'#a78bfa', label:'Volume'},
   obv:          {color:'#a78bfa', label:'Volume'},
   mfi:          {color:'#a78bfa', label:'Volume'},
   rsi_extreme:  {color:'#f0b429', label:'Contrarian'},
   demark_seq:   {color:'#f0b429', label:'Contrarian'},
   bollinger:    {color:'#f0b429', label:'Contrarian'},
-  candle_signal:{color:'#f0b429', label:'Contrarian'},
 };
 
 function buildDashboard(){
@@ -3786,8 +3728,11 @@ function showTileModal(id){
     <span class="dt-modal-tag" style="color:var(--text3);background:var(--surface3);border:1px solid var(--border);">${bkt.toUpperCase()}</span>
   `;
 
-  // Title
-  document.getElementById('dt-modal-title').textContent = ind.name;
+  // Title — prefix with the ticker symbol so the panel shows what we're analyzing
+  const tickerVal = (document.getElementById('ticker-input')?.value || '').toUpperCase().trim();
+  document.getElementById('dt-modal-title').textContent = tickerVal
+    ? `${tickerVal} · ${ind.name}`
+    : ind.name;
 
   // Score row
   const scoreRow = document.getElementById('dt-modal-score-row');
@@ -3811,8 +3756,11 @@ function showTileModal(id){
   // Chart — build indicator-specific chart in modal
   const chartArea = document.getElementById('dt-modal-chart');
   chartArea.innerHTML = '';
+  // MACD and RSI render as stacked two-panel (price above, indicator below)
+  const isStacked = (id === 'macd' || id === 'rsi_extreme');
+  chartArea.classList.toggle('stacked', isStacked);
   const chartWrap = document.createElement('div');
-  chartWrap.style.height = 'clamp(160px, 30vh, 300px)';
+  if (!isStacked) chartWrap.style.height = 'clamp(160px, 30vh, 300px)';
   chartArea.appendChild(chartWrap);
   buildModalChart(id, chartWrap);
 
@@ -3826,8 +3774,9 @@ function showTileModal(id){
 function closeTileModal(){
   const overlay = document.getElementById('dt-modal-overlay');
   if(overlay) overlay.style.display = 'none';
-  // Destroy any chart we created in the modal
+  // Destroy any charts we created in the modal (MACD/RSI have two — price + indicator)
   if(window._dtModalChart){ window._dtModalChart.destroy(); window._dtModalChart = null; }
+  if(window._dtModalPriceChart){ window._dtModalPriceChart.destroy(); window._dtModalPriceChart = null; }
 }
 // Escape key closes tile modal
 document.addEventListener('keydown', e => { if(e.key === 'Escape') closeTileModal(); });
@@ -3853,9 +3802,65 @@ function drawTileGauge(cv, score){
   ctx.beginPath(); ctx.arc(cx, cy, 2.5, 0, Math.PI*2); ctx.fillStyle = needleColor; ctx.fill();
 }
 
+// Build a "price above, indicator below" stacked layout.
+// Creates the price panel (closes line, colored by indicator score) and
+// returns the canvas for the indicator panel so the caller can populate it.
+// The two panels share the same labels array so the X axes line up.
+function buildStackedPricePanel(container, bars, labels, scoreForColor) {
+  const closes = bars.map(b => b.c);
+  const isDark = document.body.classList.contains('dark-mode');
+  const gridColor = isDark ? '#21262d' : '#e8eaed';
+  const textColor = isDark ? '#8b949e' : '#6e7681';
+
+  // Price panel wrapper
+  const priceWrap = document.createElement('div');
+  priceWrap.className = 'dt-stack-price';
+  const priceCanvas = document.createElement('canvas');
+  priceWrap.appendChild(priceCanvas);
+  container.appendChild(priceWrap);
+
+  const priceColor = typeof sCol === 'function' ? sCol(scoreForColor ?? 50) : '#4c8ef7';
+
+  window._dtModalPriceChart = new Chart(priceCanvas, {
+    type: 'line',
+    data: { labels, datasets: [{
+      label: 'Close', data: closes, borderColor: priceColor, borderWidth: 1.75,
+      pointRadius: 0, tension: 0.25, fill: false,
+    }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      layout: { padding: { top: 4, bottom: 0 } },
+      plugins: {
+        legend: { display: false },
+        tooltip: { mode: 'index', intersect: false, callbacks: {
+          label: ctx => `Close: ${ctx.parsed.y?.toFixed(2) ?? '—'}`
+        }},
+      },
+      scales: {
+        x: { display: false, grid: { display: false } },
+        y: {
+          display: true, position: 'left',
+          grid: { color: gridColor },
+          ticks: { color: textColor, font: { size: 9 }, maxTicksLimit: 5 },
+        },
+      },
+      interaction: { intersect: false, mode: 'index' },
+    },
+  });
+
+  // Indicator panel wrapper — caller fills this canvas
+  const indWrap = document.createElement('div');
+  indWrap.className = 'dt-stack-indicator';
+  const indCanvas = document.createElement('canvas');
+  indWrap.appendChild(indCanvas);
+  container.appendChild(indWrap);
+  return indCanvas;
+}
+
 // Build a fresh Chart.js chart inside the modal for the given indicator
 function buildModalChart(indId, container){
   if(window._dtModalChart){ window._dtModalChart.destroy(); window._dtModalChart = null; }
+  if(window._dtModalPriceChart){ window._dtModalPriceChart.destroy(); window._dtModalPriceChart = null; }
   if(!window._cachedDailyBars || !window._cachedDailyBars.length){
     container.innerHTML = `<div style="padding:20px;text-align:center;color:var(--text3);font:400 12px/1.5 var(--mono);">Enter a ticker and click <strong style="color:var(--accent);">Analyze</strong> to load indicator charts</div>`;
     return;
@@ -3873,7 +3878,9 @@ function buildModalChart(indId, container){
   rangeLabel.style.cssText = 'font:500 9px/1 var(--mono);color:var(--text3);text-align:center;padding:2px 0 4px;';
   rangeLabel.textContent = `Daily · ${startDate} — ${endDate} (${chartBars.length} bars)`;
   container.appendChild(rangeLabel);
-  container.appendChild(canvas);
+  // Stacked indicators (MACD, RSI Extreme) create their own canvases via buildStackedPricePanel.
+  const isStacked = indId === 'macd' || indId === 'rsi_extreme';
+  if (!isStacked) container.appendChild(canvas);
 
   const labels = chartBars.map(b => b.t || '');
   const closes = chartBars.map(b => b.c);
@@ -3883,22 +3890,61 @@ function buildModalChart(indId, container){
   const CI = window._cachedIndicators || {};
   const hasAnnotation = Chart.registry?.plugins?.get('annotation');
 
-  // ── Oscillator charts (RSI, MFI) — 0–100 scale with thresholds ──
-  if(indId === 'rsi_extreme' || indId === 'mfi'){
-    const series = indId === 'rsi_extreme' ? chartRSI(closes, 14) : chartMFI(bars, 14);
-    const overbought = indId === 'rsi_extreme' ? 70 : 80;
-    const oversold = indId === 'rsi_extreme' ? 30 : 20;
-    const lineColor = indId === 'rsi_extreme' ? '#3b82f6' : '#a78bfa';
+  // ── RSI Extreme — stacked: price panel above, RSI oscillator below ──
+  if(indId === 'rsi_extreme'){
+    const RSI_WINDOW = 63; // ~3 months, matches MACD for visual consistency
+    const n = bars.length;
+    const start = Math.max(0, n - RSI_WINDOW);
+    const tail = bars.slice(start);
+    const tailLabels = tail.map(b => b.t || '');
+    const rsiSeriesFull = chartRSI(closes, 14);
+    const rsiSeries = rsiSeriesFull.slice(start);
+    rangeLabel.textContent = `Daily · ${tail[0]?.t||''} — ${tail[tail.length-1]?.t||''} (3 months · RSI 14)`;
+
+    // Build price panel + get indicator canvas for the RSI plot
+    const indCanvas = buildStackedPricePanel(container, tail, tailLabels, vals.rsi_extreme);
+
+    window._dtModalChart = new Chart(indCanvas, {
+      type: 'line',
+      data: { labels: tailLabels, datasets: [{
+        label: 'RSI(14)', data: rsiSeries, borderColor: '#3b82f6', borderWidth: 1.5,
+        pointRadius: 0, tension: 0.3, fill: false,
+      }] },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        layout: { padding: { top: 2 } },
+        plugins: {
+          legend: { display: false },
+          annotation: hasAnnotation ? { annotations: {
+            ob: { type: 'line', yMin: 70, yMax: 70, borderColor: '#ff456080', borderWidth: 1, borderDash: [4,3], label: { content: 'Overbought', display: true, position: 'end', font: { size: 8 }, color: '#ff4560' } },
+            os: { type: 'line', yMin: 30, yMax: 30, borderColor: '#00d97e80', borderWidth: 1, borderDash: [4,3], label: { content: 'Oversold', display: true, position: 'end', font: { size: 8 }, color: '#00d97e' } },
+            mid: { type: 'line', yMin: 50, yMax: 50, borderColor: gridColor, borderWidth: 1, borderDash: [2,4] },
+          }} : {},
+          tooltip: { mode: 'index', intersect: false },
+        },
+        scales: {
+          x: { display: true, grid: { color: gridColor }, ticks: { color: textColor, font: { size: 8 }, maxTicksLimit: 6 } },
+          y: { display: true, min: 0, max: 100, grid: { color: gridColor }, ticks: { color: textColor, font: { size: 9 }, stepSize: 20 } }
+        },
+        interaction: { intersect: false, mode: 'index' },
+      }
+    });
+    return;
+  }
+
+  // ── MFI oscillator (single panel; MFI + bar-close context already captured by the 20/80 levels) ──
+  if(indId === 'mfi'){
+    const series = chartMFI(bars, 14);
     window._dtModalChart = new Chart(canvas, {
       type: 'line',
-      data: { labels, datasets: [{ label: indId === 'rsi_extreme' ? 'RSI(14)' : 'MFI(14)', data: series, borderColor: lineColor, borderWidth: 1.5, pointRadius: 0, tension: 0.3, fill: false }] },
+      data: { labels, datasets: [{ label: 'MFI(14)', data: series, borderColor: '#a78bfa', borderWidth: 1.5, pointRadius: 0, tension: 0.3, fill: false }] },
       options: {
         responsive: true, maintainAspectRatio: false,
         plugins: {
           legend: { display: false },
           annotation: hasAnnotation ? { annotations: {
-            ob: { type: 'line', yMin: overbought, yMax: overbought, borderColor: '#ff456080', borderWidth: 1, borderDash: [4,3], label: { content: 'Overbought', display: true, position: 'end', font: { size: 8 }, color: '#ff4560' } },
-            os: { type: 'line', yMin: oversold, yMax: oversold, borderColor: '#00d97e80', borderWidth: 1, borderDash: [4,3], label: { content: 'Oversold', display: true, position: 'end', font: { size: 8 }, color: '#00d97e' } },
+            ob: { type: 'line', yMin: 80, yMax: 80, borderColor: '#ff456080', borderWidth: 1, borderDash: [4,3], label: { content: 'Overbought', display: true, position: 'end', font: { size: 8 }, color: '#ff4560' } },
+            os: { type: 'line', yMin: 20, yMax: 20, borderColor: '#00d97e80', borderWidth: 1, borderDash: [4,3], label: { content: 'Oversold', display: true, position: 'end', font: { size: 8 }, color: '#00d97e' } },
             mid: { type: 'line', yMin: 50, yMax: 50, borderColor: gridColor, borderWidth: 1, borderDash: [2,4] },
           }} : {},
         },
@@ -3935,37 +3981,75 @@ function buildModalChart(indId, container){
     return;
   }
 
-  // ── Candlestick — OHLC bars for last 50 bars when pattern detected ──
-  if(indId === 'candle_signal'){
-    const cs = CI.candle;
-    const tail = bars.slice(-63);
+  // ── MACD — line + signal + histogram for last ~3 months ──
+  if(indId === 'macd'){
+    const MACD_WINDOW = 63; // ~3 months of trading days
+    // Need at least slow(26)+sig(9)+1 = 36 bars of LEAD-IN to compute first valid signal point;
+    // use full bars for computation then slice to the last MACD_WINDOW for display.
+    const closesAll = bars.map(b => b.c);
+    // Compute MACD series (inline — the scoring computeMACD only returns last-bar values)
+    const eFast = emaCalc(closesAll, 12);
+    const eSlow = emaCalc(closesAll, 26);
+    const macdLineAll = closesAll.map((_, i) => (eFast[i] === null || eSlow[i] === null) ? null : eFast[i] - eSlow[i]);
+    const macdValid = macdLineAll.filter(v => v !== null);
+    const sigCompact = emaCalc(macdValid, 9);
+    const offset = macdLineAll.length - macdValid.length;
+    const signalLineAll = macdLineAll.map((_, i) => { const j = i - offset; return j < 0 ? null : sigCompact[j]; });
+    const histAll = macdLineAll.map((v, i) => (v === null || signalLineAll[i] === null) ? null : v - signalLineAll[i]);
+
+    // Slice to display window
+    const n = bars.length;
+    const start = Math.max(0, n - MACD_WINDOW);
+    const tail = bars.slice(start);
     const tailLabels = tail.map(b => b.t || '');
-    rangeLabel.textContent = `Daily · ${tail[0]?.t||''} — ${tail[tail.length-1]?.t||''} (3 months)`;
-    // Build colored bar data: each bar = [open, close], colored by direction
-    const bodies = tail.map(b => [Math.min(b.o, b.c), Math.max(b.o, b.c)]);
-    const colors = tail.map(b => b.c >= b.o ? '#00d97e' : '#ff4560');
-    const highs = tail.map(b => b.h);
-    const lows = tail.map(b => b.l);
+    const macdSlice   = macdLineAll.slice(start);
+    const signalSlice = signalLineAll.slice(start);
+    const histSlice   = histAll.slice(start);
+    rangeLabel.textContent = `Daily · ${tail[0]?.t||''} — ${tail[tail.length-1]?.t||''} (3 months · 12/26/9)`;
+
+    // Histogram bar colors: green when positive, red when negative; dimmed when contracting
+    const histColors = histSlice.map((h, i) => {
+      if (h === null) return 'rgba(128,128,128,0.3)';
+      const prev = i > 0 ? histSlice[i-1] : h;
+      const expanding = Math.abs(h) > Math.abs(prev ?? h);
+      if (h >= 0) return expanding ? '#00d97e' : 'rgba(0,217,126,0.45)';
+      return expanding ? '#ff4560' : 'rgba(255,69,96,0.45)';
+    });
+
     const datasets = [
-      { label: 'Body', data: bodies, backgroundColor: colors, borderColor: colors, borderWidth: 1, type: 'bar', barPercentage: 0.6, categoryPercentage: 0.8, borderSkipped: false },
-      { label: 'High', data: highs, borderColor: isDark ? '#484f5860' : '#b0bac860', borderWidth: 0.5, pointRadius: 0, type: 'line', fill: false },
-      { label: 'Low', data: lows, borderColor: isDark ? '#484f5860' : '#b0bac860', borderWidth: 0.5, pointRadius: 0, type: 'line', fill: false },
+      { label: 'Histogram', type: 'bar', data: histSlice, backgroundColor: histColors, borderColor: histColors, borderWidth: 0, barPercentage: 0.8, categoryPercentage: 0.9, yAxisID: 'y', order: 3 },
+      { label: 'MACD',      type: 'line', data: macdSlice,   borderColor: '#4c8ef7', borderWidth: 1.75, pointRadius: 0, tension: 0.25, fill: false, yAxisID: 'y', order: 1 },
+      { label: 'Signal',    type: 'line', data: signalSlice, borderColor: '#f0b429', borderWidth: 1.25, pointRadius: 0, borderDash: [4,3], tension: 0.25, fill: false, yAxisID: 'y', order: 2 },
     ];
-    // Mark the pattern bar if detected
-    const annotations = {};
-    if(cs && cs.barsAgo != null && cs.barsAgo < 63){
-      const patIdx = tail.length - 1 - cs.barsAgo;
-      annotations.pat = { type: 'line', xMin: patIdx, xMax: patIdx, borderColor: '#f0b429', borderWidth: 2, label: { content: cs.type, display: true, position: 'start', font: { size: 9, weight: 'bold' }, color: '#f0b429', backgroundColor: '#f0b42920' } };
-    }
-    window._dtModalChart = new Chart(canvas, {
+
+    const annotations = {
+      zero: { type: 'line', yMin: 0, yMax: 0, borderColor: gridColor, borderWidth: 1.25, borderDash: [2,4] }
+    };
+
+    // Build price panel + get indicator canvas for the MACD plot
+    const indCanvas = buildStackedPricePanel(container, tail, tailLabels, vals.macd);
+
+    window._dtModalChart = new Chart(indCanvas, {
       type: 'bar',
       data: { labels: tailLabels, datasets },
       options: {
         responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { display: false }, annotation: hasAnnotation ? { annotations } : {} },
+        layout: { padding: { top: 2 } },
+        plugins: {
+          legend: {
+            display: true, position: 'top', align: 'end',
+            labels: { color: textColor, font: { size: 10 }, boxWidth: 14, padding: 10 }
+          },
+          annotation: hasAnnotation ? { annotations } : {},
+          tooltip: { mode: 'index', intersect: false }
+        },
         scales: {
           x: { display: true, grid: { color: gridColor }, ticks: { color: textColor, font: { size: 8 }, maxTicksLimit: 6 } },
-          y: { display: true, grid: { color: gridColor }, ticks: { color: textColor, font: { size: 9 }, maxTicksLimit: 5 } }
+          y: {
+            display: true, beginAtZero: false,
+            grid: { color: gridColor },
+            ticks: { color: textColor, font: { size: 9 }, maxTicksLimit: 6 }
+          }
         },
         interaction: { intersect: false, mode: 'index' },
       }
@@ -4264,7 +4348,7 @@ function recalc(){
   // Detect confluences first (populates confluenceMultipliers for bScore)
   detectConfluences();
   const bs={high:bScore('high'),med:bScore('med')};
-  const rawT=bs.high*customBW.high+bs.med*customBW.med;
+  const rawT=bs.high*BW.high+bs.med*BW.med;
   // Compute dispersion: std dev of all active indicator scores
   const allInds=[...INDS.high,...INDS.med];
   const scores=allInds.map(i=>vals[i.id]??50);
@@ -4435,36 +4519,36 @@ function detectFallingKnife(){
 
   const rsi      = vals.rsi_extreme ?? 50;
   const demark   = vals.demark_seq ?? 50;
-  const candle   = vals.candle_signal ?? 50;
+  const macd     = vals.macd ?? 50;
   const sma200   = vals.sma_200 ?? 50;
   const adxVal   = adxOverlay.adx ?? 0;
   const obv      = vals.obv ?? 50;
   const boll     = vals.bollinger ?? 50;
   const maCross  = vals.sma_cross ?? 50;
 
-  // ── FALLING KNIFE (capitulation bottom — reversal candle confirms buyers stepping in) ──
-  // Exhaustion indicators fire bullish AND a bullish reversal candle (hammer/bottoming tail)
-  // shows buyers have stepped in at the bottom. Trend confirms we're in a downtrend.
+  // ── FALLING KNIFE (capitulation bottom — MACD momentum flipping up confirms buyers stepping in) ──
+  // Exhaustion indicators fire bullish AND MACD momentum flips positive
+  // showing buyers have stepped in at the bottom. Trend confirms we're in a downtrend.
   const rsiBullish       = rsi >= 65;          // RSI oversold → contrarian buy
   const demarkBullish    = demark >= 62;       // DeMark exhaustion buy
-  const candleReversal   = candle >= 60;       // Bullish candle = hammer/bottoming tail, buyers stepped in
+  const macdFlipBull     = macd >= 60;         // MACD momentum flipping up (bullish bias or fresh cross)
   const trendBearish     = sma200 <= 40 || maCross <= 35;   // Confirmed downtrend
   const bollingerBullish = boll >= 60;         // Near/below lower band
 
-  // ── BLOW-OFF TOP (euphoria top — reversal candle confirms sellers stepping in) ──
-  // Exhaustion indicators fire bearish AND a bearish reversal candle (topping tail/shooting star)
-  // shows sellers have stepped in at the top.
+  // ── BLOW-OFF TOP (euphoria top — MACD momentum flipping down confirms sellers stepping in) ──
+  // Exhaustion indicators fire bearish AND MACD momentum flips negative
+  // showing sellers have stepped in at the top.
   const rsiBearish       = rsi <= 35;
   const demarkBearish    = demark <= 38;
-  const candleRejection  = candle <= 40;       // Bearish candle = topping tail/shooting star, sellers stepped in
+  const macdFlipBear     = macd <= 40;         // MACD momentum flipping down
   const trendBullish     = sma200 >= 60 || maCross >= 65;
   const bollingerBearish = boll <= 40;
 
   let alertType = null; // 'knife' | 'blowoff'
   let strength = 0;     // count of confirming signals
 
-  // Falling Knife: RSI + DeMark + bullish reversal candle + bearish trend
-  if(rsiBullish && demarkBullish && candleReversal && trendBearish){
+  // Falling Knife: RSI + DeMark + MACD flipping up + bearish trend
+  if(rsiBullish && demarkBullish && macdFlipBull && trendBearish){
     alertType = 'knife';
     strength = 2; // base: RSI + DeMark
     if(bollingerBullish) strength++;  // Bollinger confirms oversold
@@ -4472,8 +4556,8 @@ function detectFallingKnife(){
     if(obv >= 60) strength++;  // OBV bullish divergence (accumulation into selloff)
   }
 
-  // Blow-Off Top: RSI + DeMark + bearish reversal candle + bullish trend
-  if(rsiBearish && demarkBearish && candleRejection && trendBullish){
+  // Blow-Off Top: RSI + DeMark + MACD flipping down + bullish trend
+  if(rsiBearish && demarkBearish && macdFlipBear && trendBullish){
     alertType = 'blowoff';
     strength = 2;
     if(bollingerBearish) strength++;
@@ -4493,8 +4577,8 @@ function detectFallingKnife(){
 
   // Build description
   desc.innerHTML = isKnife
-    ? `<strong>Capitulation bottom detected.</strong> Multiple exhaustion indicators are firing BUY signals and a bullish reversal candle (hammer/bottoming tail) shows buyers stepping in. This is the signature of a potential capitulation bottom — sellers are exhausted and the first sign of a turnaround has appeared.`
-    : `<strong>Blow-off top detected.</strong> Multiple exhaustion indicators are firing SELL signals and a bearish reversal candle (topping tail/shooting star) shows sellers stepping in. This is the signature of a potential blow-off top — buyers are exhausted and the first sign of rejection has appeared.`;
+    ? `<strong>Capitulation bottom detected.</strong> Multiple exhaustion indicators are firing BUY signals and MACD momentum is flipping positive — buyers are stepping in. This is the signature of a potential capitulation bottom — sellers are exhausted and the first sign of a turnaround has appeared.`
+    : `<strong>Blow-off top detected.</strong> Multiple exhaustion indicators are firing SELL signals and MACD momentum is flipping negative — sellers are stepping in. This is the signature of a potential blow-off top — buyers are exhausted and the first sign of rejection has appeared.`;
 
   // Build signal tags
   sigs.innerHTML = '';
@@ -4503,7 +4587,7 @@ function detectFallingKnife(){
   if(isKnife){
     addSig(`RSI Oversold (${rsi})`, 'bull');
     addSig(`DeMark BUY (${demark})`, 'bull');
-    addSig(`Reversal Candle (${candle})`, 'bull');
+    addSig(`MACD Momentum Flipping Up (${macd})`, 'bull');
     addSig(`Downtrend Confirmed`, 'bear');
     if(bollingerBullish) addSig(`Bollinger Oversold (${boll})`, 'bull');
     if(obv >= 60) addSig(`OBV Accumulation (${obv})`, 'bull');
@@ -4511,7 +4595,7 @@ function detectFallingKnife(){
   } else {
     addSig(`RSI Overbought (${rsi})`, 'bear');
     addSig(`DeMark SELL (${demark})`, 'bear');
-    addSig(`Reversal Candle (${candle})`, 'bear');
+    addSig(`MACD Momentum Flipping Down (${macd})`, 'bear');
     addSig(`Uptrend Confirmed`, 'bull');
     if(bollingerBearish) addSig(`Bollinger Overbought (${boll})`, 'bear');
     if(obv <= 40) addSig(`OBV Distribution (${obv})`, 'bear');
@@ -4521,8 +4605,8 @@ function detectFallingKnife(){
 
   // Context box
   ctx.innerHTML = isKnife
-    ? `<strong>⚠ Falling Knife Risk:</strong> Exhaustion signals do NOT guarantee a bottom. Confirm with: (1) volume spike on the capitulation candle, (2) next-day follow-through (close above prior day's high), (3) OBV divergence showing accumulation. Position sizing should be reduced — use 50% of normal size with a tight stop below the swing low.`
-    : `<strong>⚠ Blow-Off Top Risk:</strong> Exhaustion signals do NOT guarantee a top. Confirm with: (1) volume spike on the euphoria candle, (2) next-day reversal (close below prior day's low), (3) OBV divergence showing distribution. Consider scaling out rather than shorting — blow-off tops can extend further than expected.`;
+    ? `<strong>⚠ Falling Knife Risk:</strong> Exhaustion signals do NOT guarantee a bottom. Confirm with: (1) volume spike on the reversal bar, (2) next-day follow-through (close above prior day's high), (3) OBV divergence showing accumulation. Position sizing should be reduced — use 50% of normal size with a tight stop below the swing low.`
+    : `<strong>⚠ Blow-Off Top Risk:</strong> Exhaustion signals do NOT guarantee a top. Confirm with: (1) volume spike on the reversal bar, (2) next-day reversal (close below prior day's low), (3) OBV divergence showing distribution. Consider scaling out rather than shorting — blow-off tops can extend further than expected.`;
 }
 
 // ═══ SIGNAL COMMENTARY — always-on plain-English summary ═══
@@ -4539,7 +4623,7 @@ function detectDualSignalCommentary(){
   // Read all indicator scores
   const rsi      = vals.rsi_extreme ?? 50;
   const demark   = vals.demark_seq ?? 50;
-  const candle   = vals.candle_signal ?? 50;
+  const macd     = vals.macd ?? 50;
   const sma200   = vals.sma_200 ?? 50;
   const obv      = vals.obv ?? 50;
   const boll     = vals.bollinger ?? 50;
@@ -4649,10 +4733,10 @@ function detectDualSignalCommentary(){
     parts.push(`Some indicator conflicts detected — a few signals disagree with each other, so confidence is a bit lower than usual.`);
   }
 
-  // ── CANDLESTICK ──
-  if(candle <= 25 || candle >= 75){
-    const candleDir = candle >= 75 ? 'bullish' : 'bearish';
-    parts.push(`A recent candlestick reversal pattern adds short-term ${candleDir} context — these are timing signals, not directional calls on their own. They carry more weight when aligned with the bigger picture above.`);
+  // ── MACD MOMENTUM EVENT ──
+  if(macd <= 25 || macd >= 75){
+    const macdDir = macd >= 75 ? 'bullish' : 'bearish';
+    parts.push(`A fresh <strong>MACD</strong> (Moving Average Convergence Divergence) crossover adds short-term ${macdDir} momentum context — this is a timing signal, not a directional call on its own. It carries more weight when aligned with the bigger picture above.`);
   }
 
   // Fallback
@@ -4756,10 +4840,10 @@ function updWB(){
     is.forEach(i=>{
       const el=document.getElementById('wb-'+i.id);
       if(!el) return;
-      const eff=((i.iW/tw)*customBW[b]*100);
+      const eff=((i.iW/tw)*BW[b]*100);
       el.textContent=eff.toFixed(1)+'%';
       el.className='iw '+(eff>=10?'eff-hi':eff>=6?'eff-med':'eff-lo');
-      el.title=`Effective influence: ${eff.toFixed(1)}%\niW=${i.iW.toFixed(1)}, bucket totalIW=${tw.toFixed(1)}, bucket weight=${(customBW[b]*100).toFixed(0)}%\nFormula: (${i.iW.toFixed(1)}/${tw.toFixed(1)}) × ${(customBW[b]*100).toFixed(0)}% = ${eff.toFixed(1)}%`;
+      el.title=`Effective influence: ${eff.toFixed(1)}%\niW=${i.iW.toFixed(1)}, bucket totalIW=${tw.toFixed(1)}, bucket weight=${(BW[b]*100).toFixed(0)}%\nFormula: (${i.iW.toFixed(1)}/${tw.toFixed(1)}) × ${(BW[b]*100).toFixed(0)}% = ${eff.toFixed(1)}%`;
     });
   });
 }
@@ -5173,7 +5257,6 @@ async function runAnalysis(){
   btn.disabled=true;btn.classList.add('loading');dot.className='sdot loading';st.className='stext';st.style.color='var(--bear)';st.style.animation='blink 0.7s step-end infinite';st.textContent=`Analyzing ${ticker}…`;so.textContent='';
   // Apply timeframe preset on every new Analyze run
   applyTFPreset(getTF());
-  if(document.getElementById('wt-panel-body').classList.contains('open')) renderWtPanel();
   [...INDS.high,...INDS.med].forEach(i=>setSl(i.id,50,false));
   clearChartCache();
   // Reset sub-labels
@@ -5194,8 +5277,8 @@ async function runAnalysis(){
   if(obvSub) obvSub.textContent='OBV — computing…';
   const vpSub = document.getElementById('sub-vol_profile');
   if(vpSub) vpSub.textContent='POC / VAH / VAL — computing…';
-  const csSub = document.getElementById('sub-candle_signal');
-  if(csSub) csSub.textContent='Scanning for patterns…';
+  const macdSub = document.getElementById('sub-macd');
+  if(macdSub) macdSub.textContent='12/26/9 daily — computing…';
   // Reset orientation chart
   const os=document.getElementById('orient-status');
   if(os) os.textContent='Loading…';
@@ -5244,7 +5327,7 @@ async function runAnalysis(){
       if(lb){ const s = getSig(v); lb.className = 'slbl '+s.cls; lb.textContent = s.txt; }
     });
     recalc();
-    console.log('runAnalysis: recalc done. gauge score=', Math.round(bScore('high')*customBW.high + bScore('med')*customBW.med));
+    console.log('runAnalysis: recalc done. gauge score=', Math.round(bScore('high')*BW.high + bScore('med')*BW.med));
 
     // DOM verification — check that slider DOM actually reflects vals
     const domCheck = {};
@@ -5256,7 +5339,7 @@ async function runAnalysis(){
     console.log('runAnalysis: DOM check:', JSON.stringify(domCheck));
 
     // Update status bar with computed scores
-    const _sc = Math.round(bScore('high')*customBW.high + bScore('med')*customBW.med);
+    const _sc = Math.round(bScore('high')*BW.high + bScore('med')*BW.med);
     const _vc = verd(_sc).l, _cc = sCol(_sc);
     const _cnc = window._lastSymbolName ? ` · ${window._lastSymbolName}` : '';
     const priceC = document.getElementById('price-val').textContent || '';
@@ -5286,7 +5369,7 @@ async function runAnalysis(){
       });
       recalc();
       // Also force status bar
-      const sc2 = Math.round(bScore('high')*customBW.high + bScore('med')*customBW.med);
+      const sc2 = Math.round(bScore('high')*BW.high + bScore('med')*BW.med);
       const vc2 = verd(sc2).l, cc2 = sCol(sc2);
       const cn2 = window._lastSymbolName ? ` · ${window._lastSymbolName}` : '';
       const pr2 = document.getElementById('price-val').textContent || '';
@@ -5391,7 +5474,7 @@ All values plain text only — no HTML, no citations. N/A if unknown.`;
       // Update status bar with AI data but keep computed scores
       const priceText = document.getElementById('price-val').textContent || '';
       const _cname=window._lastSymbolName?` · ${window._lastSymbolName}`:'';
-      const _aiScore = Math.round(bScore('high')*customBW.high + bScore('med')*customBW.med);
+      const _aiScore = Math.round(bScore('high')*BW.high + bScore('med')*BW.med);
       const _aiVerdict = verd(_aiScore).l, _aiCol = sCol(_aiScore);
       const _dcAi = window._dailyChangeText ? ` <span style="color:${window._dailyChangeColor||''};font-size:12px">${window._dailyChangeText}</span>` : '';
       dot.className='sdot active';st.className='stext active';st.style.animation='';st.style.color='';
@@ -5403,7 +5486,7 @@ All values plain text only — no HTML, no citations. N/A if unknown.`;
           if(window._lastSymbolName){
             const cur=document.getElementById('stext');
             if(cur && cur.innerHTML.includes(ticker)){
-              const _s2 = Math.round(bScore('high')*customBW.high + bScore('med')*customBW.med);
+              const _s2 = Math.round(bScore('high')*BW.high + bScore('med')*BW.med);
               const _v2 = verd(_s2).l, _c2 = sCol(_s2);
               const priceNow = document.getElementById('price-val').textContent || '';
               const _dcLate = window._dailyChangeText ? ` <span style="color:${window._dailyChangeColor||''};font-size:12px">${window._dailyChangeText}</span>` : '';
@@ -5434,9 +5517,7 @@ function stateToUrl(){
     v:Object.fromEntries(Object.entries(vals).map(([k,v])=>[k,v])),
     l:{r1:document.getElementById('r1').value,r2:document.getElementById('r2').value,s1:document.getElementById('s1').value,s2:document.getElementById('s2').value,stop:document.getElementById('stop').value,target:document.getElementById('target').value},
     dn:document.getElementById('div-note').value,
-    fg:fgVal,
-    cbw:{h:customBW.high,m:customBW.med},
-    ciw:Object.fromEntries(['high','med'].flatMap(b=>INDS[b].map(i=>[i.id,i.iW])))
+    fg:fgVal
   };
   return '#'+btoa(encodeURIComponent(JSON.stringify(state)));
 }
@@ -5449,16 +5530,14 @@ function loadFromUrl(){
     if(state.t)document.getElementById('ticker-input').value=state.t;
     if(state.ac)document.getElementById('asset-class').value=state.ac;
     if(state.tf){
-      const sel=document.getElementById('timeframe-sel');if(sel)sel.value=state.tf;
-      const badge=document.getElementById('tf-badge');if(badge&&TF_PRESETS[state.tf])badge.textContent='Timeframe: '+TF_PRESETS[state.tf].label;
+      const sel=document.getElementById('timeframe-sel');
+      if(sel){ sel.value=state.tf; applyTFPreset(state.tf); }
     }
     if(state.p){document.getElementById('price-val').textContent=state.p;syncPriceLvl();}
     if(state.v)Object.entries(state.v).forEach(([id,v])=>setSl(id,v,false));
     if(state.l)['r1','r2','s1','s2','stop','target'].forEach(k=>{const el=document.getElementById(k);if(el&&state.l[k])el.value=state.l[k];});
     if(state.dn)document.getElementById('div-note').value=state.dn;
     if(state.fg!==null&&state.fg!==undefined)setFGDisplay(state.fg);
-    if(state.cbw){customBW={high:state.cbw.h,med:state.cbw.m};}
-    if(state.ciw){['high','med'].forEach(b=>INDS[b].forEach(i=>{if(state.ciw[i.id]!==undefined)i.iW=state.ciw[i.id];}));}
     onACChange();
     const dot=document.getElementById('sdot'),st=document.getElementById('stext');
     dot.className='sdot active';st.className='stext active';st.style.animation='';st.style.color='';
@@ -5673,10 +5752,9 @@ function resetAll(){
   fgVal=null;document.getElementById('fg-num').textContent='—';document.getElementById('fg-num').style.color='';
   document.getElementById('fg-sent').textContent='not loaded';document.getElementById('fg-sent').style.color='';
   document.getElementById('fg-manual').value='';drawFGA(null);document.getElementById('price-val').textContent='—';
-  customBW={...BASELINE_BW};
-  ['high','med'].forEach(b=>INDS[b].forEach(i=>i.iW=BASELINE_IW[i.id]));
+  // Reset timeframe to Position (this also resets BW and all indicator iW via the preset)
   const tfSel=document.getElementById('timeframe-sel');if(tfSel)tfSel.value='position';
-  const tfBadge=document.getElementById('tf-badge');if(tfBadge){tfBadge.textContent='Timeframe: '+TF_PRESETS.position.label;}
+  applyTFPreset('position');
   document.getElementById('conflict-card').classList.remove('has-conflicts','regime-elevated','regime-transition');
   document.getElementById('confluence-card').classList.remove('has-confluences');
   document.getElementById('knife-card').classList.remove('active');
@@ -5718,7 +5796,7 @@ function resetAll(){
 function buildRpt(){
   const ticker=document.getElementById('ticker-input').value.toUpperCase();
   const bs={high:bScore('high'),med:bScore('med')};
-  const rawT=bs.high*customBW.high+bs.med*customBW.med;
+  const rawT=bs.high*BW.high+bs.med*BW.med;
   const t=applyConflictCap(rawT,currentConflictRegime);
   const v=verd(t);
   const ais=[...INDS.high.map(i=>({...i,bkt:'HIGH'})),...INDS.med.map(i=>({...i,bkt:'MED'}))];
@@ -5762,7 +5840,7 @@ function copyReport(){
     'BUCKET SCORES',`  HIGH (60%) : ${d.bucketScores.high}`,`  MED  (40%) : ${d.bucketScores.med}`].filter(l=>l!==null);
   if(d.conflicts.length>0){lines.push('','⚠ CONFLICTS DETECTED',...d.conflicts.map(c=>`  ${c.tier==='backbone'?'🔑':'•'} ${c.desc}`));}
   if(d.confluences.length>0){lines.push('','🔒 CONFLUENCES CONFIRMED',...d.confluences.map(c=>`  • ${c}`));}
-  if(d.fallingKnife){lines.push('',`🔪 ${d.fallingKnife} ALERT ACTIVE`,'  Exhaustion indicators firing with a reversal candle confirming the turn.');}
+  if(d.fallingKnife){lines.push('',`🔪 ${d.fallingKnife} ALERT ACTIVE`,'  Exhaustion indicators firing with MACD momentum flipping to confirm the turn.');}
   lines.push('','INDICATOR READINGS','────────────────────────────────────────',
     ...d.indicators.map(i=>{const ln=`[${i.bucket.padEnd(4)}] ${i.name.padEnd(22)} ${i.label.padEnd(16)} (${i.signal}/100)`;return i.notes?ln+`\n         ↳ ${i.notes}`:ln;}),
     '','KEY LEVELS',`  Resistance 1 : ${d.keyLevels.r1||'—'}`,`  Resistance 2 : ${d.keyLevels.r2||'—'}`,`  Support 1    : ${d.keyLevels.s1||'—'}`,`  Support 2    : ${d.keyLevels.s2||'—'}`,`  Stop         : ${d.keyLevels.stop||'—'}`,`  Target       : ${d.keyLevels.target||'—'}`,'');
@@ -6158,7 +6236,6 @@ function renderTideChart(curve, hilos){
 
 document.addEventListener('DOMContentLoaded',()=>{
   buildAll();
-  updWtBadge();
   // Dismiss tooltips on tap outside (mobile)
   document.addEventListener('touchstart', e=>{
     if(!e.target.classList.contains('tip-icon')){
@@ -6253,6 +6330,7 @@ Together, they help you avoid the classic "great company, terrible entry" trap.
 <h4>Trend Direction</h4>
 <p><strong>SMA 200 Trend</strong> — The 200-day Simple Moving Average is the single most widely watched level by institutional investors worldwide. Price above it = healthy uptrend; price below = downtrend. It's the dividing line between bull and bear markets. Carries the highest intra-weight (1.4×) for a reason.</p>
 <p><strong>MA Cross 50/200</strong> — When the 50-day Moving Average crosses above the 200-day, that's a Golden Cross (bullish structural shift); crossing below is a Death Cross (bearish). These events are rare and meaningful — they signal the trend itself is changing, not just price.</p>
+<p><strong>MACD</strong> — Moving Average Convergence Divergence is a pure-math momentum + trend indicator built from exponential moving averages (EMAs). The MACD line = 12-day EMA − 26-day EMA; the signal line = 9-day EMA of MACD; the histogram = MACD − signal. Scored on four axes: zero-line position (above/below), signal-line crossover (momentum direction), histogram expansion (acceleration), and fresh crossover events (timing bonuses). Unlike candlestick patterns, MACD requires no analyst judgment — the math produces an unambiguous score every bar.</p>
 
 <h4>Volume &amp; Institutional Flow</h4>
 <p><strong>Volume Profile</strong> — Maps where the heaviest institutional trading occurred. The POC (Point of Control) is the price with the most volume — it acts as a magnet. VAH (Volume Area High) and VAL (Volume Area Low) bracket where 70% of volume traded. Price above POC = bullish structure.</p>
@@ -6263,7 +6341,6 @@ Together, they help you avoid the classic "great company, terrible entry" trap.
 <p><strong>RSI Extreme</strong> — The Relative Strength Index measures momentum on a 0–100 scale. This is a <em>contrarian</em> indicator: RSI below 30 means sellers are exhausted → scored bullish. RSI above 70 means buyers are exhausted → scored bearish. Carries the second-highest weight (1.2×) because it sits at the opposite philosophical end from SMA 200.</p>
 <p><strong>DeMark Sequential</strong> — Tom DeMark's system counts 9 consecutive closes in the same direction to identify price exhaustion. A completed "Setup 9" — especially when "perfected" — is a high-conviction reversal signal. Countdown 13 is the strongest signal. It answers: has this move been going on too long?</p>
 <p><strong>Bollinger Bands</strong> — Plots bands at 2 standard deviations around a 20-day SMA. Scored as contrarian: price at the lower band suggests oversold (bullish reversal); price at the upper band suggests overbought (bearish reversal). A band squeeze (very narrow bands) signals a breakout is building.</p>
-<p><strong>Candlestick Signal</strong> — Detects classic reversal patterns in the most recent daily bars. Topping Tails (Shooting Stars) show sellers rejecting higher prices. Bottoming Tails (Hammers) show buyers stepping in. Engulfing patterns confirm momentum shifts. Signals are stronger at key levels (VAH, VAL, SMA 200) and on elevated volume.</p>
 
 <h4>Regime Overlay (Not Scored)</h4>
 <p><strong>ADX</strong> — The Average Directional Index doesn't produce a score. Instead, it tells the system <em>how much to trust</em> the trend-following indicators. In strong trends (ADX above 25), trend signals get boosted. In choppy, range-bound markets (ADX below 20), they get dampened. It's the "trust gate" for the entire trend family.</p>
@@ -6296,7 +6373,7 @@ Together, they help you avoid the classic "great company, terrible entry" trap.
 <table>
 <tr><th>Bucket</th><th>Weight</th><th>Indicators</th><th>Role</th></tr>
 <tr><td><strong>HIGH</strong></td><td>60%</td><td>Volume Profile, SMA 200, MA Cross, RSI Extreme, OBV (On-Balance Volume)</td><td>Structural, institutional-grade anchors</td></tr>
-<tr><td><strong>MED</strong></td><td>40%</td><td>MFI, Bollinger Bands, DeMark, Candlestick</td><td>Interpretive timing tools</td></tr>
+<tr><td><strong>MED</strong></td><td>40%</td><td>MFI, Bollinger Bands, DeMark, MACD</td><td>Interpretive timing tools</td></tr>
 </table>
 <p>Each indicator has an <strong>intra-weight</strong> reflecting its authority. SMA 200 carries the highest (1.4×) — the most widely watched institutional level. RSI Extreme is second (1.2×) — the strongest contrarian signal.</p>
 
@@ -6336,8 +6413,8 @@ Together, they help you avoid the classic "great company, terrible entry" trap.
 </table>
 
 <h4>5. Specialized Alerts</h4>
-<p><strong>Falling Knife</strong> — four simultaneous conditions (RSI oversold + DeMark buy + bullish reversal candle + confirmed downtrend) detect potential capitulation bottoms. The reversal candle (hammer/bottoming tail) confirms buyers are stepping in.<br>
-<strong>Blow-Off Top</strong> — the mirror image: RSI overbought + DeMark sell + bearish reversal candle (topping tail/shooting star) + confirmed uptrend. Sellers are stepping in at the top.</p>
+<p><strong>Falling Knife</strong> — four simultaneous conditions (RSI oversold + DeMark buy + MACD momentum flipping up + confirmed downtrend) detect potential capitulation bottoms. MACD momentum flipping positive confirms buyers are stepping in.<br>
+<strong>Blow-Off Top</strong> — the mirror image: RSI overbought + DeMark sell + MACD momentum flipping down + confirmed uptrend. Sellers are stepping in at the top.</p>
 
 <h3>What You Can Do With It</h3>
 <p><strong>Avoid buying into exhaustion</strong> — A score of 28 with Triple Exhaustion active means the technicals are begging you to wait, even if the fundamentals look perfect.</p>
