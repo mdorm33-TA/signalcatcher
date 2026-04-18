@@ -833,7 +833,7 @@ body.dark-mode .ci-backbone-tag{background:#f0883e18;color:#f0883e;border-color:
   <div class="sdot active" id="sdot"></div>
   <span class="stext active" id="stext"></span>
   <span class="sstream" id="sstream"></span>
-  <span class="v-badge" title="Build version — if this doesn't match your expected version, do a hard refresh to clear cache">v15.1</span>
+  <span class="v-badge" title="Build version — if this doesn't match your expected version, do a hard refresh to clear cache">v15.1b</span>
 </div>
 
 <!-- VERDICT SUMMARY BAR -->
@@ -5176,7 +5176,10 @@ async function fetchPrice(){
     const price=meta.regularMarketPrice;
     document.getElementById('price-val').textContent='$'+Number(price).toFixed(2);syncPriceLvl();
     // Daily change from prior close
-    const prevClose = meta.chartPreviousClose || meta.previousClose;
+    // Prefer regularMarketPreviousClose — it's the canonical "yesterday's regular session close".
+    // chartPreviousClose is the close before the CHART'S range starts, which can be 2+ days back
+    // depending on Yahoo's range/interval behavior and cause wrong daily change values.
+    const prevClose = meta.regularMarketPreviousClose || meta.previousClose || meta.chartPreviousClose;
     const dcEl = document.getElementById('daily-change');
     if(prevClose && prevClose > 0){
       const chg = price - prevClose;
