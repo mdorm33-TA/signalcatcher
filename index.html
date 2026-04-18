@@ -975,27 +975,7 @@ body.dark-mode .ci-backbone-tag{background:#f0883e18;color:#f0883e;border-color:
       <span class="tip-wrap"><button class="tip-icon" style="width:22px;height:22px;font-size:13px;border:1.5px solid var(--border2);border-radius:50%;background:var(--surface3);color:var(--text3);cursor:pointer;">?</button><div class="tip-box"><div class="tp-name">ADX Trend Overlay</div><div class="tp-desc"><strong>What is ADX?</strong> The Average Directional Index measures how strongly a stock is trending, regardless of direction. It ranges from 0–100; higher = stronger trend. It does NOT tell you if the trend is up or down — +DI vs -DI shows direction.<br><br>ADX is <strong>not</strong> a scored indicator — it acts as a <strong>regime overlay</strong> that multiplies the weights of trend-following indicators (SMA 200, MA Cross).<br><br><strong>How it works:</strong><br>• ADX ≥ 40: Very Strong Trend → weights boosted 1.20×<br>• ADX ≥ 30: Strong Trend → weights boosted 1.12×<br>• ADX ≥ 25: Trending → weights boosted 1.06×<br>• ADX ≥ 20: Transitional → weights neutral (1.00×)<br>• ADX &lt; 20: Choppy → weights dampened 0.85×</div></div></span>
     </div>
 
-    <!-- ═══ TILE DETAIL MODAL (injected by JS) ═══ -->
-    <div class="dt-modal-overlay" id="dt-modal-overlay" style="display:none;" onclick="closeTileModal()">
-      <div class="dt-modal" onclick="event.stopPropagation()">
-        <div class="dt-modal-hdr">
-          <div>
-            <div class="dt-modal-tags" id="dt-modal-tags"></div>
-            <h2 style="font:700 18px/1.2 var(--mono);color:var(--text);margin:0;" id="dt-modal-title">—</h2>
-          </div>
-          <button class="dt-modal-close" onclick="closeTileModal()">×</button>
-        </div>
-        <div class="dt-modal-score-row" id="dt-modal-score-row">
-          <div id="dt-modal-gauge-wrap" style="flex-shrink:0;"></div>
-          <div>
-            <div id="dt-modal-label" style="font:700 13px/1 var(--mono);margin-bottom:4px;">—</div>
-            <div id="dt-modal-signal" style="font:400 11px/1 var(--mono);color:var(--text3);">—</div>
-          </div>
-        </div>
-        <div class="dt-modal-chart" id="dt-modal-chart"></div>
-        <p class="dt-modal-desc" id="dt-modal-desc">—</p>
-      </div>
-    </div>
+    <!-- Modal moved to end of body to escape .ind-panel scroll container -->
 
     <!-- TIMEFRAME BAR — adjusts bucket/indicator weights for your trade horizon -->
     <div class="tf-bar" title="Timeframe preset — adjusts bucket weights and individual indicator weights for your trade horizon">
@@ -3769,6 +3749,9 @@ function showTileModal(id){
   descEl.innerHTML = tip ? tip.desc : 'No description available.';
 
   overlay.style.display = 'flex';
+  // Reset scroll position so the modal always opens at the top
+  const inner = overlay.querySelector('.dt-modal');
+  if(inner) inner.scrollTop = 0;
 }
 
 function closeTileModal(){
@@ -6424,6 +6407,28 @@ Together, they help you avoid the classic "great company, terrible entry" trap.
 
 <p class="gd-disclaimer">Signal Catcher is built for fun &amp; education — not financial advice. 🎣<br>Version 13 · April 2026</p>
 </div>
+</div>
+
+<!-- ═══ TILE DETAIL MODAL (moved here to escape .ind-panel scroll container — ensures position:fixed anchors to viewport) ═══ -->
+<div class="dt-modal-overlay" id="dt-modal-overlay" style="display:none;" onclick="closeTileModal()">
+  <div class="dt-modal" onclick="event.stopPropagation()">
+    <div class="dt-modal-hdr">
+      <div>
+        <div class="dt-modal-tags" id="dt-modal-tags"></div>
+        <h2 style="font:700 18px/1.2 var(--mono);color:var(--text);margin:0;" id="dt-modal-title">—</h2>
+      </div>
+      <button class="dt-modal-close" onclick="closeTileModal()">×</button>
+    </div>
+    <div class="dt-modal-score-row" id="dt-modal-score-row">
+      <div id="dt-modal-gauge-wrap" style="flex-shrink:0;"></div>
+      <div>
+        <div id="dt-modal-label" style="font:700 13px/1 var(--mono);margin-bottom:4px;">—</div>
+        <div id="dt-modal-signal" style="font:400 11px/1 var(--mono);color:var(--text3);">—</div>
+      </div>
+    </div>
+    <div class="dt-modal-chart" id="dt-modal-chart"></div>
+    <p class="dt-modal-desc" id="dt-modal-desc">—</p>
+  </div>
 </div>
 
 </body>
