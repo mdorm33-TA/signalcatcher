@@ -612,6 +612,11 @@ body.dark-mode .ci-backbone-tag{background:#f0883e18;color:#f0883e;border-color:
   .ind-group-title{font-size:11px;}
   .nrow{padding-left:0;padding-top:4px;}
   .hdr-controls{gap:6px;padding:6px 10px;flex-wrap:wrap;}
+  /* On mobile, keep the price + daily change on their own row so the Analyze
+     button doesn't get crammed next to them on short tickers like MSFT. */
+  .pdisp{flex-basis:100%;text-align:center;font-size:14px;padding:2px 0;}
+  .pdisp .pv{font-size:14px;}
+  .pdisp #daily-change{font-size:13px;}
   .search-bar{max-width:100%;flex:1;}
   .hdr-logo-img{height:60px;}
   .hdr-svg-wrap{max-width:75%;}
@@ -833,7 +838,7 @@ body.dark-mode .ci-backbone-tag{background:#f0883e18;color:#f0883e;border-color:
   <div class="sdot active" id="sdot"></div>
   <span class="stext active" id="stext"></span>
   <span class="sstream" id="sstream"></span>
-  <span class="v-badge" title="Build version — if this doesn't match your expected version, do a hard refresh to clear cache">v15.1b</span>
+  <span class="v-badge" title="Build version — if this doesn't match your expected version, do a hard refresh to clear cache">v15.1d</span>
 </div>
 
 <!-- VERDICT SUMMARY BAR -->
@@ -3733,7 +3738,19 @@ function showTileModal(id){
   document.getElementById('dt-modal-label').style.color = color;
   document.getElementById('dt-modal-signal').textContent = `Signal: ${Math.round(score)} / 100`;
 
-  // Chart — build indicator-specific chart in modal
+  // Description from TIPS
+  const descEl = document.getElementById('dt-modal-desc');
+  descEl.innerHTML = tip ? tip.desc : 'No description available.';
+
+  // Show overlay FIRST, then build the chart — Chart.js needs the parent to have
+  // real dimensions when `responsive:true, maintainAspectRatio:false` is in effect.
+  // Building the chart while the overlay is display:none causes 0-width parent and
+  // the modal overflows the viewport once it becomes visible.
+  overlay.style.display = 'flex';
+  const inner = overlay.querySelector('.dt-modal');
+  if(inner) inner.scrollTop = 0;
+
+  // Chart — build indicator-specific chart in modal (now that the modal has layout)
   const chartArea = document.getElementById('dt-modal-chart');
   chartArea.innerHTML = '';
   // MACD and RSI render as stacked two-panel (price above, indicator below)
@@ -3742,16 +3759,8 @@ function showTileModal(id){
   const chartWrap = document.createElement('div');
   if (!isStacked) chartWrap.style.height = 'clamp(160px, 30vh, 300px)';
   chartArea.appendChild(chartWrap);
-  buildModalChart(id, chartWrap);
-
-  // Description from TIPS
-  const descEl = document.getElementById('dt-modal-desc');
-  descEl.innerHTML = tip ? tip.desc : 'No description available.';
-
-  overlay.style.display = 'flex';
-  // Reset scroll position so the modal always opens at the top
-  const inner = overlay.querySelector('.dt-modal');
-  if(inner) inner.scrollTop = 0;
+  // Next frame to guarantee layout has flushed before Chart.js measures
+  requestAnimationFrame(() => buildModalChart(id, chartWrap));
 }
 
 function closeTileModal(){
