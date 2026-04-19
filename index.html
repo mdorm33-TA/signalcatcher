@@ -55,7 +55,7 @@ body.dark-mode .coast-links a{color:#58a6ff;}
 .dark-toggle{padding:5px 10px;background:var(--surface3);border:1px solid var(--border2);border-radius:6px;font-family:var(--mono);font-size:13px;color:var(--text2);cursor:pointer;transition:all .15s;white-space:nowrap;flex-shrink:0;line-height:1.3;}
 .dark-toggle:hover{border-color:var(--accent);color:var(--accent);}
 *{box-sizing:border-box;margin:0;padding:0;}
-body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:18px;line-height:1.65;min-height:100vh;}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:18px;line-height:1.65;min-height:100vh;overflow-x:hidden;}
 
 /* ── HEADER ── */
 .hdr{border-bottom:1px solid var(--border);padding:0;box-shadow:0 2px 8px rgba(0,0,0,.06);}
@@ -631,8 +631,8 @@ body.dark-mode .ci-backbone-tag{background:#f0883e18;color:#f0883e;border-color:
   .vbar-conf{font-size:10px;}
   .vbar-buckets{margin-left:0;gap:8px;}
   .vbar-divider{height:24px;}
-  .stext{font-size:12px;}
-  .stext.active{font-size:14px;}
+  .stext{font-size:12px;flex-shrink:1;min-width:0;overflow-wrap:anywhere;}
+  .stext.active{font-size:14px;flex-shrink:1;min-width:0;overflow-wrap:anywhere;}
   .sbar{padding:5px 10px;font-size:11px;}
   /* Hide the timestamp portion of the status bar on mobile — keeps the bar on one line */
   .stime{display:none;}
@@ -840,7 +840,7 @@ body.dark-mode .ci-backbone-tag{background:#f0883e18;color:#f0883e;border-color:
   <div class="sdot active" id="sdot"></div>
   <span class="stext active" id="stext"></span>
   <span class="sstream" id="sstream"></span>
-  <span class="v-badge" title="Build version — if this doesn't match your expected version, do a hard refresh to clear cache">v15.1f</span>
+  <span class="v-badge" title="Build version — if this doesn't match your expected version, do a hard refresh to clear cache">v15.1h</span>
 </div>
 
 <!-- VERDICT SUMMARY BAR -->
@@ -4105,21 +4105,32 @@ function buildModalChart(indId, container){
     if(vp.val) annotations.val = { type: 'line', yMin: vp.val, yMax: vp.val, borderColor: '#00d97e90', borderWidth: 1, borderDash: [4,3], label: { content: `VAL $${vp.val.toFixed(2)}`, display: true, position: 'start', font: { size: 8 }, color: '#00d97e' } };
   }
 
-  // DeMark — price chart + setup count marker
+  // DeMark — price chart + setup/countdown markers, sliced to last 3 months for visual verification
   if(indId === 'demark_seq' && CI.demark){
+    const DM_WINDOW = 63; // ~3 months, matches MACD/RSI for visual consistency
+    const n = bars.length;
+    const start = Math.max(0, n - DM_WINDOW);
+    const tail = bars.slice(start);
+    const tailLabels = tail.map(b => b.t || '');
+    const tailCloses = tail.map(b => b.c);
+    rangeLabel.textContent = `Daily · ${tail[0]?.t||''} — ${tail[tail.length-1]?.t||''} (3 months · DeMark 9/13)`;
+    // Override the main close line + label axis to the sliced window
+    labels.length = 0; tailLabels.forEach(l => labels.push(l));
+    datasets[0] = { label: 'Close', data: tailCloses, borderColor: sCol(vals[indId]??50), borderWidth: 1.5, pointRadius: 0, tension: 0.3, fill: false };
+
     const dm = CI.demark;
-    // Mark the setup completion or current count position
-    if(dm.setupCount > 0 && dm.barsSinceSetup != null && dm.barsSinceSetup < bars.length){
-      const setupIdx = bars.length - 1 - (dm.barsSinceSetup || 0);
+    // Mark the setup completion or current count position — only if within window
+    if(dm.setupCount > 0 && dm.barsSinceSetup != null && dm.barsSinceSetup < tail.length){
+      const setupIdx = tail.length - 1 - (dm.barsSinceSetup || 0);
       const countLabel = dm.setupCount >= 9 ? `${dm.lastSetup?.toUpperCase()||'?'} 9 ✓` : `${(dm.lastSetup||'?').toUpperCase()} ${dm.setupCount}/9`;
-      if(hasAnnotation) annotations.setup = { type: 'point', xValue: setupIdx, yValue: closes[setupIdx], backgroundColor: dm.lastSetup === 'buy' ? '#00d97e' : '#ff4560', radius: 6, borderColor: '#fff', borderWidth: 1.5 };
-      if(hasAnnotation) annotations.setupLbl = { type: 'label', xValue: setupIdx, yValue: closes[setupIdx], content: countLabel, font: { size: 9, weight: 'bold' }, color: dm.lastSetup === 'buy' ? '#00d97e' : '#ff4560', yAdjust: -16 };
+      if(hasAnnotation) annotations.setup = { type: 'point', xValue: setupIdx, yValue: tailCloses[setupIdx], backgroundColor: dm.lastSetup === 'buy' ? '#00d97e' : '#ff4560', radius: 6, borderColor: '#fff', borderWidth: 1.5 };
+      if(hasAnnotation) annotations.setupLbl = { type: 'label', xValue: setupIdx, yValue: tailCloses[setupIdx], content: countLabel, font: { size: 9, weight: 'bold' }, color: dm.lastSetup === 'buy' ? '#00d97e' : '#ff4560', yAdjust: -16 };
     }
-    // Also mark countdown 13 if present
-    if(dm.lastCd && dm.barsSinceCd != null && dm.barsSinceCd < bars.length && hasAnnotation){
-      const cdIdx = bars.length - 1 - dm.barsSinceCd;
-      annotations.cd13 = { type: 'point', xValue: cdIdx, yValue: closes[cdIdx], backgroundColor: '#f0b429', radius: 7, borderColor: '#fff', borderWidth: 2 };
-      annotations.cd13Lbl = { type: 'label', xValue: cdIdx, yValue: closes[cdIdx], content: `CD13 ${dm.lastCd.toUpperCase()}`, font: { size: 9, weight: 'bold' }, color: '#f0b429', yAdjust: -18 };
+    // Also mark countdown 13 if within window
+    if(dm.lastCd && dm.barsSinceCd != null && dm.barsSinceCd < tail.length && hasAnnotation){
+      const cdIdx = tail.length - 1 - dm.barsSinceCd;
+      annotations.cd13 = { type: 'point', xValue: cdIdx, yValue: tailCloses[cdIdx], backgroundColor: '#f0b429', radius: 7, borderColor: '#fff', borderWidth: 2 };
+      annotations.cd13Lbl = { type: 'label', xValue: cdIdx, yValue: tailCloses[cdIdx], content: `CD13 ${dm.lastCd.toUpperCase()}`, font: { size: 9, weight: 'bold' }, color: '#f0b429', yAdjust: -18 };
     }
   }
 
