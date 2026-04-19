@@ -1535,6 +1535,18 @@ function computeDeMark(bars) {
       if (close[i] > close[lastSetupBar]) { lastSetup = null; lastSetupBar = null; lastSetupPerf = false; break; }
     }
   }
+  // Invalidate completed countdown if post-trigger price action contradicts it.
+  // Buy CD13 voided once any later close breaks below the CD13 trigger bar close; mirror for sell.
+  // Prevents degenerate "stale CD13" cases where countdown completes long after the real reversal played out.
+  if (lastCd === 'buy' && lastCdBar !== null) {
+    for (let i = lastCdBar + 1; i < n; i++) {
+      if (close[i] < close[lastCdBar]) { lastCd = null; lastCdBar = null; break; }
+    }
+  } else if (lastCd === 'sell' && lastCdBar !== null) {
+    for (let i = lastCdBar + 1; i < n; i++) {
+      if (close[i] > close[lastCdBar]) { lastCd = null; lastCdBar = null; break; }
+    }
+  }
   let bc2 = 0, sc2 = 0;
   for (let i = 4; i < n; i++) {
     if (close[i] < close[i - 4]) { bc2++; sc2 = 0; if (bc2 >= 9) bc2 = 0; }
