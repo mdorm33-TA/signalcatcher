@@ -838,7 +838,7 @@ body.dark-mode .ci-backbone-tag{background:#f0883e18;color:#f0883e;border-color:
   <div class="sdot active" id="sdot"></div>
   <span class="stext active" id="stext"></span>
   <span class="sstream" id="sstream"></span>
-  <span class="v-badge" title="Build version — if this doesn't match your expected version, do a hard refresh to clear cache">v15.1d</span>
+  <span class="v-badge" title="Build version — if this doesn't match your expected version, do a hard refresh to clear cache">v15.1e</span>
 </div>
 
 <!-- VERDICT SUMMARY BAR -->
@@ -2792,7 +2792,7 @@ async function runAllComputed(ticker){
     const _fvc = verd(_fsc).l, _fcc = sCol(_fsc);
     const _fcn = window._lastSymbolName ? ` · ${window._lastSymbolName}` : '';
     const _fpr = document.getElementById('price-val').textContent || '';
-    const _fdc = window._dailyChangeText ? ` <span style="color:${window._dailyChangeColor||''};font-size:12px">${window._dailyChangeText}</span>` : '';
+    const _fdc = ''; // daily change lives in the price row only — keeps status bar from overflowing on mobile
     const dot2=document.getElementById('sdot'), st2=document.getElementById('stext'), so2=document.getElementById('sstream');
     const btn2=document.getElementById('run-btn');
     dot2.className='sdot active'; st2.className='stext active'; st2.style.animation=''; st2.style.color='';
@@ -5338,7 +5338,7 @@ async function runAnalysis(){
     const _vc = verd(_sc).l, _cc = sCol(_sc);
     const _cnc = window._lastSymbolName ? ` · ${window._lastSymbolName}` : '';
     const priceC = document.getElementById('price-val').textContent || '';
-    const _dcC = window._dailyChangeText ? ` <span style="color:${window._dailyChangeColor||''};font-size:12px">${window._dailyChangeText}</span>` : '';
+    const _dcC = ''; // daily change lives in the price row only
     dot.className='sdot active';st.className='stext active';st.style.animation='';st.style.color='';
     st.innerHTML=`<span class="sticker">${ticker}</span>${_cnc} — <span style="color:${_cc};font-weight:600">${_vc}</span> · ${priceC}${_dcC} · OHLC scored · ${nowStamp()}`;
     so.textContent='Waiting for AI (divNote + fundamentals)…';
@@ -5368,7 +5368,7 @@ async function runAnalysis(){
       const vc2 = verd(sc2).l, cc2 = sCol(sc2);
       const cn2 = window._lastSymbolName ? ` · ${window._lastSymbolName}` : '';
       const pr2 = document.getElementById('price-val').textContent || '';
-      const dc2 = window._dailyChangeText ? ` <span style="color:${window._dailyChangeColor||''};font-size:12px">${window._dailyChangeText}</span>` : '';
+      const dc2 = ''; // daily change lives in the price row only
       document.getElementById('sdot').className='sdot active';
       const st3 = document.getElementById('stext');
       st3.className='stext active'; st3.style.animation=''; st3.style.color='';
@@ -5471,7 +5471,7 @@ All values plain text only — no HTML, no citations. N/A if unknown.`;
       const _cname=window._lastSymbolName?` · ${window._lastSymbolName}`:'';
       const _aiScore = Math.round(bScore('high')*BW.high + bScore('med')*BW.med);
       const _aiVerdict = verd(_aiScore).l, _aiCol = sCol(_aiScore);
-      const _dcAi = window._dailyChangeText ? ` <span style="color:${window._dailyChangeColor||''};font-size:12px">${window._dailyChangeText}</span>` : '';
+      const _dcAi = ''; // daily change lives in the price row only
       dot.className='sdot active';st.className='stext active';st.style.animation='';st.style.color='';
       st.innerHTML=`<span class="sticker">${parsed.ticker||ticker}</span>${_cname} — <span style="color:${_aiCol};font-weight:600">${_aiVerdict}</span> · ${priceText}${_dcAi} · OHLC scored · ${nowStamp()}`;
       console.log('AI call complete for', ticker, '— divNote + fundamentals loaded');
@@ -5484,7 +5484,7 @@ All values plain text only — no HTML, no citations. N/A if unknown.`;
               const _s2 = Math.round(bScore('high')*BW.high + bScore('med')*BW.med);
               const _v2 = verd(_s2).l, _c2 = sCol(_s2);
               const priceNow = document.getElementById('price-val').textContent || '';
-              const _dcLate = window._dailyChangeText ? ` <span style="color:${window._dailyChangeColor||''};font-size:12px">${window._dailyChangeText}</span>` : '';
+              const _dcLate = ''; // daily change lives in the price row only
               cur.innerHTML=`<span class="sticker">${ticker}</span> · ${window._lastSymbolName} — <span style="color:${_c2};font-weight:600">${_v2}</span> · ${priceNow}${_dcLate} · OHLC scored · ${nowStamp()}`;
             }
           }
