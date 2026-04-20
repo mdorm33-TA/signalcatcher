@@ -253,8 +253,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:18
 .dt-modal-score-row{display:flex;align-items:center;gap:16px;border-radius:12px;padding:14px 18px;margin-bottom:16px;}
 .dt-modal-chart{background:var(--bg);border-radius:10px;padding:8px;margin-bottom:14px;border:1px solid var(--border);min-height:180px;}
 .dt-modal-chart.stacked{min-height:360px;}
-.dt-stack-price{height:clamp(130px, 22vh, 200px);margin-bottom:4px;}
-.dt-stack-indicator{height:clamp(150px, 25vh, 240px);}
+.dt-stack-price{height:clamp(130px, 22vh, 200px);margin-bottom:4px;position:relative;}
+.dt-stack-indicator{height:clamp(150px, 25vh, 240px);position:relative;}
+/* Panel label overlay — identifies PRICE panel vs indicator panel (MACD/RSI) */
+.panel-label{position:absolute;top:4px;left:10px;font:600 10px/1 var(--mono);color:var(--text3);letter-spacing:0.06em;z-index:2;pointer-events:none;background:transparent;}
 .dt-modal-desc{font:400 13px/1.65 var(--sans);color:var(--text2);margin:0;}
 @keyframes dtFadeIn{from{opacity:0}to{opacity:1}}
 @keyframes dtSlideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
@@ -832,7 +834,7 @@ body.dark-mode .ci-backbone-tag{background:#f0883e18;color:#f0883e;border-color:
   <div class="sdot active" id="sdot"></div>
   <span class="stext active" id="stext"></span>
   <span class="sstream" id="sstream"></span>
-  <span class="v-badge" title="Build version — if this doesn't match your expected version, do a hard refresh to clear cache">v15.1j</span>
+  <span class="v-badge" title="Build version — if this doesn't match your expected version, do a hard refresh to clear cache">v15.1k</span>
 </div>
 
 <!-- VERDICT SUMMARY BAR -->
@@ -3220,6 +3222,11 @@ async function renderChart(id){
       // Price panel — close line colored by current indicator score
       const priceWrap = document.createElement('div');
       priceWrap.className = 'rc-price';
+      // PRICE panel label (top-left overlay)
+      const priceLbl = document.createElement('div');
+      priceLbl.className = 'panel-label';
+      priceLbl.textContent = 'PRICE';
+      priceWrap.appendChild(priceLbl);
       const priceCanvas = document.createElement('canvas');
       priceWrap.appendChild(priceCanvas);
       cc.appendChild(priceWrap);
@@ -3243,6 +3250,10 @@ async function renderChart(id){
           scales: {
             x: { display: false, grid: { display: false } },
             y: { position: 'right', ticks: { font: { family: 'IBM Plex Mono', size: 8 }, color: _cc.tick, maxTicksLimit: 5 }, grid: { color: _cc.grid } },
+            // Mirror on left — no gridlines (avoid double-draw), synced to y's bounds
+            y1: { position: 'left', ticks: { font: { family: 'IBM Plex Mono', size: 8 }, color: _cc.tick, maxTicksLimit: 5 }, grid: { drawOnChartArea: false, color: _cc.grid },
+              afterDataLimits(axis) { const y = axis.chart.scales.y; if (y && typeof y.min === 'number' && typeof y.max === 'number') { axis.min = y.min; axis.max = y.max; } }
+            },
           },
           interaction: { intersect: false, mode: 'index' },
         },
@@ -3251,6 +3262,11 @@ async function renderChart(id){
       // Indicator panel — separate canvas, rendered below
       const indWrap = document.createElement('div');
       indWrap.className = 'rc-indicator';
+      // Indicator panel label (top-left overlay)
+      const indLbl = document.createElement('div');
+      indLbl.className = 'panel-label';
+      indLbl.textContent = id === 'rsi_extreme' ? 'RSI 14' : 'MACD 12/26/9';
+      indWrap.appendChild(indLbl);
       const indCanvas = document.createElement('canvas');
       indWrap.appendChild(indCanvas);
       cc.appendChild(indWrap);
@@ -3285,7 +3301,11 @@ async function renderChart(id){
             { label: 'Oversold (30) → Bullish',  data: Array(tailLabels.length).fill(30), borderColor: '#0a8a4e55', borderWidth: 1, pointRadius: 0, borderDash: [4,4] },
             { label: 'Midline (50)',              data: Array(tailLabels.length).fill(50), borderColor: '#d0d6e055', borderWidth: 1, pointRadius: 0, borderDash: [2,4] },
           ]},
-          options: { ...baseOpts, scales: { ...baseOpts.scales, y: { ...baseOpts.scales.y, min: 0, max: 100 } } },
+          options: { ...baseOpts, scales: { ...baseOpts.scales,
+            y: { ...baseOpts.scales.y, min: 0, max: 100 },
+            // Mirror of y on left (baseOpts.y is position:right). 0–100 scale, no gridlines.
+            y1: { position: 'left', min: 0, max: 100, ticks: { font: { family: 'IBM Plex Mono', size: 8 }, color: _cc.tick, stepSize: 20 }, grid: { drawOnChartArea: false, color: _cc.grid } }
+          } },
         });
       } else if (id === 'macd') {
         // Compute MACD 12/26/9 on full dataset, slice to last W
@@ -3331,6 +3351,12 @@ async function renderChart(id){
           options: { ...baseOpts,
             plugins: { ...baseOpts.plugins,
               annotation: { annotations: { zero: { type: 'line', yMin: 0, yMax: 0, borderColor: _cc.grid, borderWidth: 1.25, borderDash: [2,4] } } },
+            },
+            scales: { ...baseOpts.scales,
+              // Mirror of baseOpts.y (position:right). Sync bounds via afterDataLimits.
+              y1: { position: 'left', ticks: { font: { family: 'IBM Plex Mono', size: 8 }, color: _cc.tick, maxTicksLimit: 6 }, grid: { drawOnChartArea: false, color: _cc.grid },
+                afterDataLimits(axis) { const y = axis.chart.scales.y; if (y && typeof y.min === 'number' && typeof y.max === 'number') { axis.min = y.min; axis.max = y.max; } }
+              }
             },
           },
         });
@@ -3804,7 +3830,7 @@ function drawTileGauge(cv, score){
 // Creates the price panel (closes line, colored by indicator score) and
 // returns the canvas for the indicator panel so the caller can populate it.
 // The two panels share the same labels array so the X axes line up.
-function buildStackedPricePanel(container, bars, labels, scoreForColor) {
+function buildStackedPricePanel(container, bars, labels, scoreForColor, indicatorLabel) {
   const closes = bars.map(b => b.c);
   const isDark = document.body.classList.contains('dark-mode');
   const gridColor = isDark ? '#21262d' : '#e8eaed';
@@ -3813,6 +3839,11 @@ function buildStackedPricePanel(container, bars, labels, scoreForColor) {
   // Price panel wrapper
   const priceWrap = document.createElement('div');
   priceWrap.className = 'dt-stack-price';
+  // PRICE panel label (top-left overlay)
+  const priceLbl = document.createElement('div');
+  priceLbl.className = 'panel-label';
+  priceLbl.textContent = 'PRICE';
+  priceWrap.appendChild(priceLbl);
   const priceCanvas = document.createElement('canvas');
   priceWrap.appendChild(priceCanvas);
   container.appendChild(priceWrap);
@@ -3841,6 +3872,19 @@ function buildStackedPricePanel(container, bars, labels, scoreForColor) {
           grid: { color: gridColor },
           ticks: { color: textColor, font: { size: 9 }, maxTicksLimit: 5 },
         },
+        // Mirror of y on the right side — no gridlines (avoids double-drawing),
+        // synced to y's computed bounds via afterDataLimits.
+        y1: {
+          display: true, position: 'right',
+          grid: { drawOnChartArea: false, color: gridColor },
+          ticks: { color: textColor, font: { size: 9 }, maxTicksLimit: 5 },
+          afterDataLimits(axis) {
+            const y = axis.chart.scales.y;
+            if (y && typeof y.min === 'number' && typeof y.max === 'number') {
+              axis.min = y.min; axis.max = y.max;
+            }
+          }
+        },
       },
       interaction: { intersect: false, mode: 'index' },
     },
@@ -3849,6 +3893,13 @@ function buildStackedPricePanel(container, bars, labels, scoreForColor) {
   // Indicator panel wrapper — caller fills this canvas
   const indWrap = document.createElement('div');
   indWrap.className = 'dt-stack-indicator';
+  // Indicator panel label (top-left overlay) — e.g. "RSI 14" or "MACD 12/26/9"
+  if (indicatorLabel) {
+    const indLbl = document.createElement('div');
+    indLbl.className = 'panel-label';
+    indLbl.textContent = indicatorLabel;
+    indWrap.appendChild(indLbl);
+  }
   const indCanvas = document.createElement('canvas');
   indWrap.appendChild(indCanvas);
   container.appendChild(indWrap);
@@ -3900,7 +3951,7 @@ function buildModalChart(indId, container){
     rangeLabel.textContent = `Daily · ${tail[0]?.t||''} — ${tail[tail.length-1]?.t||''} (3 months · RSI 14)`;
 
     // Build price panel + get indicator canvas for the RSI plot
-    const indCanvas = buildStackedPricePanel(container, tail, tailLabels, vals.rsi_extreme);
+    const indCanvas = buildStackedPricePanel(container, tail, tailLabels, vals.rsi_extreme, 'RSI 14');
 
     window._dtModalChart = new Chart(indCanvas, {
       type: 'line',
@@ -3922,7 +3973,9 @@ function buildModalChart(indId, container){
         },
         scales: {
           x: { display: true, grid: { color: gridColor }, ticks: { color: textColor, font: { size: 8 }, maxTicksLimit: 6 } },
-          y: { display: true, min: 0, max: 100, grid: { color: gridColor }, ticks: { color: textColor, font: { size: 9 }, stepSize: 20 } }
+          y: { display: true, position: 'left', min: 0, max: 100, grid: { color: gridColor }, ticks: { color: textColor, font: { size: 9 }, stepSize: 20 } },
+          // Mirror y on right side (same 0–100 scale, no gridlines to avoid double-draw)
+          y1: { display: true, position: 'right', min: 0, max: 100, grid: { drawOnChartArea: false }, ticks: { color: textColor, font: { size: 9 }, stepSize: 20 } }
         },
         interaction: { intersect: false, mode: 'index' },
       }
@@ -4025,7 +4078,7 @@ function buildModalChart(indId, container){
     };
 
     // Build price panel + get indicator canvas for the MACD plot
-    const indCanvas = buildStackedPricePanel(container, tail, tailLabels, vals.macd);
+    const indCanvas = buildStackedPricePanel(container, tail, tailLabels, vals.macd, 'MACD 12/26/9');
 
     window._dtModalChart = new Chart(indCanvas, {
       type: 'bar',
@@ -4044,9 +4097,21 @@ function buildModalChart(indId, container){
         scales: {
           x: { display: true, grid: { color: gridColor }, ticks: { color: textColor, font: { size: 8 }, maxTicksLimit: 6 } },
           y: {
-            display: true, beginAtZero: false,
+            display: true, position: 'left', beginAtZero: false,
             grid: { color: gridColor },
             ticks: { color: textColor, font: { size: 9 }, maxTicksLimit: 6 }
+          },
+          // Mirror y on right — no gridlines, synced bounds via afterDataLimits
+          y1: {
+            display: true, position: 'right',
+            grid: { drawOnChartArea: false, color: gridColor },
+            ticks: { color: textColor, font: { size: 9 }, maxTicksLimit: 6 },
+            afterDataLimits(axis) {
+              const y = axis.chart.scales.y;
+              if (y && typeof y.min === 'number' && typeof y.max === 'number') {
+                axis.min = y.min; axis.max = y.max;
+              }
+            }
           }
         },
         interaction: { intersect: false, mode: 'index' },
