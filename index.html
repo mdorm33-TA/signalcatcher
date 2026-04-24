@@ -552,8 +552,8 @@ body.dark-mode .conflict-item.backbone{background:rgba(255,160,80,.06);}
 .chart-error{font-family:var(--mono);font-size:10px;color:var(--bear);text-align:center;padding:12px;}
 .fund-panel{background:var(--surface2);border:2px solid var(--accent);border-radius:10px;margin-top:10px;overflow:hidden;}.fund-panel-hdr{display:flex;align-items:center;justify-content:space-between;padding:12px 13px;cursor:pointer;user-select:none;transition:background .15s;border-radius:10px;}
 .fund-panel-hdr:hover{background:var(--surface3);}
-.fund-panel-title{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--text2);display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
-.fund-context-note{font-family:var(--mono);font-size:9px;color:var(--text3);font-weight:400;font-style:italic;}
+.fund-panel-title{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--text2);display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.fund-context-note{font-family:var(--mono);font-size:10px;color:var(--text3);font-weight:400;font-style:italic;}
 .fund-badge{font-size:10px;padding:1px 6px;border-radius:3px;font-weight:400;background:var(--surface3);color:var(--text3);}
 .fund-badge.loaded{background:#1a6fd418;color:var(--accent);}
 .fund-badge.na{background:var(--surface3);color:var(--text3);}
@@ -580,22 +580,22 @@ body.dark-mode .conflict-item.backbone{background:rgba(255,160,80,.06);}
 @keyframes newsBlink{0%,100%{opacity:1;box-shadow:0 0 4px #f59e0b00;}50%{opacity:.65;box-shadow:0 0 10px #f59e0b40;}}
 .news-fetch-btn:hover{background:#f59e0b30;animation:none;}
 .news-fetch-btn:disabled{opacity:0.5;cursor:not-allowed;animation:none;}
-.fund-na{font-family:var(--mono);font-size:11px;color:var(--text3);font-style:italic;padding:4px 0 6px;}
+.fund-na{font-family:var(--mono);font-size:12px;color:var(--text3);font-style:italic;padding:4px 0 6px;}
 
 /* compact multi-column grid */
 .fund-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;}
 .fund-cat{background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:9px 11px;}
-.fund-cat-title{font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);padding-bottom:5px;border-bottom:1px solid var(--border);margin-bottom:5px;}
+.fund-cat-title{font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);padding-bottom:5px;border-bottom:1px solid var(--border);margin-bottom:5px;}
 .fund-row{display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:6px;padding:2px 0;}
-.fund-name{font-family:var(--mono);font-size:10px;color:var(--text2);}
-.fund-val{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--text);text-align:right;white-space:nowrap;}
+.fund-name{font-family:var(--mono);font-size:12px;color:var(--text2);}
+.fund-val{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--text);text-align:right;white-space:nowrap;}
 .fund-val.na{color:var(--text3);font-weight:400;}
-.fund-cmp{font-family:var(--mono);font-size:9px;padding:1px 5px;border-radius:3px;white-space:nowrap;min-width:54px;text-align:center;}
+.fund-cmp{font-family:var(--mono);font-size:10px;padding:1px 5px;border-radius:3px;white-space:nowrap;min-width:54px;text-align:center;}
 .fund-cmp.above{background:#0a8a4e18;color:var(--bull);}
 .fund-cmp.below{background:#cc284018;color:var(--bear);}
 .fund-cmp.inline{background:#a06a0018;color:var(--neu);}
 .fund-cmp.na{background:var(--surface3);color:var(--text3);}
-.fund-footnote{font-family:var(--mono);font-size:9px;color:var(--text3);margin-top:9px;font-style:italic;line-height:1.5;}
+.fund-footnote{font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:9px;font-style:italic;line-height:1.5;}
 @media(max-width:800px){
   .mob-tabs{display:flex;gap:4px;padding:4px 8px 0;}
   .mob-tab{font-size:15px;font-weight:700;padding:12px;letter-spacing:0.3px;border-radius:8px 8px 0 0;}
@@ -832,7 +832,7 @@ body.dark-mode .conflict-item.backbone{background:rgba(255,160,80,.06);}
   <div class="sdot active" id="sdot"></div>
   <span class="stext active" id="stext"></span>
   <span class="sstream" id="sstream"></span>
-  <span class="v-badge" title="Build version — if this doesn't match your expected version, do a hard refresh to clear cache">v15.1k</span>
+  <span class="v-badge" title="Build version — if this doesn't match your expected version, do a hard refresh to clear cache">v15.1m</span>
 </div>
 
 <!-- VERDICT SUMMARY BAR -->
@@ -1092,7 +1092,7 @@ body.dark-mode .conflict-item.backbone{background:rgba(255,160,80,.06);}
         </div>
       </div>
 
-      <div class="lvl-card">
+      <div class="lvl-card" style="display:none;">
         <div class="stitle" style="display:flex;align-items:center;gap:6px;">Key Price Levels
           <span class="lvl-info-btn" onclick="document.getElementById('lvl-info-popup').classList.toggle('visible')" title="What do these levels mean?">?</span>
         </div>
@@ -6266,12 +6266,30 @@ document.addEventListener('DOMContentLoaded',()=>{
     const chev=document.getElementById('coast-chevron');
     if(body){body.classList.add('open');if(chev)chev.classList.add('open');loadCoastalConditions();}
   })();
-  // Load from URL hash if present, otherwise show empty state
+  // Load from URL hash if present, otherwise try ?t=SYMBOL query param (email deep-link), otherwise empty state
   if(window.location.hash&&window.location.hash.length>3){
     loadFromUrl();
   } else {
-    document.getElementById('ticker-input').value = '';
-    document.getElementById('ticker-input').placeholder = 'AAPL, MSFT, BTC-USD…';
+    const qp = new URLSearchParams(window.location.search);
+    const qt = (qp.get('t')||'').trim().toUpperCase();
+    if(qt){
+      const tin = document.getElementById('ticker-input');
+      tin.value = qt;
+      const qac = (qp.get('ac')||'').trim().toLowerCase();
+      if(qac){
+        const acSel = document.getElementById('asset-class');
+        if(acSel){
+          // Only set if the value exists as an option
+          const ok = Array.from(acSel.options).some(o=>o.value===qac);
+          if(ok) acSel.value = qac;
+        }
+      }
+      // Let DOM settle, then kick off analyze
+      setTimeout(()=>{ try{ runAnalysis(); }catch(e){ console.warn('Auto-analyze from ?t= failed:',e); } }, 150);
+    } else {
+      document.getElementById('ticker-input').value = '';
+      document.getElementById('ticker-input').placeholder = 'AAPL, MSFT, BTC-USD…';
+    }
   }
   drawFGA(null);
   onACChange();
