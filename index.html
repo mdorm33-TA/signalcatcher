@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Signal Catcher v15.3 — Dashboard</title>
+<title>Signal Catcher v15.4 — Dashboard</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -840,7 +840,7 @@ body.dark-mode .conflict-item.backbone{background:rgba(255,160,80,.06);}
   <div class="sdot active" id="sdot"></div>
   <span class="stext active" id="stext"></span>
   <span class="sstream" id="sstream"></span>
-  <span class="v-badge" title="Build version — if this doesn't match your expected version, do a hard refresh to clear cache">v15.3</span>
+  <span class="v-badge" title="Build version — if this doesn't match your expected version, do a hard refresh to clear cache">v15.4</span>
 </div>
 
 <!-- VERDICT SUMMARY BAR -->
@@ -866,7 +866,7 @@ body.dark-mode .conflict-item.backbone{background:rgba(255,160,80,.06);}
     <!-- ORIENTATION CHART -->
     <div class="orient-card" id="orient-card">
       <div class="orient-hdr">
-        <span class="orient-title">📈 <span id="orient-ticker-lbl">—</span> · 3-Year Price Chart</span>
+        <span class="orient-title">📈 <span id="orient-ticker-lbl">—</span> · 18-Month Price Chart</span>
         <span class="orient-sub">SMA 50 · SMA 200 · RSI(14)</span>
         <span id="chart-help-btn" class="chart-help-btn" title="Click for chart help" onclick="toggleChartHelp()">?</span>
         <button id="spy-compare-btn" class="chart-help-btn" title="Toggle S&P 500 (SPY) return comparison" onclick="toggleSPYCompare()" style="font-size:10px;width:auto;padding:0 6px;letter-spacing:.02em;font-family:var(--mono);">S&P 500 Compare</button>
@@ -2758,10 +2758,10 @@ async function renderOrientationChart(ticker){
     const ohlc = await fetchOHLCForCharts(ticker);
     if(!ohlc || ohlc.daily.length < 10) throw new Error('Insufficient data');
 
-    // Use all fetched bars for SMA200 warmup, but only display last ~3yr
+    // Use all fetched bars for SMA200 warmup, but only display last ~18m
     const allBars = ohlc.daily;
     const allCloses = allBars.map(b => b.c);
-    const displayCount = Math.min(allBars.length, 756); // ~3yr daily bars
+    const displayCount = Math.min(allBars.length, 378); // ~18m daily bars
     const bars = allBars.slice(-displayCount);
     window._orientBars = bars; // store for SPY compare
     const labels = bars.map(b => b.t); // b.t is already formatted 'Mon DD'
@@ -2940,7 +2940,7 @@ async function fetchOHLCForCharts(ticker){
     }
     return out;
   };
-  // Daily — fetch 5y so SMA200 warmup (200 bars) completes before 3yr display window
+  // Daily — fetch 5y so SMA200 warmup (200 bars) completes before 18m display window
   const daily = await fetchBars('1d','5y');
   ohlcCache = { ticker, daily, weekly: [] };
   return ohlcCache;
@@ -6228,7 +6228,10 @@ Together, they help you avoid the classic "great company, terrible entry" trap.
 <p><strong>Recognize transitions</strong> — When trend and exhaustion indicators are fighting, the market is changing. Signal Catcher surfaces these moments instead of hiding them.</p>
 <p><strong>Stay in strong moves</strong> — When trend is aligned, exhaustion is absent, and OBV confirms accumulation — "stay in the trade."</p>
 
-<p class="gd-disclaimer">Signal Catcher is built for fun &amp; education — not financial advice. 🎣<br>Version 13 · April 2026</p>
+<h3>Operational Framing</h3>
+<p>The operational framing remains: a trend-quality detector for cyclical-growth and safe-haven instruments, whose 5-year edge is concentrated in roughly 20 high-confidence names, with weaker but real edge on a second tier of 10 high-conviction near-misses and a third tier of 5 lower-confidence tracked names, no measurable edge on broader watchlists or defensive sectors, and a recurrent failure mode at leadership transitions that admits at least two structural variants. The system is useful within its specialty. The right way to operate it is now what's actually operating: tier-aware alert framing on a curated universe with a regime-aware design problem still open.</p>
+
+<p class="gd-disclaimer">Signal Catcher is built for fun &amp; education — not financial advice. 🎣<br>Version 15.4 · April 2026</p>
 </div>
 </div>
 
