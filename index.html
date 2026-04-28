@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Signal Catcher v15.4 — Dashboard</title>
+<title>Signal Catcher v15.5 — Dashboard</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -840,7 +840,7 @@ body.dark-mode .conflict-item.backbone{background:rgba(255,160,80,.06);}
   <div class="sdot active" id="sdot"></div>
   <span class="stext active" id="stext"></span>
   <span class="sstream" id="sstream"></span>
-  <span class="v-badge" title="Build version — if this doesn't match your expected version, do a hard refresh to clear cache">v15.4</span>
+  <span class="v-badge" title="Build version — if this doesn't match your expected version, do a hard refresh to clear cache">v15.5</span>
 </div>
 
 <!-- VERDICT SUMMARY BAR -->
@@ -1851,12 +1851,18 @@ const CONFLUENCE_DEFS = [
     multiplier: 1.06,
   },
   {
+    // Triple Exhaustion — multiplier reduced 1.15 → 1.07 (Apr 28 2026, Step 7b
+    // Pair-Revisit Memo Finding 2). At ≥65 the triple fires only 4× in 60
+    // months with hit rate 50% (below unconditional 62.3%). The pairwise
+    // (bollinger, rsi_extreme) component carries the edge (+7.1pp at n=147);
+    // the other two pairwise components invert at meaningful n. 1.07×
+    // reflects the supported component, not multiplicative interaction.
     ids: ['rsi_extreme', 'demark_seq', 'bollinger'],
     thresh: 62,
     bull: '🔥 Triple Exhaustion Reversal — RSI oversold + DeMark buy signal + Bollinger lower band. Highest-conviction mean-reversion setup.',
     bear: '🔥 Triple Exhaustion Reversal — RSI overbought + DeMark sell signal + Bollinger upper band. Highest-conviction mean-reversion setup.',
     strength: 'strong',
-    multiplier: 1.15,
+    multiplier: 1.07,
   },
   {
     ids: ['obv', 'mfi'],
@@ -1865,6 +1871,21 @@ const CONFLUENCE_DEFS = [
     bear: '💪 Smart Money Signal — OBV distribution + MFI overbought. Volume trend and volume momentum both bearish.',
     strength: 'strong',
     multiplier: 1.10,
+  },
+  {
+    // OBV + RSI Extreme — bull-only confluence added Apr 28 2026 per Step 7b
+    // Pair-Revisit Memo Finding 3. Asymmetric: agree_bull n=45, hit 75.6%
+    // (+13.2pp edge), μfwd +12.21% vs +4.89% unconditional. agree_bear shows
+    // no equivalent edge — bear side is null. Within-bucket Spearman is
+    // negative (−0.14): once the pair fires, the confluence is the signal —
+    // higher composite scores inside the bucket do not improve the trade.
+    // Trend caveat embedded (Q3 2023→2024 sub-window losers all SMA_200 ≤30).
+    ids: ['obv', 'rsi_extreme'],
+    thresh: 60,
+    bull: '🎯 Volume Accumulation + Oversold Reversal — OBV confirms accumulation while RSI signals oversold; high-conviction long setup. Most reliable above SMA200.',
+    bear: null, // asymmetric: bear side does not replicate the edge
+    strength: 'moderate',
+    multiplier: 1.07,
   },
 ];
 
@@ -4178,15 +4199,26 @@ function verd(s){
   return       {l:'STRONGLY BEARISH',  c:'~70–80% bearish probability',col:'#ff4560'};
 }
 
-// ═══ CONFLICT REGIME CLASSIFIER ═══
-// Pure logic — mirrors ta-scoring-engine.js classifyConflictRegime()
+// ═══ CONFLICT REGIME CLASSIFIER (RETIRED Apr 28 2026) ═══
+// Per-symbol conflict regime classification was anchored on the
+// (rsi_extreme, sma_200) backbone-conflict pair. Step 7b walk-forward
+// analysis showed the disagree bucket performs +5.5pp ABOVE unconditional
+// (n=603, μfwd +7.75% vs +4.89%) — opposite of the "tension as
+// degradation" framing the regime caps were built on. See Pair-Revisit
+// Memo Finding 1 (Apr 28 2026). Regime detection has moved to the
+// universe-level detector (Regime Detector Memo Rev 3); per-symbol
+// conflict-pair flagging is preserved for diagnostic display only and
+// no longer drives score capping or elevated/transition warnings.
+//
+// Function preserved as no-op for backward compat — always returns
+// regime='clear' with scoreCap=null. Conflict and backbone counts still
+// populated so the conflict card can show "N conflicts detected" info.
 function classifyConflictRegime(conflicts){
   const conflictCount=conflicts.length;
   const backboneCount=conflicts.filter(c=>c.tier==='backbone').length;
-  if(conflictCount>=4||backboneCount>=2) return {regime:'transition',conflictCount,backboneCount,label:'Transition Regime',scoreCap:{bullMax:65,bearMin:35}};
-  if(conflictCount>=2||backboneCount>=1) return {regime:'elevated',conflictCount,backboneCount,label:'Elevated Conflict',scoreCap:null};
   return {regime:'clear',conflictCount,backboneCount,label:'',scoreCap:null};
 }
+// applyConflictCap retained as passthrough (scoreCap is always null now)
 function applyConflictCap(rawScore,regime){
   if(!regime||!regime.scoreCap) return rawScore;
   const {bullMax,bearMin}=regime.scoreCap;
@@ -4267,8 +4299,10 @@ function detectConfluences(){
     // Check if ALL indicators are above threshold (bullish confluence)
     const allBull = scores.every(s => s >= def.thresh);
     // Check if ALL are below mirror threshold (bearish confluence)
+    // Asymmetric pair convention: if def.bear is null, suppress bear-side
+    // detection entirely (e.g. obv + rsi_extreme is bull-only).
     const bearThresh = 100 - def.thresh;
-    const allBear = scores.every(s => s <= bearThresh);
+    const allBear = def.bear != null && scores.every(s => s <= bearThresh);
 
     if(allBull || allBear){
       const avgScore = Math.round(scores.reduce((s,v)=>s+v,0)/scores.length);
@@ -5597,7 +5631,8 @@ function buildRpt(){
   CONFLUENCE_DEFS.forEach(def=>{
     const scores=def.ids.map(id=>vals[id]??50);
     const allBull=scores.every(s=>s>=def.thresh);
-    const allBear=scores.every(s=>s<=(100-def.thresh));
+    // Asymmetric pair guard: bear side suppressed when def.bear is null
+    const allBear=def.bear!=null && scores.every(s=>s<=(100-def.thresh));
     if(allBull) confluenceList.push(def.bull);
     if(allBear) confluenceList.push(def.bear);
   });
@@ -6195,7 +6230,7 @@ Together, they help you avoid the classic "great company, terrible entry" trap.
 </table>
 
 <h4>4. Confluences &amp; Conflicts</h4>
-<p><strong>7 confluence patterns</strong> boost weights when specific combinations align:</p>
+<p><strong>8 confluence patterns</strong> boost weights when specific combinations align:</p>
 <table>
 <tr><th>Pattern</th><th>Indicators</th><th>Multiplier</th></tr>
 <tr><td>🔒 Dual Trend Confirmed</td><td>SMA 200 + MA Cross</td><td>1.10×</td></tr>
@@ -6203,8 +6238,9 @@ Together, they help you avoid the classic "great company, terrible entry" trap.
 <tr><td>📈 Dual Oscillator</td><td>MFI + RSI</td><td>1.08×</td></tr>
 <tr><td>🏦 Volume Confirms Trend</td><td>OBV + SMA 200</td><td>1.08×</td></tr>
 <tr><td>🏗 Structure + Trend</td><td>Vol Profile + SMA 200</td><td>1.06×</td></tr>
-<tr><td>🔥 Triple Exhaustion</td><td>RSI + DeMark + Bollinger</td><td>1.15×</td></tr>
+<tr><td>🔥 Triple Exhaustion</td><td>RSI + DeMark + Bollinger</td><td>1.07×</td></tr>
 <tr><td>💪 Smart Money</td><td>OBV + MFI</td><td>1.10×</td></tr>
+<tr><td>🎯 Volume Accum + Oversold <em>(bull-only)</em></td><td>OBV + RSI</td><td>1.07×</td></tr>
 </table>
 
 <p><strong>6 conflict pairs</strong> surface meaningful disagreements (40+ point divergence):</p>
@@ -6231,7 +6267,7 @@ Together, they help you avoid the classic "great company, terrible entry" trap.
 <h3>Operational Framing</h3>
 <p>The operational framing remains: a trend-quality detector for cyclical-growth and safe-haven instruments, whose 5-year edge is concentrated in roughly 20 high-confidence names, with weaker but real edge on a second tier of 10 high-conviction near-misses and a third tier of 5 lower-confidence tracked names, no measurable edge on broader watchlists or defensive sectors, and a recurrent failure mode at leadership transitions that admits at least two structural variants. The system is useful within its specialty. The right way to operate it is now what's actually operating: tier-aware alert framing on a curated universe with a regime-aware design problem still open.</p>
 
-<p class="gd-disclaimer">Signal Catcher is built for fun &amp; education — not financial advice. 🎣<br>Version 15.4 · April 2026</p>
+<p class="gd-disclaimer">Signal Catcher is built for fun &amp; education — not financial advice. 🎣<br>Version 15.5 · April 2026</p>
 </div>
 </div>
 
