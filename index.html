@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Signal Catcher v15.1 — Dashboard</title>
+<title>Signal Catcher v15.3 — Dashboard</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -158,6 +158,14 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:18
 .sticker{color:var(--accent);font-weight:600;}
 .sstream{color:var(--text3);font-size:10px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-style:italic;min-width:140px;}
 .v-badge{font-family:var(--mono);font-size:10px;padding:2px 7px;border-radius:4px;background:var(--high-dim);color:var(--accent);border:1px solid var(--accent);letter-spacing:.04em;flex-shrink:0;font-weight:600;}
+/* ── TIER BADGES (v15.3) ── Shown next to sticker symbol in status bar.
+   T1 = solid green (validated 5y edge); T2A = solid amber (moderate edge);
+   T2B = outlined amber (tracked, lower confidence). Untiered symbols
+   render no badge. Color tokens auto-shift between light/dark via theme. */
+.tier-badge{display:inline-block;font-family:var(--mono);font-size:10px;font-weight:700;padding:1px 6px;border-radius:3px;margin-left:6px;letter-spacing:.04em;vertical-align:1px;line-height:1.4;flex-shrink:0;}
+.tier-T1{background:var(--bull);color:#fff;border:1px solid var(--bull);}
+.tier-T2A{background:var(--neu);color:#fff;border:1px solid var(--neu);}
+.tier-T2B{background:transparent;color:var(--neu);border:1px solid var(--neu);}
 
 /* ── MOBILE TABS ── */
 .mob-tabs{display:none;border-bottom:1px solid var(--border);background:var(--surface);}
@@ -225,7 +233,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:18
 @keyframes rowFlash{0%{background:#4c8ef720;}100%{background:transparent;}}
 
 /* ── DASHBOARD GRID ── */
-.dash-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:0 auto 0;max-width:580px;}
+.dash-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:0 auto 0;max-width:680px;}
 .dash-tile{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px 8px 10px;cursor:pointer;text-align:center;transition:all .2s ease;position:relative;overflow:hidden;}
 .dash-tile:hover{transform:scale(1.04);box-shadow:0 4px 20px rgba(0,0,0,.15);}
 .dash-tile::after{content:'🔍 Tap for details';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.65);color:#fff;font:600 11px/1 var(--mono);letter-spacing:.03em;border-radius:12px;opacity:0;transition:opacity .2s;pointer-events:none;}
@@ -255,7 +263,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:18
 .dt-modal-chart.stacked{min-height:360px;}
 .dt-stack-price{height:clamp(130px, 22vh, 200px);margin-bottom:4px;position:relative;}
 .dt-stack-indicator{height:clamp(150px, 25vh, 240px);position:relative;}
-/* Panel label overlay — identifies PRICE panel vs indicator panel (MACD/RSI) */
+/* Panel label overlay — identifies PRICE panel vs indicator panel (RSI/MFI) */
 .panel-label{position:absolute;top:4px;left:10px;font:600 10px/1 var(--mono);color:var(--text3);letter-spacing:0.06em;z-index:2;pointer-events:none;background:transparent;}
 .dt-modal-desc{font:400 13px/1.65 var(--sans);color:var(--text2);margin:0;}
 @keyframes dtFadeIn{from{opacity:0}to{opacity:1}}
@@ -637,7 +645,7 @@ body.dark-mode .conflict-item.backbone{background:rgba(255,160,80,.06);}
   body{font-size:14px;}
   .run-btn{padding:7px 12px;font-size:12px;}
   .asel{font-size:12px;}
-  .dash-grid{gap:8px;max-width:100%;}
+  .dash-grid{grid-template-columns:repeat(2,1fr);gap:8px;max-width:100%;}
   .dash-tile{padding:10px 6px 8px;}
   .dash-tile .dt-score-circle{width:38px;height:38px;margin-bottom:4px;}
   .dash-tile .dt-score{font-size:14px;}
@@ -832,7 +840,7 @@ body.dark-mode .conflict-item.backbone{background:rgba(255,160,80,.06);}
   <div class="sdot active" id="sdot"></div>
   <span class="stext active" id="stext"></span>
   <span class="sstream" id="sstream"></span>
-  <span class="v-badge" title="Build version — if this doesn't match your expected version, do a hard refresh to clear cache">v15.1n</span>
+  <span class="v-badge" title="Build version — if this doesn't match your expected version, do a hard refresh to clear cache">v15.3</span>
 </div>
 
 <!-- VERDICT SUMMARY BAR -->
@@ -1038,9 +1046,9 @@ body.dark-mode .conflict-item.backbone{background:rgba(255,160,80,.06);}
         </div>
         <div class="scoring-info-popup" id="scoring-info-popup">
           <h4>How the Score Works</h4>
-          9 technical indicators are scored 0–100 individually, then combined using weighted averages across two confidence buckets:<br><br>
+          8 technical indicators are scored 0–100 individually, then combined using weighted averages across two confidence buckets:<br><br>
           <strong style="color:#4c8ef7">HIGH confidence (60%)</strong> — Volume Profile, SMA (Simple Moving Average) 200, MA Cross 50/200, RSI (Relative Strength Index) Extreme, OBV (On-Balance Volume) Trend<br>
-          <strong style="color:#a78bfa">MED confidence (40%)</strong> — Money Flow Index (MFI), Bollinger Bands, DeMark Sequential, MACD (Moving Average Convergence Divergence)<br>
+          <strong style="color:#a78bfa">MED confidence (40%)</strong> — Money Flow Index (MFI), Bollinger Bands, DeMark Sequential<br>
           <div class="si-section">
             <h4>ADX Trend Overlay</h4>
             ADX (Average Directional Index) measures trend strength and adjusts the weights of trend-following indicators (SMA 200, MA Cross). In strong trends these indicators get boosted; in choppy markets they get dampened.
@@ -1576,71 +1584,12 @@ function scoreDeMarkCombo(dc) {
   return 50;
 }
 
-// ─── MACD (12/26/9 daily) ────────────────────────────────────
-// v10: Replaces Candlestick Signal in MED bucket.
-// Pure-math momentum + trend indicator. No analyst judgment required.
-// Scoring axes: zero-line regime, signal-line position, histogram
-// dynamics, fresh crossovers. All deterministic.
-
-function computeMACD(bars, fast = 12, slow = 26, sig = 9) {
-  const n = bars.length;
-  if (n < slow + sig + 1) {
-    return { macd: 0, signal: 0, histogram: 0, histPrev: 0,
-      sigCrossBull: false, sigCrossBear: false,
-      zeroCrossBull: false, zeroCrossBear: false, valid: false };
-  }
-  const closes = bars.map(b => b.c);
-  const emaFast = emaCalc(closes, fast);
-  const emaSlow = emaCalc(closes, slow);
-  const macdLine = closes.map((_, i) => {
-    if (emaFast[i] === null || emaSlow[i] === null) return null;
-    return emaFast[i] - emaSlow[i];
-  });
-  const macdValid = macdLine.filter(v => v !== null);
-  const signalCompact = emaCalc(macdValid, sig);
-  const offset = macdLine.length - macdValid.length;
-  const signalLine = macdLine.map((_, i) => {
-    const j = i - offset;
-    return j < 0 ? null : signalCompact[j];
-  });
-  const last = n - 1, prev = n - 2;
-  const macd = macdLine[last], signal = signalLine[last];
-  const macdP = macdLine[prev], signalP = signalLine[prev];
-  if (macd === null || signal === null || macdP === null || signalP === null) {
-    return { macd: 0, signal: 0, histogram: 0, histPrev: 0,
-      sigCrossBull: false, sigCrossBear: false,
-      zeroCrossBull: false, zeroCrossBear: false, valid: false };
-  }
-  const histogram = macd - signal;
-  const histPrev  = macdP - signalP;
-  const EPS = 1e-8;
-  const sigCrossBull = histPrev <= EPS && histogram > EPS;
-  const sigCrossBear = histPrev >= -EPS && histogram < -EPS;
-  const zeroCrossBull = macdP <= EPS && macd > EPS;
-  const zeroCrossBear = macdP >= -EPS && macd < -EPS;
-  return { macd, signal, histogram, histPrev,
-    sigCrossBull, sigCrossBear, zeroCrossBull, zeroCrossBear, valid: true };
-}
-
-function scoreMACD(m) {
-  if (!m || !m.valid) return 50;
-  let score = 50;
-  if (m.macd > 0) score += 12;
-  else if (m.macd < 0) score -= 12;
-  if (m.macd > m.signal) score += 10;
-  else if (m.macd < m.signal) score -= 10;
-  const histExpanding = Math.abs(m.histogram) > Math.abs(m.histPrev);
-  if (m.histogram > 0) {
-    score += histExpanding ? 6 : -2;
-  } else if (m.histogram < 0) {
-    score += histExpanding ? -6 : 2;
-  }
-  if (m.sigCrossBull) score += 10;
-  else if (m.sigCrossBear) score -= 10;
-  if (m.zeroCrossBull) score += 15;
-  else if (m.zeroCrossBear) score -= 15;
-  return Math.max(5, Math.min(95, Math.round(score)));
-}
+// ─── MACD removed (v15.2 / engine v11, April 27 2026) ──────
+// Removed on regime-conditional evidence: across all 6 walk-forward
+// universes tested, MACD's per-month Spearman with forward returns
+// was negative at the 4 worst-composite months on 6 of 6 universes.
+// Tier 1 average ρ = -0.330 at inflection failures. See engine
+// header and Rev 6 white paper for full role analysis.
 
 // ─── ADX + DI ────────────────────────────────────────────────
 function computeADX(bars) {
@@ -1789,7 +1738,6 @@ async function scoreSymbol(dailyBars, weeklyBars) {
   const obv = safe('OBV', ()=>computeOBV(dailyBars));
   await yld();
   const demark = safe('DeMark', ()=>computeDeMark(dailyBars));
-  const macd = safe('MACD', ()=>computeMACD(dailyBars));
   await yld();
   const adx = safe('ADX', ()=>computeADX(dailyBars)) || {adx:0,plusDI:0,minusDI:0,adxRising:false};
   const volProf = safe('VolProfile', ()=>computeVolumeProfile(dailyBars));
@@ -1804,11 +1752,10 @@ async function scoreSymbol(dailyBars, weeklyBars) {
     mfi: safe('sMFI', ()=>scoreMFI(mfi)) ?? 50,
     obv: safe('sOBV', ()=>scoreOBV(obv, dailyBars)) ?? 50,
     demark_seq: safe('sDM', ()=>scoreDeMark(demark)) ?? 50,
-    macd: safe('sMACD', ()=>scoreMACD(macd)) ?? 50,
     sma_cross: safe('sCross', ()=>scoreSMACross(closes, sma50, sma200, cross)) ?? 50,
   };
   console.log('scoreSymbol: COMPLETE. Scores:', JSON.stringify(scores));
-  return { price, scores, adx, indicators: { rsi, sma200, sma50, boll, mfi, obv, demark, macd, adx, volProf, cross } };
+  return { price, scores, adx, indicators: { rsi, sma200, sma50, boll, mfi, obv, demark, adx, volProf, cross } };
 }
 // ═══ END SCORING ENGINE ═══════════════════════════════════════
 
@@ -1831,7 +1778,6 @@ const TIPS = {
   bollinger:    {name:'Bollinger Bands',   desc:'Bollinger Bands plot a middle <strong>SMA</strong> (Simple Moving Average) with upper and lower bands at 2 standard deviations. CONTRARIAN scoring: <strong>%B</strong> (percent bandwidth) near 0 (at lower band) → bullish reversal signal; %B near 1 (at upper band) → bearish reversal signal. Band squeeze (bandwidth below 4%) → neutral with breakout pending. In strong trends price can "walk the band" — check trend context. Computed from real OHLC data (20-period, 2σ).'},
   obv:          {name:'OBV Trend',         desc:'<strong>OBV</strong> (On-Balance Volume) tracks cumulative volume flow — it adds volume on up days and subtracts it on down days. Rising OBV with rising price confirms accumulation (bullish). Divergence — OBV falling while price rises — warns of distribution (smart money selling). Computed from real OHLC + volume data.'},
   adx:          {name:'ADX Trend Overlay', desc:'<strong>ADX</strong> (Average Directional Index) measures TREND STRENGTH (not direction). Not scored directly — acts as an overlay multiplier on trend-following indicator weights (SMA 200, MA Cross). Below 20 = no trend (choppy, weights dampened 0.85×). 20–25 = transitional (1.00×). 25–30 = trending (1.06×). 30–40 = strong trend (1.12×). Above 40 = very strong trend (1.20×). <strong>+DI</strong> (Positive Directional Indicator) vs <strong>-DI</strong> (Negative Directional Indicator) shows trend direction. Computed from real OHLC data using Wilder\'s <strong>DMI</strong> (Directional Movement Index), 14-period.'},
-  macd:         {name:'MACD',              desc:'<strong>MACD</strong> (Moving Average Convergence Divergence) is a momentum + trend indicator built from exponential moving averages. The <strong>MACD line</strong> = 12-day <strong>EMA</strong> (Exponential Moving Average) minus 26-day EMA. The <strong>signal line</strong> = 9-day EMA of the MACD line. The <strong>histogram</strong> = MACD line minus signal line.<br><br><strong>Four scoring axes:</strong><br>• <strong>Zero line</strong> — MACD above zero = structurally bullish; below zero = bearish.<br>• <strong>Signal line</strong> — MACD above signal = momentum turning up; below = turning down.<br>• <strong>Histogram dynamics</strong> — expanding = accelerating; contracting = decelerating.<br>• <strong>Fresh crossovers</strong> — signal-line cross (one-bar window) adds a timing bonus; zero-line cross (regime flip) adds a bigger one.<br><br>All deterministic, no pattern-recognition judgment required. Fires more often than weekly MACD but with tighter edges — useful for position-size timing in trending markets.'},
 };
 
 const INDS={
@@ -1846,7 +1792,6 @@ const INDS={
     {id:'mfi',          name:'Money Flow Index', sub:'14-period MFI — computing…',         iW:1.1},
     {id:'bollinger',   name:'Bollinger Bands',  sub:'20-period 2σ — computing…',        iW:0.9},
     {id:'demark_seq',  name:'DeMark Sequential',sub:'TD 9/13 — computing…',             iW:0.9},
-    {id:'macd',        name:'MACD',             sub:'12/26/9 daily — computing…',      iW:1.0},
   ],
 };
 
@@ -1931,7 +1876,7 @@ let confluenceMultipliers = {};
 //   ADX > 25 (trending): boost SMA200, MA Cross weights
 //   ADX < 20 (choppy):   dampen those weights
 // The multiplier is applied during recalc alongside confluence multipliers.
-const ADX_TREND_IDS = ['sma_200', 'sma_cross', 'macd'];
+const ADX_TREND_IDS = ['sma_200', 'sma_cross'];
 let adxOverlay = { adx: null, plusDI: null, minusDI: null, multiplier: 1.0, label: 'N/A' };
 
 function computeADXOverlayMultiplier(adxVal) {
@@ -1941,6 +1886,41 @@ function computeADXOverlayMultiplier(adxVal) {
   if (adxVal >= 25)  return { multiplier: 1.06, label: `ADX ${adxVal} — Trending (1.06×)` };
   if (adxVal >= 20)  return { multiplier: 1.00, label: `ADX ${adxVal} — Weak/Transitional (1.00×)` };
   return { multiplier: 0.85, label: `ADX ${adxVal} — Choppy (0.85× dampen)` };
+}
+
+// ── SYMBOL TIER MAP (v15.3) ──
+// Mirror of worker.js TIER_MAP. Membership derived from the 65-symbol ×
+// 60-snap × +indicators walk-forward run on engine v11 (April 27, 2026):
+//   T1  = 5y validated edge (hit ≥70% & bull ≥20) — 20 names
+//   T2A = high-conviction near-misses (hit ≥65% & bull ≥15) — 10 names
+//   T2B = tracked secondary (hit 60–65% & bull ≥15) — 5 names
+//   untiered = scored normally but no badge shown
+// Symbols outside the production watchlist receive no badge automatically
+// (getTier returns null), so random user inputs (e.g. AAPL, MSFT, BTC-USD)
+// just render without a tier pill — clean fallback.
+const TIER_MAP = {
+  // T1 (20)
+  AMAT:'T1', AIQ:'T1', NVDA:'T1', GLD:'T1', ITA:'T1',
+  SPHQ:'T1', AVGO:'T1', QQQ:'T1', IWF:'T1', GE:'T1',
+  DGRO:'T1', ADI:'T1', IGV:'T1', SMH:'T1', XOM:'T1',
+  XLF:'T1', LRCX:'T1', SPY:'T1', KLAC:'T1', VTI:'T1',
+  // T2A (10)
+  META:'T2A', MTUM:'T2A', XLC:'T2A', TSM:'T2A', ASML:'T2A',
+  RTX:'T2A', INTC:'T2A', XLI:'T2A', GDXJ:'T2A', SOXX:'T2A',
+  // T2B (5)
+  GOOGL:'T2B', GDX:'T2B', DIA:'T2B', NFLX:'T2B', SIL:'T2B',
+};
+function getTier(symbol) {
+  if (!symbol) return null;
+  return TIER_MAP[String(symbol).toUpperCase()] || null;
+}
+// Tier badge HTML for the status bar. Uses CSS classes (theme-aware via
+// var(--bull) / var(--neu)). Returns '' for untiered symbols so the
+// caller can interpolate unconditionally without changing layout.
+function tierBadgeHtml(symbol) {
+  const tier = getTier(symbol);
+  if (!tier) return '';
+  return `<span class="tier-badge tier-${tier}">${tier}</span>`;
 }
 
 // ── BUCKET WEIGHTS ──
@@ -1958,7 +1938,7 @@ const TF_PRESETS = {
     bw: { high:0.55, med:0.45 },
     iw: {
       vol_profile:1.0, sma_200:0.8,  sma_cross:0.9,  rsi_extreme:1.5, obv:1.1,
-      mfi:1.3,         bollinger:1.4,   demark_seq:1.4, macd:1.2,
+      mfi:1.3,         bollinger:1.4,   demark_seq:1.4,
     }
   },
   position: {
@@ -1967,7 +1947,7 @@ const TF_PRESETS = {
     bw: { high:0.60, med:0.40 },
     iw: {
       vol_profile:1.1, sma_200:1.4,  sma_cross:1.1,  rsi_extreme:1.2, obv:1.0,
-      mfi:1.1,         bollinger:0.9,   demark_seq:0.9, macd:1.0,
+      mfi:1.1,         bollinger:0.9,   demark_seq:0.9,
     }
   },
   intermediate: {
@@ -1976,7 +1956,7 @@ const TF_PRESETS = {
     bw: { high:0.65, med:0.35 },
     iw: {
       vol_profile:1.3, sma_200:1.5,  sma_cross:1.3,  rsi_extreme:0.9, obv:1.1,
-      mfi:0.8,         bollinger:0.7,   demark_seq:0.7, macd:0.8,
+      mfi:0.8,         bollinger:0.7,   demark_seq:0.7,
     }
   },
   longterm: {
@@ -1985,7 +1965,7 @@ const TF_PRESETS = {
     bw: { high:0.65, med:0.35 },
     iw: {
       vol_profile:1.2, sma_200:1.8,  sma_cross:1.5,  rsi_extreme:0.6, obv:1.2,
-      mfi:0.6,         bollinger:0.5,   demark_seq:0.5, macd:0.6,
+      mfi:0.6,         bollinger:0.5,   demark_seq:0.5,
     }
   }
 };
@@ -2618,29 +2598,6 @@ async function runAllComputed(ticker){
     if(dmNote && !dmNote.value) dmNote.value = `[Computed from ${n} daily bars] ${dmDetail}`;
     }
 
-    // MACD sub-label
-    const mc = I.macd;
-    if(mc && mc.valid){
-      const pos = mc.macd >= 0 ? 'above zero' : 'below zero';
-      const sig = mc.macd > mc.signal ? 'above signal' : mc.macd < mc.signal ? 'below signal' : 'at signal';
-      const histExp = Math.abs(mc.histogram) > Math.abs(mc.histPrev);
-      const histWord = histExp ? 'expanding' : 'contracting';
-      const crossNote = mc.zeroCrossBull ? ' · fresh zero cross ▲'
-        : mc.zeroCrossBear ? ' · fresh zero cross ▼'
-        : mc.sigCrossBull ? ' · fresh bull cross ▲'
-        : mc.sigCrossBear ? ' · fresh bear cross ▼'
-        : '';
-      const macdFmt = mc.macd.toFixed(2);
-      const macdDetail = `MACD ${mc.macd >= 0 ? '+' : ''}${macdFmt} · ${pos} · ${sig} · histogram ${histWord}${crossNote}`;
-      const mSub = document.getElementById('sub-macd');
-      if(mSub) mSub.textContent = macdDetail;
-      const mNote = document.getElementById('nt-macd');
-      if(mNote && !mNote.value) mNote.value = `[Computed] MACD ${macdFmt}, signal ${mc.signal.toFixed(2)}, histogram ${mc.histogram.toFixed(2)}${crossNote}`;
-    } else {
-      const mSub = document.getElementById('sub-macd');
-      if(mSub) mSub.textContent = 'Not enough bars to compute';
-    }
-
     console.log('runAllComputed: ALL DONE — detail strings complete for', ticker);
 
     // ── FORCE UI UPDATE HERE — before returning to caller ──
@@ -2663,7 +2620,7 @@ async function runAllComputed(ticker){
     const dot2=document.getElementById('sdot'), st2=document.getElementById('stext'), so2=document.getElementById('sstream');
     const btn2=document.getElementById('run-btn');
     dot2.className='sdot active'; st2.className='stext active'; st2.style.animation=''; st2.style.color='';
-    st2.innerHTML=`<span class="sticker">${ticker}</span>${_fcn} — <span style="color:${_fcc};font-weight:600">${_fvc}</span> · ${_fpr}${_fdc}`;
+    st2.innerHTML=`<span class="sticker">${ticker}</span>${tierBadgeHtml(ticker)}${_fcn} — <span style="color:${_fcc};font-weight:600">${_fvc}</span> · ${_fpr}${_fdc}`;
     so2.textContent='Waiting for AI…';
     btn2.disabled=false; btn2.classList.remove('loading');
     console.log('runAllComputed: UI force-updated. Score:', _fsc);
@@ -3017,7 +2974,7 @@ function ema(data, period){
 
 function destroyChart(id){
   if(chartInstances[id]){ chartInstances[id].destroy(); delete chartInstances[id]; }
-  // Stacked indicators (RSI, MACD) track a companion price chart under id+':price'
+  // Stacked indicators (RSI, MFI) track a companion price chart under id+':price'
   const pKey = id + ':price';
   if(chartInstances[pKey]){ chartInstances[pKey].destroy(); delete chartInstances[pKey]; }
 }
@@ -3066,8 +3023,8 @@ async function renderChart(id){
 
     cc.innerHTML = ''; // clear loading
 
-    // ── STACKED LAYOUT for RSI Extreme, MACD, MFI (price above, oscillator/momentum below) ──
-    const isStacked = (id === 'rsi_extreme' || id === 'macd' || id === 'mfi');
+    // ── STACKED LAYOUT for RSI Extreme, MFI (price above, oscillator/momentum below) ──
+    const isStacked = (id === 'rsi_extreme' || id === 'mfi');
     cc.classList.toggle('stacked', isStacked);
 
     if (isStacked) {
@@ -3124,7 +3081,7 @@ async function renderChart(id){
       // Indicator panel label (top-left overlay)
       const indLbl = document.createElement('div');
       indLbl.className = 'panel-label';
-      indLbl.textContent = id === 'rsi_extreme' ? 'RSI 14' : id === 'mfi' ? 'MFI 14' : 'MACD 12/26/9';
+      indLbl.textContent = id === 'rsi_extreme' ? 'RSI 14' : 'MFI 14';
       indWrap.appendChild(indLbl);
       const indCanvas = document.createElement('canvas');
       indWrap.appendChild(indCanvas);
@@ -3165,59 +3122,6 @@ async function renderChart(id){
             // Mirror of y on left (baseOpts.y is position:right). 0–100 scale, no gridlines.
             y1: { position: 'left', min: 0, max: 100, ticks: { font: { family: 'IBM Plex Mono', size: 8 }, color: _cc.tick, stepSize: 20 }, grid: { drawOnChartArea: false, color: _cc.grid } }
           } },
-        });
-      } else if (id === 'macd') {
-        // Compute MACD 12/26/9 on full dataset, slice to last W
-        const ema = (data, period) => {
-          const k = 2 / (period + 1);
-          const r = [];
-          let prev = null;
-          for (let i = 0; i < data.length; i++) {
-            if (i < period - 1) { r.push(null); continue; }
-            if (prev === null) { prev = data.slice(0, period).reduce((s, v) => s + v, 0) / period; r.push(prev); continue; }
-            prev = data[i] * k + prev * (1 - k);
-            r.push(prev);
-          }
-          return r;
-        };
-        const eFast = ema(closes_d, 12);
-        const eSlow = ema(closes_d, 26);
-        const macdFull = closes_d.map((_, i) => (eFast[i] === null || eSlow[i] === null) ? null : eFast[i] - eSlow[i]);
-        const macdValid = macdFull.filter(v => v !== null);
-        const sigCompact = ema(macdValid, 9);
-        const offset = macdFull.length - macdValid.length;
-        const signalFull = macdFull.map((_, i) => { const j = i - offset; return j < 0 ? null : sigCompact[j]; });
-        const histFull = macdFull.map((v, i) => (v === null || signalFull[i] === null) ? null : v - signalFull[i]);
-        const macdSlice = macdFull.slice(start);
-        const signalSlice = signalFull.slice(start);
-        const histSlice = histFull.slice(start);
-
-        const histColors = histSlice.map((h, i) => {
-          if (h === null) return 'rgba(128,128,128,0.3)';
-          const prev = i > 0 ? histSlice[i - 1] : h;
-          const expanding = Math.abs(h) > Math.abs(prev ?? h);
-          if (h >= 0) return expanding ? '#00d97e' : 'rgba(0,217,126,0.45)';
-          return expanding ? '#ff4560' : 'rgba(255,69,96,0.45)';
-        });
-
-        chartInstances[id] = new Chart(indCtx, {
-          type: 'bar',
-          data: { labels: tailLabels, datasets: [
-            { label: 'Histogram', type: 'bar',  data: histSlice,   backgroundColor: histColors, borderColor: histColors, borderWidth: 0, barPercentage: 0.8, categoryPercentage: 0.9, order: 3 },
-            { label: 'MACD',      type: 'line', data: macdSlice,   borderColor: '#4c8ef7', borderWidth: 1.75, pointRadius: 0, tension: 0.25, fill: false, order: 1 },
-            { label: 'Signal',    type: 'line', data: signalSlice, borderColor: '#f0b429', borderWidth: 1.25, pointRadius: 0, borderDash: [4,3], tension: 0.25, fill: false, order: 2 },
-          ]},
-          options: { ...baseOpts,
-            plugins: { ...baseOpts.plugins,
-              annotation: { annotations: { zero: { type: 'line', yMin: 0, yMax: 0, borderColor: _cc.grid, borderWidth: 1.25, borderDash: [2,4] } } },
-            },
-            scales: { ...baseOpts.scales,
-              // Mirror of baseOpts.y (position:right). Sync bounds via afterDataLimits.
-              y1: { position: 'left', ticks: { font: { family: 'IBM Plex Mono', size: 8 }, color: _cc.tick, maxTicksLimit: 6 }, grid: { drawOnChartArea: false, color: _cc.grid },
-                afterDataLimits(axis) { const y = axis.chart.scales.y; if (y && typeof y.min === 'number' && typeof y.max === 'number') { axis.min = y.min; axis.max = y.max; } }
-              }
-            },
-          },
         });
       } else if (id === 'mfi') {
         // Compute MFI 14 on full dataset, slice to last W
@@ -3346,7 +3250,7 @@ function clearChartCache(){
 // ═══ BUILD ROWS ═══
 const CHARTABLE = {
   vol_profile:true, sma_200:true, sma_cross:true,  // sma_cross also gets computed override
-  rsi_extreme:true, mfi:true, bollinger:true, macd:true
+  rsi_extreme:true, mfi:true, bollinger:true
 };
 function buildRow(ind,bkt,container){
   const c=container||document.getElementById('bucket-'+bkt);
@@ -3448,9 +3352,9 @@ function setSl(id,v,anim=true){
 }
 
 // v12: Thematic grouping — display-only, scoring buckets unchanged
-// v15: MACD moved from Contrarian to Trend Direction (MACD is a trend/momentum indicator)
+// v15.2: MACD removed (engine v11) — Trend Direction is now SMA200 + MA Cross
 const IND_GROUPS = [
-  { container: 'grp-trend',      ids: ['sma_200', 'sma_cross', 'macd'] },
+  { container: 'grp-trend',      ids: ['sma_200', 'sma_cross'] },
   { container: 'grp-volume',     ids: ['vol_profile', 'obv', 'mfi'] },
   { container: 'grp-contrarian', ids: ['rsi_extreme', 'demark_seq', 'bollinger'] },
 ];
@@ -3480,13 +3384,12 @@ function buildAll(){
 const DASH_ORDER = [
   'sma_200', 'sma_cross', 'vol_profile',
   'obv',     'rsi_extreme','demark_seq',
-  'bollinger','mfi',       'macd'
+  'bollinger','mfi'
 ];
 
 const DASH_GROUP = {
   sma_200:      {color:'#4c8ef7', label:'Trend'},
   sma_cross:    {color:'#4c8ef7', label:'Trend'},
-  macd:         {color:'#4c8ef7', label:'Trend'},
   vol_profile:  {color:'#a78bfa', label:'Volume'},
   obv:          {color:'#a78bfa', label:'Volume'},
   mfi:          {color:'#a78bfa', label:'Volume'},
@@ -3652,8 +3555,8 @@ function showTileModal(id){
   // Chart — build indicator-specific chart in modal (now that the modal has layout)
   const chartArea = document.getElementById('dt-modal-chart');
   chartArea.innerHTML = '';
-  // MACD and RSI render as stacked two-panel (price above, indicator below)
-  const isStacked = (id === 'macd' || id === 'rsi_extreme' || id === 'mfi');
+  // RSI and MFI render as stacked two-panel (price above, indicator below)
+  const isStacked = (id === 'rsi_extreme' || id === 'mfi');
   chartArea.classList.toggle('stacked', isStacked);
   const chartWrap = document.createElement('div');
   if (!isStacked) chartWrap.style.height = 'clamp(160px, 30vh, 300px)';
@@ -3665,7 +3568,7 @@ function showTileModal(id){
 function closeTileModal(){
   const overlay = document.getElementById('dt-modal-overlay');
   if(overlay) overlay.style.display = 'none';
-  // Destroy any charts we created in the modal (MACD/RSI have two — price + indicator)
+  // Destroy any charts we created in the modal (RSI/MFI have two — price + indicator)
   if(window._dtModalChart){ window._dtModalChart.destroy(); window._dtModalChart = null; }
   if(window._dtModalPriceChart){ window._dtModalPriceChart.destroy(); window._dtModalPriceChart = null; }
 }
@@ -3760,7 +3663,7 @@ function buildStackedPricePanel(container, bars, labels, scoreForColor, indicato
   // Indicator panel wrapper — caller fills this canvas
   const indWrap = document.createElement('div');
   indWrap.className = 'dt-stack-indicator';
-  // Indicator panel label (top-left overlay) — e.g. "RSI 14" or "MACD 12/26/9"
+  // Indicator panel label (top-left overlay) — e.g. "RSI 14" or "MFI 14"
   if (indicatorLabel) {
     const indLbl = document.createElement('div');
     indLbl.className = 'panel-label';
@@ -3794,8 +3697,8 @@ function buildModalChart(indId, container){
   rangeLabel.style.cssText = 'font:500 9px/1 var(--mono);color:var(--text3);text-align:center;padding:2px 0 4px;';
   rangeLabel.textContent = `Daily · ${startDate} — ${endDate} (${chartBars.length} bars)`;
   container.appendChild(rangeLabel);
-  // Stacked indicators (MACD, RSI Extreme, MFI) create their own canvases via buildStackedPricePanel.
-  const isStacked = indId === 'macd' || indId === 'rsi_extreme' || indId === 'mfi';
+  // Stacked indicators (RSI Extreme, MFI) create their own canvases via buildStackedPricePanel.
+  const isStacked = indId === 'rsi_extreme' || indId === 'mfi';
   if (!isStacked) container.appendChild(canvas);
 
   const labels = chartBars.map(b => b.t || '');
@@ -3808,7 +3711,7 @@ function buildModalChart(indId, container){
 
   // ── RSI Extreme — stacked: price panel above, RSI oscillator below ──
   if(indId === 'rsi_extreme'){
-    const RSI_WINDOW = 63; // ~3 months, matches MACD for visual consistency
+    const RSI_WINDOW = 63; // ~3 months, matches MFI/OBV for visual consistency
     const n = bars.length;
     const start = Math.max(0, n - RSI_WINDOW);
     const tail = bars.slice(start);
@@ -3896,7 +3799,7 @@ function buildModalChart(indId, container){
 
   // ── OBV — right-axis overlay: price on left axis, OBV on right axis ──
   if(indId === 'obv'){
-    const OBV_WINDOW = 63; // ~3 months, matches RSI/MACD/MFI for visual consistency
+    const OBV_WINDOW = 63; // ~3 months, matches RSI/MFI for visual consistency
     const n = bars.length;
     const start = Math.max(0, n - OBV_WINDOW);
     const tail = bars.slice(start);
@@ -3941,94 +3844,6 @@ function buildModalChart(indId, container){
           yOBV: { position: 'right', grid: { drawOnChartArea: false },
             ticks: { color: OBV_COLOR, font: { size: 9 }, maxTicksLimit: 6,
                      callback: v => (v/1e6).toFixed(0) + 'M' } },
-        },
-        interaction: { intersect: false, mode: 'index' },
-      }
-    });
-    return;
-  }
-
-  // ── MACD — line + signal + histogram for last ~3 months ──
-  if(indId === 'macd'){
-    const MACD_WINDOW = 63; // ~3 months of trading days
-    // Need at least slow(26)+sig(9)+1 = 36 bars of LEAD-IN to compute first valid signal point;
-    // use full bars for computation then slice to the last MACD_WINDOW for display.
-    const closesAll = bars.map(b => b.c);
-    // Compute MACD series (inline — the scoring computeMACD only returns last-bar values)
-    const eFast = emaCalc(closesAll, 12);
-    const eSlow = emaCalc(closesAll, 26);
-    const macdLineAll = closesAll.map((_, i) => (eFast[i] === null || eSlow[i] === null) ? null : eFast[i] - eSlow[i]);
-    const macdValid = macdLineAll.filter(v => v !== null);
-    const sigCompact = emaCalc(macdValid, 9);
-    const offset = macdLineAll.length - macdValid.length;
-    const signalLineAll = macdLineAll.map((_, i) => { const j = i - offset; return j < 0 ? null : sigCompact[j]; });
-    const histAll = macdLineAll.map((v, i) => (v === null || signalLineAll[i] === null) ? null : v - signalLineAll[i]);
-
-    // Slice to display window
-    const n = bars.length;
-    const start = Math.max(0, n - MACD_WINDOW);
-    const tail = bars.slice(start);
-    const tailLabels = tail.map(b => b.t || '');
-    const macdSlice   = macdLineAll.slice(start);
-    const signalSlice = signalLineAll.slice(start);
-    const histSlice   = histAll.slice(start);
-    rangeLabel.textContent = `Daily · ${tail[0]?.t||''} — ${tail[tail.length-1]?.t||''} (3 months · 12/26/9)`;
-
-    // Histogram bar colors: green when positive, red when negative; dimmed when contracting
-    const histColors = histSlice.map((h, i) => {
-      if (h === null) return 'rgba(128,128,128,0.3)';
-      const prev = i > 0 ? histSlice[i-1] : h;
-      const expanding = Math.abs(h) > Math.abs(prev ?? h);
-      if (h >= 0) return expanding ? '#00d97e' : 'rgba(0,217,126,0.45)';
-      return expanding ? '#ff4560' : 'rgba(255,69,96,0.45)';
-    });
-
-    const datasets = [
-      { label: 'Histogram', type: 'bar', data: histSlice, backgroundColor: histColors, borderColor: histColors, borderWidth: 0, barPercentage: 0.8, categoryPercentage: 0.9, yAxisID: 'y', order: 3 },
-      { label: 'MACD',      type: 'line', data: macdSlice,   borderColor: '#4c8ef7', borderWidth: 1.75, pointRadius: 0, tension: 0.25, fill: false, yAxisID: 'y', order: 1 },
-      { label: 'Signal',    type: 'line', data: signalSlice, borderColor: '#f0b429', borderWidth: 1.25, pointRadius: 0, borderDash: [4,3], tension: 0.25, fill: false, yAxisID: 'y', order: 2 },
-    ];
-
-    const annotations = {
-      zero: { type: 'line', yMin: 0, yMax: 0, borderColor: gridColor, borderWidth: 1.25, borderDash: [2,4] }
-    };
-
-    // Build price panel + get indicator canvas for the MACD plot
-    const indCanvas = buildStackedPricePanel(container, tail, tailLabels, vals.macd, 'MACD 12/26/9');
-
-    window._dtModalChart = new Chart(indCanvas, {
-      type: 'bar',
-      data: { labels: tailLabels, datasets },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        layout: { padding: { top: 2 } },
-        plugins: {
-          legend: {
-            display: true, position: 'top', align: 'end',
-            labels: { color: textColor, font: { size: 10 }, boxWidth: 14, padding: 10 }
-          },
-          annotation: hasAnnotation ? { annotations } : {},
-          tooltip: { mode: 'index', intersect: false }
-        },
-        scales: {
-          x: { display: true, grid: { color: gridColor }, ticks: { color: textColor, font: { size: 8 }, maxTicksLimit: 6 } },
-          y: {
-            display: true, position: 'left', beginAtZero: false,
-            grid: { color: gridColor },
-            ticks: { color: textColor, font: { size: 9 }, maxTicksLimit: 6 }
-          },
-          // Mirror y on right — no gridlines, synced bounds via afterDataLimits
-          y1: {
-            display: true, position: 'right',
-            grid: { drawOnChartArea: false, color: gridColor },
-            ticks: { color: textColor, font: { size: 9 }, maxTicksLimit: 6 },
-            afterDataLimits(axis) {
-              const y = axis.chart.scales.y;
-              if (y && typeof y.min === 'number' && typeof y.max === 'number') {
-                axis.min = y.min; axis.max = y.max;
-              }
-            }
-          }
         },
         interaction: { intersect: false, mode: 'index' },
       }
@@ -4092,7 +3907,7 @@ function buildModalChart(indId, container){
 
   // DeMark — price chart + setup/countdown markers, sliced to last 3 months for visual verification
   if(indId === 'demark_seq' && CI.demark){
-    const DM_WINDOW = 63; // ~3 months, matches MACD/RSI for visual consistency
+    const DM_WINDOW = 63; // ~3 months, matches RSI/MFI for visual consistency
     const n = bars.length;
     const start = Math.max(0, n - DM_WINDOW);
     const tail = bars.slice(start);
@@ -4499,6 +4314,8 @@ function detectConfluences(){
 }
 
 // ═══ FALLING KNIFE / BLOW-OFF TOP DETECTOR ═══
+// v15.2: MACD removed (engine v11 sync). Base pattern is now RSI + DeMark +
+// opposing trend (3 conditions). Bollinger / ADX / OBV remain as strength bonuses.
 function detectFallingKnife(){
   const card = document.getElementById('knife-card');
   const desc = document.getElementById('knife-desc');
@@ -4508,45 +4325,38 @@ function detectFallingKnife(){
 
   const rsi      = vals.rsi_extreme ?? 50;
   const demark   = vals.demark_seq ?? 50;
-  const macd     = vals.macd ?? 50;
   const sma200   = vals.sma_200 ?? 50;
   const adxVal   = adxOverlay.adx ?? 0;
   const obv      = vals.obv ?? 50;
   const boll     = vals.bollinger ?? 50;
   const maCross  = vals.sma_cross ?? 50;
 
-  // ── FALLING KNIFE (capitulation bottom — MACD momentum flipping up confirms buyers stepping in) ──
-  // Exhaustion indicators fire bullish AND MACD momentum flips positive
-  // showing buyers have stepped in at the bottom. Trend confirms we're in a downtrend.
+  // ── FALLING KNIFE (capitulation bottom — exhaustion signals firing into a confirmed downtrend) ──
   const rsiBullish       = rsi >= 65;          // RSI oversold → contrarian buy
   const demarkBullish    = demark >= 62;       // DeMark exhaustion buy
-  const macdFlipBull     = macd >= 60;         // MACD momentum flipping up (bullish bias or fresh cross)
   const trendBearish     = sma200 <= 40 || maCross <= 35;   // Confirmed downtrend
   const bollingerBullish = boll >= 60;         // Near/below lower band
 
-  // ── BLOW-OFF TOP (euphoria top — MACD momentum flipping down confirms sellers stepping in) ──
-  // Exhaustion indicators fire bearish AND MACD momentum flips negative
-  // showing sellers have stepped in at the top.
+  // ── BLOW-OFF TOP (euphoria top — exhaustion signals firing into a confirmed uptrend) ──
   const rsiBearish       = rsi <= 35;
   const demarkBearish    = demark <= 38;
-  const macdFlipBear     = macd <= 40;         // MACD momentum flipping down
   const trendBullish     = sma200 >= 60 || maCross >= 65;
   const bollingerBearish = boll <= 40;
 
   let alertType = null; // 'knife' | 'blowoff'
   let strength = 0;     // count of confirming signals
 
-  // Falling Knife: RSI + DeMark + MACD flipping up + bearish trend
-  if(rsiBullish && demarkBullish && macdFlipBull && trendBearish){
+  // Falling Knife: RSI + DeMark + bearish trend
+  if(rsiBullish && demarkBullish && trendBearish){
     alertType = 'knife';
-    strength = 2; // base: RSI + DeMark
+    strength = 2; // base: RSI + DeMark + downtrend
     if(bollingerBullish) strength++;  // Bollinger confirms oversold
     if(adxVal >= 25) strength++; // ADX confirms strong trend (the downtrend is real)
     if(obv >= 60) strength++;  // OBV bullish divergence (accumulation into selloff)
   }
 
-  // Blow-Off Top: RSI + DeMark + MACD flipping down + bullish trend
-  if(rsiBearish && demarkBearish && macdFlipBear && trendBullish){
+  // Blow-Off Top: RSI + DeMark + bullish trend
+  if(rsiBearish && demarkBearish && trendBullish){
     alertType = 'blowoff';
     strength = 2;
     if(bollingerBearish) strength++;
@@ -4566,8 +4376,8 @@ function detectFallingKnife(){
 
   // Build description
   desc.innerHTML = isKnife
-    ? `<strong>Capitulation bottom detected.</strong> Multiple exhaustion indicators are firing BUY signals and MACD momentum is flipping positive — buyers are stepping in. This is the signature of a potential capitulation bottom — sellers are exhausted and the first sign of a turnaround has appeared.`
-    : `<strong>Blow-off top detected.</strong> Multiple exhaustion indicators are firing SELL signals and MACD momentum is flipping negative — sellers are stepping in. This is the signature of a potential blow-off top — buyers are exhausted and the first sign of rejection has appeared.`;
+    ? `<strong>Capitulation bottom detected.</strong> Multiple exhaustion indicators are firing BUY signals into a confirmed downtrend — this is the signature of a potential bottom where sellers may be exhausted and the first sign of a turnaround has appeared.`
+    : `<strong>Blow-off top detected.</strong> Multiple exhaustion indicators are firing SELL signals into a confirmed uptrend — this is the signature of a potential top where buyers may be exhausted and the first sign of rejection has appeared.`;
 
   // Build signal tags
   sigs.innerHTML = '';
@@ -4576,7 +4386,6 @@ function detectFallingKnife(){
   if(isKnife){
     addSig(`RSI Oversold (${rsi})`, 'bull');
     addSig(`DeMark BUY (${demark})`, 'bull');
-    addSig(`MACD Momentum Flipping Up (${macd})`, 'bull');
     addSig(`Downtrend Confirmed`, 'bear');
     if(bollingerBullish) addSig(`Bollinger Oversold (${boll})`, 'bull');
     if(obv >= 60) addSig(`OBV Accumulation (${obv})`, 'bull');
@@ -4584,7 +4393,6 @@ function detectFallingKnife(){
   } else {
     addSig(`RSI Overbought (${rsi})`, 'bear');
     addSig(`DeMark SELL (${demark})`, 'bear');
-    addSig(`MACD Momentum Flipping Down (${macd})`, 'bear');
     addSig(`Uptrend Confirmed`, 'bull');
     if(bollingerBearish) addSig(`Bollinger Overbought (${boll})`, 'bear');
     if(obv <= 40) addSig(`OBV Distribution (${obv})`, 'bear');
@@ -4612,7 +4420,6 @@ function detectDualSignalCommentary(){
   // Read all indicator scores
   const rsi      = vals.rsi_extreme ?? 50;
   const demark   = vals.demark_seq ?? 50;
-  const macd     = vals.macd ?? 50;
   const sma200   = vals.sma_200 ?? 50;
   const obv      = vals.obv ?? 50;
   const boll     = vals.bollinger ?? 50;
@@ -4720,12 +4527,6 @@ function detectDualSignalCommentary(){
     parts.push(`<strong>⚠ High conflict detected</strong> — several indicators are pulling in opposite directions. The score has been pulled toward neutral. When this many signals disagree, it often means a breakout or reversal is building.`);
   } else if(cr.regime === 'elevated'){
     parts.push(`Some indicator conflicts detected — a few signals disagree with each other, so confidence is a bit lower than usual.`);
-  }
-
-  // ── MACD MOMENTUM EVENT ──
-  if(macd <= 25 || macd >= 75){
-    const macdDir = macd >= 75 ? 'bullish' : 'bearish';
-    parts.push(`A fresh <strong>MACD</strong> (Moving Average Convergence Divergence) crossover adds short-term ${macdDir} momentum context — this is a timing signal, not a directional call on its own. It carries more weight when aligned with the bigger picture above.`);
   }
 
   // Fallback
@@ -5268,8 +5069,6 @@ async function runAnalysis(){
   if(obvSub) obvSub.textContent='OBV — computing…';
   const vpSub = document.getElementById('sub-vol_profile');
   if(vpSub) vpSub.textContent='POC / VAH / VAL — computing…';
-  const macdSub = document.getElementById('sub-macd');
-  if(macdSub) macdSub.textContent='12/26/9 daily — computing…';
   // Reset orientation chart
   const os=document.getElementById('orient-status');
   if(os) os.textContent='Loading…';
@@ -5336,7 +5135,7 @@ async function runAnalysis(){
     const priceC = document.getElementById('price-val').textContent || '';
     const _dcC = window._dailyChangeText ? `<span style="color:${window._dailyChangeColor||''};font-size:13px;font-weight:600;margin-left:4px;">${window._dailyChangeText}</span>` : '';
     dot.className='sdot active';st.className='stext active';st.style.animation='';st.style.color='';
-    st.innerHTML=`<span class="sticker">${ticker}</span>${_cnc} — <span style="color:${_cc};font-weight:600">${_vc}</span> · ${priceC}${_dcC}`;
+    st.innerHTML=`<span class="sticker">${ticker}</span>${tierBadgeHtml(ticker)}${_cnc} — <span style="color:${_cc};font-weight:600">${_vc}</span> · ${priceC}${_dcC}`;
     so.textContent='Waiting for AI (divNote + fundamentals)…';
     btn.disabled=false;btn.classList.remove('loading');
     console.log('runAnalysis: ALL DONE. Score:', _sc);
@@ -5368,7 +5167,7 @@ async function runAnalysis(){
       document.getElementById('sdot').className='sdot active';
       const st3 = document.getElementById('stext');
       st3.className='stext active'; st3.style.animation=''; st3.style.color='';
-      st3.innerHTML=`<span class="sticker">${_savedTicker}</span>${cn2} — <span style="color:${cc2};font-weight:600">${vc2}</span> · ${pr2}${dc2}`;
+      st3.innerHTML=`<span class="sticker">${_savedTicker}</span>${tierBadgeHtml(_savedTicker)}${cn2} — <span style="color:${cc2};font-weight:600">${vc2}</span> · ${pr2}${dc2}`;
       document.getElementById('sstream').textContent='Waiting for AI…';
       document.getElementById('run-btn').disabled=false;
       document.getElementById('run-btn').classList.remove('loading');
@@ -5469,7 +5268,7 @@ All values plain text only — no HTML, no citations. N/A if unknown.`;
       const _aiVerdict = verd(_aiScore).l, _aiCol = sCol(_aiScore);
       const _dcAi = window._dailyChangeText ? `<span style="color:${window._dailyChangeColor||''};font-size:13px;font-weight:600;margin-left:4px;">${window._dailyChangeText}</span>` : '';
       dot.className='sdot active';st.className='stext active';st.style.animation='';st.style.color='';
-      st.innerHTML=`<span class="sticker">${parsed.ticker||ticker}</span>${_cname} — <span style="color:${_aiCol};font-weight:600">${_aiVerdict}</span> · ${priceText}${_dcAi}`;
+      st.innerHTML=`<span class="sticker">${parsed.ticker||ticker}</span>${tierBadgeHtml(parsed.ticker||ticker)}${_cname} — <span style="color:${_aiCol};font-weight:600">${_aiVerdict}</span> · ${priceText}${_dcAi}`;
       console.log('AI call complete for', ticker, '— divNote + fundamentals loaded');
       // If name arrived late, do another status bar update
       if(!window._lastSymbolName){
@@ -5481,7 +5280,7 @@ All values plain text only — no HTML, no citations. N/A if unknown.`;
               const _v2 = verd(_s2).l, _c2 = sCol(_s2);
               const priceNow = document.getElementById('price-val').textContent || '';
               const _dcLate = window._dailyChangeText ? `<span style="color:${window._dailyChangeColor||''};font-size:13px;font-weight:600;margin-left:4px;">${window._dailyChangeText}</span>` : '';
-              cur.innerHTML=`<span class="sticker">${ticker}</span> · ${window._lastSymbolName} — <span style="color:${_c2};font-weight:600">${_v2}</span> · ${priceNow}${_dcLate}`;
+              cur.innerHTML=`<span class="sticker">${ticker}</span>${tierBadgeHtml(ticker)} · ${window._lastSymbolName} — <span style="color:${_c2};font-weight:600">${_v2}</span> · ${priceNow}${_dcLate}`;
             }
           }
         }, 3000);
@@ -5533,7 +5332,7 @@ function loadFromUrl(){
     const dot=document.getElementById('sdot'),st=document.getElementById('stext');
     dot.className='sdot active';st.className='stext active';st.style.animation='';st.style.color='';
     const _cn=window._lastSymbolName?` · ${window._lastSymbolName}`:'';
-    st.innerHTML=`<span class="sticker">${state.t||'?'}</span>${_cn} — loaded from shared permalink`;
+    st.innerHTML=`<span class="sticker">${state.t||'?'}</span>${tierBadgeHtml(state.t||'')}${_cn} — loaded from shared permalink`;
     recalc();
   }catch(e){console.warn('Could not load state from URL:',e);}
 }
@@ -5831,7 +5630,7 @@ function copyReport(){
     'BUCKET SCORES',`  HIGH (60%) : ${d.bucketScores.high}`,`  MED  (40%) : ${d.bucketScores.med}`].filter(l=>l!==null);
   if(d.conflicts.length>0){lines.push('','⚠ CONFLICTS DETECTED',...d.conflicts.map(c=>`  ${c.tier==='backbone'?'🔑':'•'} ${c.desc}`));}
   if(d.confluences.length>0){lines.push('','🔒 CONFLUENCES CONFIRMED',...d.confluences.map(c=>`  • ${c}`));}
-  if(d.fallingKnife){lines.push('',`🔪 ${d.fallingKnife} ALERT ACTIVE`,'  Exhaustion indicators firing with MACD momentum flipping to confirm the turn.');}
+  if(d.fallingKnife){lines.push('',`🔪 ${d.fallingKnife} ALERT ACTIVE`,'  Exhaustion indicators firing into a confirmed opposing trend.');}
   lines.push('','INDICATOR READINGS','────────────────────────────────────────',
     ...d.indicators.map(i=>{const ln=`[${i.bucket.padEnd(4)}] ${i.name.padEnd(22)} ${i.label.padEnd(16)} (${i.signal}/100)`;return i.notes?ln+`\n         ↳ ${i.notes}`:ln;}),
     '','KEY LEVELS',`  Resistance 1 : ${d.keyLevels.r1||'—'}`,`  Resistance 2 : ${d.keyLevels.r2||'—'}`,`  Support 1    : ${d.keyLevels.s1||'—'}`,`  Support 2    : ${d.keyLevels.s2||'—'}`,`  Stop         : ${d.keyLevels.stop||'—'}`,`  Target       : ${d.keyLevels.target||'—'}`,'');
@@ -6333,14 +6132,12 @@ Technicals answer the <strong>"when"</strong> — is the price action confirming
 Together, they help you avoid the classic "great company, terrible entry" trap.
 </div>
 
-<h3>The 9 Indicators</h3>
+<h3>The 8 Indicators</h3>
 <p>Each indicator was chosen because it provides unique information no other indicator in the system covers, and each has a long institutional track record. Here's what each one does and why it matters:</p>
 
 <h4>Trend Direction</h4>
 <p><strong>SMA 200 Trend</strong> — The 200-day Simple Moving Average is the single most widely watched level by institutional investors worldwide. Price above it = healthy uptrend; price below = downtrend. It's the dividing line between bull and bear markets. Carries the highest intra-weight (1.4×) for a reason.</p>
 <p><strong>MA Cross 50/200</strong> — When the 50-day Moving Average crosses above the 200-day, that's a Golden Cross (bullish structural shift); crossing below is a Death Cross (bearish). These events are rare and meaningful — they signal the trend itself is changing, not just price.</p>
-<p><strong>MACD</strong> — Moving Average Convergence Divergence is a pure-math momentum + trend indicator built from exponential moving averages (EMAs). The MACD line = 12-day EMA − 26-day EMA; the signal line = 9-day EMA of MACD; the histogram = MACD − signal. Scored on four axes: zero-line position (above/below), signal-line crossover (momentum direction), histogram expansion (acceleration), and fresh crossover events (timing bonuses). Unlike candlestick patterns, MACD requires no analyst judgment — the math produces an unambiguous score every bar.</p>
-
 <h4>Volume &amp; Institutional Flow</h4>
 <p><strong>Volume Profile</strong> — Maps where the heaviest institutional trading occurred. The POC (Point of Control) is the price with the most volume — it acts as a magnet. VAH (Volume Area High) and VAL (Volume Area Low) bracket where 70% of volume traded. Price above POC = bullish structure.</p>
 <p><strong>OBV Trend</strong> — On-Balance Volume tracks cumulative volume flow: adds volume on up days, subtracts on down days. Rising OBV with rising price confirms smart money is accumulating. The key signal is divergence — OBV falling while price rises warns that institutions may be quietly selling.</p>
@@ -6355,7 +6152,7 @@ Together, they help you avoid the classic "great company, terrible entry" trap.
 <p><strong>ADX</strong> — The Average Directional Index doesn't produce a score. Instead, it tells the system <em>how much to trust</em> the trend-following indicators. In strong trends (ADX above 25), trend signals get boosted. In choppy, range-bound markets (ADX below 20), they get dampened. It's the "trust gate" for the entire trend family.</p>
 
 <h3>Two Families of Indicators</h3>
-<p>These 9 indicators fall into two philosophical families. Every market speaks in two voices at once:</p>
+<p>These 8 indicators fall into two philosophical families. Every market speaks in two voices at once:</p>
 <table>
 <tr><th>Family</th><th>What It Measures</th><th>Indicators</th></tr>
 <tr><td><strong>Trend-Following</strong></td><td>Persistence &amp; strength of the current move</td><td>SMA 200, MA Cross 50/200</td></tr>
@@ -6376,13 +6173,13 @@ Together, they help you avoid the classic "great company, terrible entry" trap.
 <h3>How the Scoring Works</h3>
 
 <h4>1. Score Each Indicator (0–100)</h4>
-<p>Ten indicators independently score the current market condition. Contrarian indicators use inverted scoring: oversold RSI is scored bullish because sellers are exhausted.</p>
+<p>Eight indicators independently score the current market condition. Contrarian indicators use inverted scoring: oversold RSI is scored bullish because sellers are exhausted.</p>
 
 <h4>2. Weight by Confidence Bucket</h4>
 <table>
 <tr><th>Bucket</th><th>Weight</th><th>Indicators</th><th>Role</th></tr>
 <tr><td><strong>HIGH</strong></td><td>60%</td><td>Volume Profile, SMA 200, MA Cross, RSI Extreme, OBV (On-Balance Volume)</td><td>Structural, institutional-grade anchors</td></tr>
-<tr><td><strong>MED</strong></td><td>40%</td><td>MFI, Bollinger Bands, DeMark, MACD</td><td>Interpretive timing tools</td></tr>
+<tr><td><strong>MED</strong></td><td>40%</td><td>MFI, Bollinger Bands, DeMark</td><td>Interpretive timing tools</td></tr>
 </table>
 <p>Each indicator has an <strong>intra-weight</strong> reflecting its authority. SMA 200 carries the highest (1.4×) — the most widely watched institutional level. RSI Extreme is second (1.2×) — the strongest contrarian signal.</p>
 
@@ -6422,8 +6219,8 @@ Together, they help you avoid the classic "great company, terrible entry" trap.
 </table>
 
 <h4>5. Specialized Alerts</h4>
-<p><strong>Falling Knife</strong> — four simultaneous conditions (RSI oversold + DeMark buy + MACD momentum flipping up + confirmed downtrend) detect potential capitulation bottoms. MACD momentum flipping positive confirms buyers are stepping in.<br>
-<strong>Blow-Off Top</strong> — the mirror image: RSI overbought + DeMark sell + MACD momentum flipping down + confirmed uptrend. Sellers are stepping in at the top.</p>
+<p><strong>Falling Knife</strong> — three simultaneous conditions (RSI oversold + DeMark buy + confirmed downtrend) detect potential capitulation bottoms. Bollinger oversold, ADX trending, and OBV accumulation each strengthen the signal as bonus confirmations.<br>
+<strong>Blow-Off Top</strong> — the mirror image: RSI overbought + DeMark sell + confirmed uptrend. Bonus strength from Bollinger overbought, ADX trending, and OBV distribution.</p>
 
 <h3>What You Can Do With It</h3>
 <p><strong>Avoid buying into exhaustion</strong> — A score of 28 with Triple Exhaustion active means the technicals are begging you to wait, even if the fundamentals look perfect.</p>
