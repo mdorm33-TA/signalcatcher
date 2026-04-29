@@ -2634,7 +2634,7 @@ async function runAllComputed(ticker){
     recalc();
     // Status bar
     const _fsc = Math.round(bScore('high')*BW.high + bScore('med')*BW.med);
-    const _fvc = verd(_fsc).l, _fcc = sCol(_fsc);
+    const _fvc = verdWithConflict(_fsc).l, _fcc = verdWithConflict(_fsc).col;
     const _fcn = window._lastSymbolName ? ` · ${window._lastSymbolName}` : '';
     const _fpr = document.getElementById('price-val').textContent || '';
     const _fdc = window._dailyChangeText ? `<span style="color:${window._dailyChangeColor||''};font-size:13px;font-weight:600;margin-left:4px;">${window._dailyChangeText}</span>` : '';
@@ -4216,6 +4216,39 @@ function verd(s){
   return       {l:'STRONGLY BEARISH',  c:'~70–80% bearish probability',col:'#ff4560'};
 }
 
+// ═══ CONFLICT-AWARE VERDICT WRAPPER (Fix C) ═══
+// Returns the same shape as verd() but overrides label/color/confidence when
+// the score's directional verdict disagrees with an active major trend-flow
+// confluence (Volume Confirms / Dual Trend / Structure + Trend in opposite
+// direction). Used by the gauge headline and the status bar — NOT by buildRpt
+// (which feeds AI prompts/exports and should stay score-pure; the AI sees
+// confluence info separately via the report's confluences array).
+//
+// The numeric score and gauge needle are unaffected — this only changes the
+// verdict text/color so the user doesn't see "CAUTIOUSLY BULLISH" while the
+// alert side is firing a major bearish confluence (or vice versa).
+function verdWithConflict(s){
+  const base = verd(s);
+  const conflList = window._activeConfluences || [];
+  const isMajorPair = (ids) => !!ids && (
+    (ids.includes('sma_200') && ids.includes('sma_cross')) ||
+    (ids.includes('obv')      && ids.includes('sma_200'))  ||
+    (ids.includes('vol_profile') && ids.includes('sma_200'))
+  );
+  const hasMajorBear = conflList.some(c => c.direction === 'bear' && isMajorPair(c.ids));
+  const hasMajorBull = conflList.some(c => c.direction === 'bull' && isMajorPair(c.ids));
+  // Only override when one direction is firing without a competing opposite
+  // confluence — if both bull and bear majors fire, the engine is already
+  // surfacing the tension via the confluence list and we leave the verdict alone.
+  if(s >= 55 && hasMajorBear && !hasMajorBull){
+    return { l: 'CONFLICTED', c: 'Composite bullish · major bearish confluence active — see notes', col: '#f0b429' };
+  }
+  if(s <= 45 && hasMajorBull && !hasMajorBear){
+    return { l: 'CONFLICTED', c: 'Composite bearish · major bullish confluence active — see notes', col: '#f0b429' };
+  }
+  return base;
+}
+
 // ═══ CONFLICT REGIME CLASSIFIER (RETIRED Apr 28 2026) ═══
 // Per-symbol conflict regime classification was anchored on the
 // (rsi_extreme, sma_200) backbone-conflict pair. Step 7b walk-forward
@@ -4686,7 +4719,7 @@ function drawGauge(score, dispersion, rawScore){
   const na=Math.PI+(score/100)*Math.PI;
   ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+(r-24)*Math.cos(na),cy+(r-24)*Math.sin(na));ctx.lineWidth=2.5;ctx.strokeStyle=needleColor;ctx.lineCap='round';ctx.stroke();
   ctx.beginPath();ctx.arc(cx,cy,5,0,Math.PI*2);ctx.fillStyle=needleColor;ctx.fill();
-  const v=verd(score);
+  const v=verdWithConflict(score);
   document.getElementById('gscore').textContent=Math.round(score);document.getElementById('gscore').style.color=sCol(score);
   document.getElementById('gverdict').textContent=v.l;document.getElementById('gverdict').style.color=v.col;
   const gconfEl=document.getElementById('gconf'); if(gconfEl) gconfEl.textContent=v.c;
@@ -5252,7 +5285,7 @@ async function runAnalysis(){
 
     // Update status bar with computed scores
     const _sc = Math.round(bScore('high')*BW.high + bScore('med')*BW.med);
-    const _vc = verd(_sc).l, _cc = sCol(_sc);
+    const _vc = verdWithConflict(_sc).l, _cc = verdWithConflict(_sc).col;
     const _cnc = window._lastSymbolName ? ` · ${window._lastSymbolName}` : '';
     const priceC = document.getElementById('price-val').textContent || '';
     const _dcC = window._dailyChangeText ? `<span style="color:${window._dailyChangeColor||''};font-size:13px;font-weight:600;margin-left:4px;">${window._dailyChangeText}</span>` : '';
@@ -5282,7 +5315,7 @@ async function runAnalysis(){
       recalc();
       // Also force status bar
       const sc2 = Math.round(bScore('high')*BW.high + bScore('med')*BW.med);
-      const vc2 = verd(sc2).l, cc2 = sCol(sc2);
+      const vc2 = verdWithConflict(sc2).l, cc2 = verdWithConflict(sc2).col;
       const cn2 = window._lastSymbolName ? ` · ${window._lastSymbolName}` : '';
       const pr2 = document.getElementById('price-val').textContent || '';
       const dc2 = window._dailyChangeText ? `<span style="color:${window._dailyChangeColor||''};font-size:13px;font-weight:600;margin-left:4px;">${window._dailyChangeText}</span>` : '';
@@ -5387,7 +5420,7 @@ All values plain text only — no HTML, no citations. N/A if unknown.`;
       const priceText = document.getElementById('price-val').textContent || '';
       const _cname=window._lastSymbolName?` · ${window._lastSymbolName}`:'';
       const _aiScore = Math.round(bScore('high')*BW.high + bScore('med')*BW.med);
-      const _aiVerdict = verd(_aiScore).l, _aiCol = sCol(_aiScore);
+      const _aiVerdict = verdWithConflict(_aiScore).l, _aiCol = verdWithConflict(_aiScore).col;
       const _dcAi = window._dailyChangeText ? `<span style="color:${window._dailyChangeColor||''};font-size:13px;font-weight:600;margin-left:4px;">${window._dailyChangeText}</span>` : '';
       dot.className='sdot active';st.className='stext active';st.style.animation='';st.style.color='';
       st.innerHTML=`<span class="sticker">${parsed.ticker||ticker}</span>${tierBadgeHtml(parsed.ticker||ticker)}${_cname} — <span style="color:${_aiCol};font-weight:600">${_aiVerdict}</span> · ${priceText}${_dcAi}`;
@@ -5399,7 +5432,7 @@ All values plain text only — no HTML, no citations. N/A if unknown.`;
             const cur=document.getElementById('stext');
             if(cur && cur.innerHTML.includes(ticker)){
               const _s2 = Math.round(bScore('high')*BW.high + bScore('med')*BW.med);
-              const _v2 = verd(_s2).l, _c2 = sCol(_s2);
+              const _v2 = verdWithConflict(_s2).l, _c2 = verdWithConflict(_s2).col;
               const priceNow = document.getElementById('price-val').textContent || '';
               const _dcLate = window._dailyChangeText ? `<span style="color:${window._dailyChangeColor||''};font-size:13px;font-weight:600;margin-left:4px;">${window._dailyChangeText}</span>` : '';
               cur.innerHTML=`<span class="sticker">${ticker}</span>${tierBadgeHtml(ticker)} · ${window._lastSymbolName} — <span style="color:${_c2};font-weight:600">${_v2}</span> · ${priceNow}${_dcLate}`;
