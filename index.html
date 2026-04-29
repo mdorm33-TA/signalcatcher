@@ -4326,6 +4326,7 @@ function detectConfluences(){
       const msg = allBull ? def.bull : def.bear;
       confluences.push({
         names, scores, avgScore, msg,
+        ids: def.ids,
         strength: def.strength,
         direction: allBull ? 'bull' : 'bear'
       });
@@ -4346,6 +4347,11 @@ function detectConfluences(){
       });
     }
   });
+
+  // Stash active confluences so the signal-summary narrative
+  // (detectDualSignalCommentary) can read them and surface a caveat when the
+  // headline label disagrees with a major confluence direction.
+  window._activeConfluences = confluences;
 
   const card = document.getElementById('confluence-card');
   const list = document.getElementById('confluence-list');
@@ -4509,6 +4515,29 @@ function detectDualSignalCommentary(){
   const adxVal_c = adxOverlay.adx ?? 0;
   const trendDir = trendBullCount > trendBearCount ? 'bullish' : trendBearCount > trendBullCount ? 'bearish' : null;
 
+  // ── Fix A/B prep: read active confluences + ADX directional state ──
+  // Active confluences are stashed by detectConfluences() in the same render
+  // cycle. We pattern-match the major trend-flow pairs (Dual Trend, Volume
+  // Confirms, Structure + Trend) to flag when one fires opposite the headline.
+  const activeConfluences = window._activeConfluences || [];
+  const isMajorTrendFlowPair = (ids) => !!ids && (
+    (ids.includes('sma_200') && ids.includes('sma_cross')) ||
+    (ids.includes('obv')      && ids.includes('sma_200'))  ||
+    (ids.includes('vol_profile') && ids.includes('sma_200'))
+  );
+  const hasMajorBearConfluence = activeConfluences.some(c => c.direction === 'bear' && isMajorTrendFlowPair(c.ids));
+  const hasMajorBullConfluence = activeConfluences.some(c => c.direction === 'bull' && isMajorTrendFlowPair(c.ids));
+
+  // ADX direction — +DI vs -DI tells us which way price has actually been moving
+  // over the last 14 bars, independent of the longer-term moving-average
+  // structure that drives the sma_200/sma_cross scores.
+  const plusDI  = adxOverlay.plusDI  ?? 0;
+  const minusDI = adxOverlay.minusDI ?? 0;
+  const adxDiDelta = plusDI - minusDI;
+  const adxStronglyDirectional = adxVal_c >= 25 && Math.abs(adxDiDelta) >= 10;
+  const adxBearDominant = adxStronglyDirectional && adxDiDelta < 0;
+  const adxBullDominant = adxStronglyDirectional && adxDiDelta > 0;
+
   const parts = [];
 
   // ── TREND ASSESSMENT ──
@@ -4525,9 +4554,28 @@ function detectDualSignalCommentary(){
       parts.push(`<strong>${tickerDisplay} confirmed downtrend</strong> — price is below its key moving averages. The overall direction is down.`);
     }
   } else if(trendBullCount >= 1 && trendBearCount === 0){
-    parts.push(`<strong>${tickerDisplay} leans bullish</strong> — one trend measure is positive, but the trend isn't fully confirmed yet.`);
+    if(adxBearDominant){
+      // Fix A.1 — structural lean is bullish (Golden Cross intact / above SMA200)
+      // but ADX shows recent price action is decisively bearish. This is the
+      // RTX-style case the narrative was previously sanguine about.
+      parts.push(`<strong>${tickerDisplay} — structurally bullish but currently selling off</strong> — the Golden Cross / above-SMA200 setup is still in place, but the recent move is decisively bearish (-DI ${minusDI.toFixed(0)} vs +DI ${plusDI.toFixed(0)}, ADX ${adxVal_c.toFixed(0)}). The longer-term structure hasn't broken yet, but the short-term direction is down.`);
+    } else {
+      parts.push(`<strong>${tickerDisplay} leans bullish</strong> — one trend measure is positive, but the trend isn't fully confirmed yet.`);
+    }
   } else if(trendBearCount >= 1 && trendBullCount === 0){
-    parts.push(`<strong>${tickerDisplay} leans bearish</strong> — one trend measure is negative, but the downtrend isn't fully confirmed yet.`);
+    if(adxBullDominant){
+      // Fix A.1 mirror — structural lean is bearish but ADX shows recent
+      // price action is decisively bullish. Mean-reversion shorts at higher risk.
+      parts.push(`<strong>${tickerDisplay} — structurally bearish but currently rallying</strong> — the Death Cross / below-SMA200 setup is still in place, but the recent move is decisively bullish (+DI ${plusDI.toFixed(0)} vs -DI ${minusDI.toFixed(0)}, ADX ${adxVal_c.toFixed(0)}). The longer-term structure hasn't broken yet, but the short-term direction is up.`);
+    } else {
+      parts.push(`<strong>${tickerDisplay} leans bearish</strong> — one trend measure is negative, but the downtrend isn't fully confirmed yet.`);
+    }
+  } else if(adxBearDominant){
+    // Fix A.1 — structural MAs are mixed but ADX shows a clear bearish move
+    parts.push(`<strong>${tickerDisplay} — current price action is trending down</strong> — the structural moving-average picture is mixed, but the recent move is decisively bearish (-DI ${minusDI.toFixed(0)} vs +DI ${plusDI.toFixed(0)}, ADX ${adxVal_c.toFixed(0)}).`);
+  } else if(adxBullDominant){
+    // Fix A.1 — mirror: structural MAs mixed, ADX shows clear bullish move
+    parts.push(`<strong>${tickerDisplay} — current price action is trending up</strong> — the structural moving-average picture is mixed, but the recent move is decisively bullish (+DI ${plusDI.toFixed(0)} vs -DI ${minusDI.toFixed(0)}, ADX ${adxVal_c.toFixed(0)}).`);
   } else {
     parts.push(`<strong>${tickerDisplay} — no clear trend</strong> — indicators are mixed or flat${adxVal_c < 20 ? ', and trend strength is very low' : ''}. The market is choppy or transitioning.`);
   }
@@ -4538,9 +4586,21 @@ function detectDualSignalCommentary(){
   } else if(exhBearCount >= 3){
     parts.push(`Momentum indicators suggest the <strong>rally is stretched</strong> — buying enthusiasm may be running out of steam.`);
   } else if(exhBullCount >= 2){
-    parts.push(`Some indicators suggest selling pressure may be fading — a potential floor could be forming.`);
+    // Fix A.2 — OBV contradiction check: if exhaustion is showing oversold-bull
+    // but institutional volume flow is sharply negative, the floor probably isn't here.
+    if(obv <= 30){
+      parts.push(`Mean-reversion signals are stretched, <strong>but institutional volume flow (OBV) is sharply negative</strong> — the floor isn't here yet.`);
+    } else {
+      parts.push(`Some indicators suggest selling pressure may be fading — a potential floor could be forming.`);
+    }
   } else if(exhBearCount >= 2){
-    parts.push(`Some indicators suggest the upward push may be getting stretched — the rally could be due for a breather.`);
+    // Fix A.2 mirror — exhaustion showing overbought-bear but OBV is strongly
+    // positive, so buyers haven't capitulated.
+    if(obv >= 70){
+      parts.push(`Mean-reversion signals look stretched, <strong>but institutional volume flow (OBV) is strongly positive</strong> — buyers haven't given up yet.`);
+    } else {
+      parts.push(`Some indicators suggest the upward push may be getting stretched — the rally could be due for a breather.`);
+    }
   }
 
   // ── KEY TENSION ──
@@ -4563,6 +4623,17 @@ function detectDualSignalCommentary(){
     } else if(volDiverges){
       parts.push(`<strong>Volume tells a different story</strong> — big money may be quietly positioning against the current price direction. Worth watching closely.`);
     }
+  }
+
+  // ── Fix B — major-confluence vs headline caveat ──
+  // When a major bearish confluence (Volume Confirms / Dual Trend / Structure +
+  // Trend, in bear direction) is firing while the composite score is bullish-
+  // leaning (or vice versa), surface the contradiction explicitly so the
+  // narrative doesn't read as sanguine while the alert side is loudly bearish.
+  if(hasMajorBearConfluence && wScore >= 55){
+    parts.push(`<strong>⚠ Note:</strong> a major bearish confluence is active — institutional flow and trend indicators are bearishly aligned. The bullish-leaning composite reflects oversold mean-reversion signals against a deteriorating trend, the classic "value trap" setup. Mean-reversion signals can fire repeatedly during a sustained decline.`);
+  } else if(hasMajorBullConfluence && wScore <= 45){
+    parts.push(`<strong>⚠ Note:</strong> a major bullish confluence is active — institutional flow and trend indicators are bullishly aligned. The bearish-leaning composite reflects overbought signals against an improving trend; mean-reversion shorts in this setup are higher-risk than the score alone suggests.`);
   }
 
   // ── AGREEMENT/DISAGREEMENT ──
