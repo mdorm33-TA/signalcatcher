@@ -3968,10 +3968,27 @@ function buildModalChart(indId, container){
     data: { labels, datasets },
     options: {
       responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false }, annotation: hasAnnotation ? { annotations } : {} },
+      plugins: {
+        legend: { display: true, position: 'top',
+          labels: { font: { family: 'IBM Plex Mono', size: 10 }, color: textColor, boxWidth: 16, padding: 8, usePointStyle: false } },
+        annotation: hasAnnotation ? { annotations } : {}
+      },
       scales: {
         x: { display: true, grid: { color: gridColor }, ticks: { color: textColor, font: { size: 9 }, maxTicksLimit: 6 } },
-        y: { display: true, grid: { color: gridColor }, ticks: { color: textColor, font: { size: 9 }, maxTicksLimit: 5 } }
+        y: { display: true, position: 'left', grid: { color: gridColor }, ticks: { color: textColor, font: { size: 9 }, maxTicksLimit: 5 } },
+        // Mirror of y on the right side — no gridlines (avoids double-draw),
+        // synced to y's computed bounds via afterDataLimits.
+        y1: {
+          display: true, position: 'right',
+          grid: { drawOnChartArea: false },
+          ticks: { color: textColor, font: { size: 9 }, maxTicksLimit: 5 },
+          afterDataLimits(axis) {
+            const y = axis.chart.scales.y;
+            if (y && typeof y.min === 'number' && typeof y.max === 'number') {
+              axis.min = y.min; axis.max = y.max;
+            }
+          }
+        }
       },
       interaction: { intersect: false, mode: 'index' },
     }
