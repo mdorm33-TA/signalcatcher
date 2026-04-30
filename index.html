@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Signal Catcher v15.5 — Dashboard</title>
+<title>Signal Catcher v15.7 — Dashboard</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -318,7 +318,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:18
 .confl-strength.strong{background:#0a8a4e22;color:var(--bull);}
 .confl-strength.moderate{background:#4dd9a022;color:#22b87a;}
 
-/* ── EXHAUSTION ALERT (Falling Knife / Blow-Off Top) ── */
+/* ── FALLING KNIFE ALERT ── */
 .knife-card{background:linear-gradient(145deg,#1a1508 0%,#12100a 100%);border:2px solid #f59e0b;border-radius:12px;padding:16px;display:none;box-shadow:0 2px 12px rgba(245,158,11,.25),0 0 20px rgba(245,158,11,.1);position:relative;overflow:hidden;}
 .knife-card::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:conic-gradient(from 0deg,transparent,rgba(245,158,11,.06),transparent,rgba(245,158,11,.06),transparent);animation:knifeGlow 6s linear infinite;}
 @keyframes knifeGlow{to{transform:rotate(360deg);}}
@@ -690,6 +690,57 @@ body.dark-mode .conflict-item.backbone{background:rgba(255,160,80,.06);}
 .coast-links{display:flex;gap:12px;flex-wrap:wrap;margin-top:10px;font-size:12px;}
 .coast-links a{color:var(--accent);text-decoration:none;font-family:var(--mono);font-weight:500;}
 .coast-links a:hover{text-decoration:underline;}
+
+/* ── COAST FISHING sub-section (inside coast card) ── */
+.fishing-section{margin-top:14px;padding-top:12px;border-top:1px dashed var(--border);}
+.fishing-section-hdr{font:600 10px/1 var(--mono);color:var(--text3);letter-spacing:.06em;text-transform:uppercase;padding:0 0 8px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;}
+.fishing-section-hdr-month{font-family:var(--mono);font-size:11px;font-weight:700;padding:3px 9px;border-radius:6px;background:var(--surface2);color:var(--text2);letter-spacing:.04em;text-transform:uppercase;border:1px solid var(--border);}
+.fishing-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:4px 0 8px;}
+.fish-tile{background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:10px 11px;display:flex;flex-direction:column;gap:6px;}
+.fish-tile-row{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.fish-tile-name{font:700 13px/1.1 var(--mono);color:var(--text);}
+.fish-tile-text{font:500 11px/1.45 var(--mono);color:var(--text2);}
+.fish-tile-note{font:500 10px/1.4 var(--mono);color:var(--text3);font-style:italic;}
+.fish-status{font-family:var(--mono);font-size:10px;font-weight:700;padding:3px 8px;border-radius:5px;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap;}
+.fish-status-open{background:#1f8a4d22;color:#1f8a4d;}
+.fish-status-soon{background:#d68a1f22;color:#d68a1f;}
+.fish-status-closed{background:#cc334422;color:#cc3344;}
+.fish-status-check{background:var(--surface);color:var(--text3);border:1px solid var(--border);}
+body.dark-mode .fish-status-open{background:#1f8a4d33;color:#7ec898;}
+body.dark-mode .fish-status-soon{background:#d68a1f33;color:#e6b35a;}
+body.dark-mode .fish-status-closed{background:#cc334433;color:#ee6677;}
+.fishing-meta{font-family:var(--mono);font-size:10px;color:var(--text3);padding:2px 0 0;font-style:italic;}
+@media (max-width:520px){
+  .fishing-grid{grid-template-columns:1fr;}
+}
+
+/* ── BONNEVILLE FISH COUNTS card ── */
+.fish-card{background:var(--surface);border-radius:10px;box-shadow:var(--card-shadow);overflow:hidden;margin-top:10px;}
+body.dark-mode .fish-card{background:var(--surface);box-shadow:var(--card-shadow);}
+.fish-hdr{background:linear-gradient(135deg,#2d6a3f,#3f8a55);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;cursor:pointer;}
+body.dark-mode .fish-hdr{background:linear-gradient(135deg,#1c4528,#2a5e38);}
+.fish-hdr-left{display:flex;align-items:center;gap:10px;}
+.fish-hdr-title{font-family:var(--sans);font-size:15px;font-weight:500;color:#fff;}
+.fish-hdr-badge{font-family:var(--mono);font-size:12px;color:rgba(255,255,255,.85);}
+.fish-chevron{color:rgba(255,255,255,.7);font-size:14px;transition:transform .2s;}
+.fish-chevron.open{transform:rotate(180deg);}
+.fish-body{max-height:0;overflow:hidden;transition:max-height .4s ease;}
+.fish-body.open{max-height:3000px;}
+.fish-content{padding:12px 14px;}
+.fish-intro{font-family:var(--mono);font-size:12px;color:var(--text2);padding:0 0 10px;line-height:1.5;}
+.fish-tabs{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;}
+.fish-tab{font-family:var(--mono);font-size:11px;font-weight:600;padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);cursor:pointer;transition:all .15s;}
+.fish-tab:hover{border-color:#3f8a55;color:var(--text);}
+.fish-tab.active{background:#3f8a55;border-color:#3f8a55;color:#fff;}
+body.dark-mode .fish-tab.active{background:#2a5e38;border-color:#2a5e38;}
+.fish-chart-wrap{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px;text-align:center;}
+.fish-chart-wrap img{max-width:100%;height:auto;display:block;margin:0 auto;border-radius:4px;}
+body.dark-mode .fish-chart-wrap img{filter:brightness(.92) contrast(1.05);}
+.fish-meta{font-family:var(--mono);font-size:11px;color:var(--text3);padding:6px 2px 0;text-align:center;}
+.fish-links{display:flex;gap:12px;flex-wrap:wrap;margin-top:10px;font-size:12px;}
+.fish-links a{color:#3f8a55;text-decoration:none;font-family:var(--mono);font-weight:500;}
+body.dark-mode .fish-links a{color:#7ec898;}
+.fish-links a:hover{text-decoration:underline;}
 </style>
 </head>
 <body>
@@ -840,7 +891,7 @@ body.dark-mode .conflict-item.backbone{background:rgba(255,160,80,.06);}
   <div class="sdot active" id="sdot"></div>
   <span class="stext active" id="stext"></span>
   <span class="sstream" id="sstream"></span>
-  <span class="v-badge" title="Build version — if this doesn't match your expected version, do a hard refresh to clear cache">v15.5</span>
+  <span class="v-badge" title="Build version — if this doesn't match your expected version, do a hard refresh to clear cache">v15.7</span>
 </div>
 
 <!-- VERDICT SUMMARY BAR -->
@@ -909,11 +960,11 @@ body.dark-mode .conflict-item.backbone{background:rgba(255,160,80,.06);}
       <textarea class="dnta" id="div-note" placeholder="e.g. AMLP: ~8.2% yield adds total return floor. Div-adj SMA 200 ~$44 vs price-only $47."></textarea>
     </div>
 
-    <!-- EXHAUSTION ALERT (Falling Knife / Blow-Off Top) -->
+    <!-- FALLING KNIFE ALERT -->
     <div class="knife-card" id="knife-card">
       <div class="knife-hdr">
-        <span class="knife-icon" id="knife-icon">🔪</span>
-        <span class="knife-title" id="knife-title">Exhaustion Alert</span>
+        <span class="knife-icon">🔪</span>
+        <span class="knife-title">Falling Knife Alert</span>
       </div>
       <div class="knife-body">
         <div class="knife-desc" id="knife-desc"></div>
@@ -1214,9 +1265,57 @@ body.dark-mode .conflict-item.backbone{background:rgba(255,160,80,.06);}
         <div style="font:600 10px/1 var(--mono);color:var(--text3);letter-spacing:.06em;text-transform:uppercase;padding:4px 0 2px;">🌊 Today's Tide Chart</div>
         <div class="coast-chart-wrap"><canvas id="coastTideChart"></canvas></div>
         <div id="coast-tide-table"></div>
+
+        <!-- ── SALMON & BOTTOM FISHING — month-aware seasonal status ── -->
+        <div class="fishing-section">
+          <div class="fishing-section-hdr">
+            <span>🎣 Salmon &amp; Bottom Fishing · Newport / Depoe Bay</span>
+            <span class="fishing-section-hdr-month" id="fishing-month-badge">—</span>
+          </div>
+          <div class="fishing-grid" id="fishing-grid"></div>
+          <div class="fishing-meta">⚠ Seasons, quotas, and depth rules change every year. Always verify with ODFW before launching.</div>
+        </div>
+
         <div class="coast-links">
           <a href="https://www.usharbors.com/harbor/oregon/depoe-bay-or/tides/" target="_blank">📍 Full tides at USHarbors →</a>
-          <a href="https://www.ndbc.noaa.gov/station_page.php?station=46050" target="_blank">🌊 Buoy 46050 swell data →</a>
+          <a href="https://myodfw.com/recreation-report/fishing-report/marine-zone" target="_blank">🐟 ODFW Marine Zone fishing report →</a>
+          <a href="https://myodfw.com/fishing/regulations/marine-zone" target="_blank">📜 ODFW Marine Zone regulations →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BONNEVILLE DAM FISH COUNTS — full width below coastal card -->
+<div style="padding:0 12px 20px;background:var(--bg);">
+  <div class="fish-card">
+    <div class="fish-hdr" onclick="toggleFishPanel()">
+      <div class="fish-hdr-left">
+        <span class="fish-hdr-title">🐟 Bonneville Dam Fish Counts</span>
+        <span class="fish-hdr-badge" id="fish-badge">tap to load</span>
+      </div>
+      <span class="fish-chevron" id="fish-chevron">▼</span>
+    </div>
+    <div class="fish-body" id="fish-body">
+      <div class="fish-content">
+        <div class="fish-intro">
+          Adult salmon and steelhead passage at Bonneville Dam, the first dam upstream from the mouth of the Columbia River. Charts show this season's daily counts vs. the 10-year average — handy for tracking when the runs are early, late, or strong. Updated daily by Columbia Basin Research (UW) from US Army Corps of Engineers data.
+        </div>
+        <div class="fish-tabs" id="fish-tabs">
+          <button class="fish-tab active" data-species="fc">Chinook</button>
+          <button class="fish-tab" data-species="fcj">Jack Chinook</button>
+          <button class="fish-tab" data-species="fs">Steelhead</button>
+          <button class="fish-tab" data-species="fb">Sockeye</button>
+          <button class="fish-tab" data-species="fk">Coho</button>
+        </div>
+        <div class="fish-chart-wrap" id="fish-chart-wrap">
+          <img id="fish-chart-img" src="" alt="Bonneville fish counts chart" loading="lazy">
+        </div>
+        <div class="fish-meta" id="fish-meta">All projects · current year vs. 10-year average · Source: cbr.washington.edu/dart</div>
+        <div class="fish-links">
+          <a href="https://www.cbr.washington.edu/dart/quick_look/adult" target="_blank">📊 Full DART Quick Look (all dams) →</a>
+          <a href="https://www.cbr.washington.edu/dart/quick_look/adult_bon" target="_blank">🌱 Bonneville Spring Chinook detail →</a>
+          <a href="https://www.cbr.washington.edu/dart/quick_look/adult_bon_stlhd" target="_blank">⚡ Bonneville Steelhead detail →</a>
         </div>
       </div>
     </div>
@@ -2634,7 +2733,7 @@ async function runAllComputed(ticker){
     recalc();
     // Status bar
     const _fsc = Math.round(bScore('high')*BW.high + bScore('med')*BW.med);
-    const _fvc = verdWithConflict(_fsc).l, _fcc = verdWithConflict(_fsc).col;
+    const _fvc = verd(_fsc).l, _fcc = sCol(_fsc);
     const _fcn = window._lastSymbolName ? ` · ${window._lastSymbolName}` : '';
     const _fpr = document.getElementById('price-val').textContent || '';
     const _fdc = window._dailyChangeText ? `<span style="color:${window._dailyChangeColor||''};font-size:13px;font-weight:600;margin-left:4px;">${window._dailyChangeText}</span>` : '';
@@ -3968,27 +4067,10 @@ function buildModalChart(indId, container){
     data: { labels, datasets },
     options: {
       responsive: true, maintainAspectRatio: false,
-      plugins: {
-        legend: { display: true, position: 'top',
-          labels: { font: { family: 'IBM Plex Mono', size: 10 }, color: textColor, boxWidth: 16, padding: 8, usePointStyle: false } },
-        annotation: hasAnnotation ? { annotations } : {}
-      },
+      plugins: { legend: { display: false }, annotation: hasAnnotation ? { annotations } : {} },
       scales: {
         x: { display: true, grid: { color: gridColor }, ticks: { color: textColor, font: { size: 9 }, maxTicksLimit: 6 } },
-        y: { display: true, position: 'left', grid: { color: gridColor }, ticks: { color: textColor, font: { size: 9 }, maxTicksLimit: 5 } },
-        // Mirror of y on the right side — no gridlines (avoids double-draw),
-        // synced to y's computed bounds via afterDataLimits.
-        y1: {
-          display: true, position: 'right',
-          grid: { drawOnChartArea: false },
-          ticks: { color: textColor, font: { size: 9 }, maxTicksLimit: 5 },
-          afterDataLimits(axis) {
-            const y = axis.chart.scales.y;
-            if (y && typeof y.min === 'number' && typeof y.max === 'number') {
-              axis.min = y.min; axis.max = y.max;
-            }
-          }
-        }
+        y: { display: true, grid: { color: gridColor }, ticks: { color: textColor, font: { size: 9 }, maxTicksLimit: 5 } }
       },
       interaction: { intersect: false, mode: 'index' },
     }
@@ -4216,39 +4298,6 @@ function verd(s){
   return       {l:'STRONGLY BEARISH',  c:'~70–80% bearish probability',col:'#ff4560'};
 }
 
-// ═══ CONFLICT-AWARE VERDICT WRAPPER (Fix C) ═══
-// Returns the same shape as verd() but overrides label/color/confidence when
-// the score's directional verdict disagrees with an active major trend-flow
-// confluence (Volume Confirms / Dual Trend / Structure + Trend in opposite
-// direction). Used by the gauge headline and the status bar — NOT by buildRpt
-// (which feeds AI prompts/exports and should stay score-pure; the AI sees
-// confluence info separately via the report's confluences array).
-//
-// The numeric score and gauge needle are unaffected — this only changes the
-// verdict text/color so the user doesn't see "CAUTIOUSLY BULLISH" while the
-// alert side is firing a major bearish confluence (or vice versa).
-function verdWithConflict(s){
-  const base = verd(s);
-  const conflList = window._activeConfluences || [];
-  const isMajorPair = (ids) => !!ids && (
-    (ids.includes('sma_200') && ids.includes('sma_cross')) ||
-    (ids.includes('obv')      && ids.includes('sma_200'))  ||
-    (ids.includes('vol_profile') && ids.includes('sma_200'))
-  );
-  const hasMajorBear = conflList.some(c => c.direction === 'bear' && isMajorPair(c.ids));
-  const hasMajorBull = conflList.some(c => c.direction === 'bull' && isMajorPair(c.ids));
-  // Only override when one direction is firing without a competing opposite
-  // confluence — if both bull and bear majors fire, the engine is already
-  // surfacing the tension via the confluence list and we leave the verdict alone.
-  if(s >= 55 && hasMajorBear && !hasMajorBull){
-    return { l: 'CONFLICTED', c: 'Composite bullish · major bearish confluence active — see notes', col: '#f0b429' };
-  }
-  if(s <= 45 && hasMajorBull && !hasMajorBear){
-    return { l: 'CONFLICTED', c: 'Composite bearish · major bullish confluence active — see notes', col: '#f0b429' };
-  }
-  return base;
-}
-
 // ═══ CONFLICT REGIME CLASSIFIER (RETIRED Apr 28 2026) ═══
 // Per-symbol conflict regime classification was anchored on the
 // (rsi_extreme, sma_200) backbone-conflict pair. Step 7b walk-forward
@@ -4359,7 +4408,6 @@ function detectConfluences(){
       const msg = allBull ? def.bull : def.bear;
       confluences.push({
         names, scores, avgScore, msg,
-        ids: def.ids,
         strength: def.strength,
         direction: allBull ? 'bull' : 'bear'
       });
@@ -4380,11 +4428,6 @@ function detectConfluences(){
       });
     }
   });
-
-  // Stash active confluences so the signal-summary narrative
-  // (detectDualSignalCommentary) can read them and surface a caveat when the
-  // headline label disagrees with a major confluence direction.
-  window._activeConfluences = confluences;
 
   const card = document.getElementById('confluence-card');
   const list = document.getElementById('confluence-list');
@@ -4463,17 +4506,6 @@ function detectFallingKnife(){
 
   const isKnife = alertType === 'knife';
   const strengthLabel = strength >= 4 ? 'EXTREME' : strength >= 3 ? 'STRONG' : 'MODERATE';
-
-  // Set the dynamic title and icon for whichever pattern is firing.
-  // "Falling Knife" is a market saying about catching a dropping stock — it
-  // ONLY applies to potential exhaustion bottoms in a downtrend (you'd "get
-  // cut" trying to catch the bottom too early). The mirror pattern in an
-  // uptrend is the well-known "Blow-Off Top." These are two different alerts
-  // and must be labeled separately.
-  const titleEl = document.getElementById('knife-title');
-  const iconEl  = document.getElementById('knife-icon');
-  if(titleEl) titleEl.textContent = isKnife ? 'Falling Knife Alert' : 'Blow-Off Top Alert';
-  if(iconEl)  iconEl.textContent  = isKnife ? '🔪' : '🚀';
 
   // Build description
   desc.innerHTML = isKnife
@@ -4559,29 +4591,6 @@ function detectDualSignalCommentary(){
   const adxVal_c = adxOverlay.adx ?? 0;
   const trendDir = trendBullCount > trendBearCount ? 'bullish' : trendBearCount > trendBullCount ? 'bearish' : null;
 
-  // ── Fix A/B prep: read active confluences + ADX directional state ──
-  // Active confluences are stashed by detectConfluences() in the same render
-  // cycle. We pattern-match the major trend-flow pairs (Dual Trend, Volume
-  // Confirms, Structure + Trend) to flag when one fires opposite the headline.
-  const activeConfluences = window._activeConfluences || [];
-  const isMajorTrendFlowPair = (ids) => !!ids && (
-    (ids.includes('sma_200') && ids.includes('sma_cross')) ||
-    (ids.includes('obv')      && ids.includes('sma_200'))  ||
-    (ids.includes('vol_profile') && ids.includes('sma_200'))
-  );
-  const hasMajorBearConfluence = activeConfluences.some(c => c.direction === 'bear' && isMajorTrendFlowPair(c.ids));
-  const hasMajorBullConfluence = activeConfluences.some(c => c.direction === 'bull' && isMajorTrendFlowPair(c.ids));
-
-  // ADX direction — +DI vs -DI tells us which way price has actually been moving
-  // over the last 14 bars, independent of the longer-term moving-average
-  // structure that drives the sma_200/sma_cross scores.
-  const plusDI  = adxOverlay.plusDI  ?? 0;
-  const minusDI = adxOverlay.minusDI ?? 0;
-  const adxDiDelta = plusDI - minusDI;
-  const adxStronglyDirectional = adxVal_c >= 25 && Math.abs(adxDiDelta) >= 10;
-  const adxBearDominant = adxStronglyDirectional && adxDiDelta < 0;
-  const adxBullDominant = adxStronglyDirectional && adxDiDelta > 0;
-
   const parts = [];
 
   // ── TREND ASSESSMENT ──
@@ -4598,28 +4607,9 @@ function detectDualSignalCommentary(){
       parts.push(`<strong>${tickerDisplay} confirmed downtrend</strong> — price is below its key moving averages. The overall direction is down.`);
     }
   } else if(trendBullCount >= 1 && trendBearCount === 0){
-    if(adxBearDominant){
-      // Fix A.1 — structural lean is bullish (Golden Cross intact / above SMA200)
-      // but ADX shows recent price action is decisively bearish. This is the
-      // RTX-style case the narrative was previously sanguine about.
-      parts.push(`<strong>${tickerDisplay} — structurally bullish but currently selling off</strong> — the Golden Cross / above-SMA200 setup is still in place, but the recent move is decisively bearish (-DI ${minusDI.toFixed(0)} vs +DI ${plusDI.toFixed(0)}, ADX ${adxVal_c.toFixed(0)}). The longer-term structure hasn't broken yet, but the short-term direction is down.`);
-    } else {
-      parts.push(`<strong>${tickerDisplay} leans bullish</strong> — one trend measure is positive, but the trend isn't fully confirmed yet.`);
-    }
+    parts.push(`<strong>${tickerDisplay} leans bullish</strong> — one trend measure is positive, but the trend isn't fully confirmed yet.`);
   } else if(trendBearCount >= 1 && trendBullCount === 0){
-    if(adxBullDominant){
-      // Fix A.1 mirror — structural lean is bearish but ADX shows recent
-      // price action is decisively bullish. Mean-reversion shorts at higher risk.
-      parts.push(`<strong>${tickerDisplay} — structurally bearish but currently rallying</strong> — the Death Cross / below-SMA200 setup is still in place, but the recent move is decisively bullish (+DI ${plusDI.toFixed(0)} vs -DI ${minusDI.toFixed(0)}, ADX ${adxVal_c.toFixed(0)}). The longer-term structure hasn't broken yet, but the short-term direction is up.`);
-    } else {
-      parts.push(`<strong>${tickerDisplay} leans bearish</strong> — one trend measure is negative, but the downtrend isn't fully confirmed yet.`);
-    }
-  } else if(adxBearDominant){
-    // Fix A.1 — structural MAs are mixed but ADX shows a clear bearish move
-    parts.push(`<strong>${tickerDisplay} — current price action is trending down</strong> — the structural moving-average picture is mixed, but the recent move is decisively bearish (-DI ${minusDI.toFixed(0)} vs +DI ${plusDI.toFixed(0)}, ADX ${adxVal_c.toFixed(0)}).`);
-  } else if(adxBullDominant){
-    // Fix A.1 — mirror: structural MAs mixed, ADX shows clear bullish move
-    parts.push(`<strong>${tickerDisplay} — current price action is trending up</strong> — the structural moving-average picture is mixed, but the recent move is decisively bullish (+DI ${plusDI.toFixed(0)} vs -DI ${minusDI.toFixed(0)}, ADX ${adxVal_c.toFixed(0)}).`);
+    parts.push(`<strong>${tickerDisplay} leans bearish</strong> — one trend measure is negative, but the downtrend isn't fully confirmed yet.`);
   } else {
     parts.push(`<strong>${tickerDisplay} — no clear trend</strong> — indicators are mixed or flat${adxVal_c < 20 ? ', and trend strength is very low' : ''}. The market is choppy or transitioning.`);
   }
@@ -4630,21 +4620,9 @@ function detectDualSignalCommentary(){
   } else if(exhBearCount >= 3){
     parts.push(`Momentum indicators suggest the <strong>rally is stretched</strong> — buying enthusiasm may be running out of steam.`);
   } else if(exhBullCount >= 2){
-    // Fix A.2 — OBV contradiction check: if exhaustion is showing oversold-bull
-    // but institutional volume flow is sharply negative, the floor probably isn't here.
-    if(obv <= 30){
-      parts.push(`Mean-reversion signals are stretched, <strong>but institutional volume flow (OBV) is sharply negative</strong> — the floor isn't here yet.`);
-    } else {
-      parts.push(`Some indicators suggest selling pressure may be fading — a potential floor could be forming.`);
-    }
+    parts.push(`Some indicators suggest selling pressure may be fading — a potential floor could be forming.`);
   } else if(exhBearCount >= 2){
-    // Fix A.2 mirror — exhaustion showing overbought-bear but OBV is strongly
-    // positive, so buyers haven't capitulated.
-    if(obv >= 70){
-      parts.push(`Mean-reversion signals look stretched, <strong>but institutional volume flow (OBV) is strongly positive</strong> — buyers haven't given up yet.`);
-    } else {
-      parts.push(`Some indicators suggest the upward push may be getting stretched — the rally could be due for a breather.`);
-    }
+    parts.push(`Some indicators suggest the upward push may be getting stretched — the rally could be due for a breather.`);
   }
 
   // ── KEY TENSION ──
@@ -4667,17 +4645,6 @@ function detectDualSignalCommentary(){
     } else if(volDiverges){
       parts.push(`<strong>Volume tells a different story</strong> — big money may be quietly positioning against the current price direction. Worth watching closely.`);
     }
-  }
-
-  // ── Fix B — major-confluence vs headline caveat ──
-  // When a major bearish confluence (Volume Confirms / Dual Trend / Structure +
-  // Trend, in bear direction) is firing while the composite score is bullish-
-  // leaning (or vice versa), surface the contradiction explicitly so the
-  // narrative doesn't read as sanguine while the alert side is loudly bearish.
-  if(hasMajorBearConfluence && wScore >= 55){
-    parts.push(`<strong>⚠ Note:</strong> a major bearish confluence is active — institutional flow and trend indicators are bearishly aligned. The bullish-leaning composite reflects oversold mean-reversion signals against a deteriorating trend, the classic "value trap" setup. Mean-reversion signals can fire repeatedly during a sustained decline.`);
-  } else if(hasMajorBullConfluence && wScore <= 45){
-    parts.push(`<strong>⚠ Note:</strong> a major bullish confluence is active — institutional flow and trend indicators are bullishly aligned. The bearish-leaning composite reflects overbought signals against an improving trend; mean-reversion shorts in this setup are higher-risk than the score alone suggests.`);
   }
 
   // ── AGREEMENT/DISAGREEMENT ──
@@ -4730,7 +4697,7 @@ function drawGauge(score, dispersion, rawScore){
   const na=Math.PI+(score/100)*Math.PI;
   ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+(r-24)*Math.cos(na),cy+(r-24)*Math.sin(na));ctx.lineWidth=2.5;ctx.strokeStyle=needleColor;ctx.lineCap='round';ctx.stroke();
   ctx.beginPath();ctx.arc(cx,cy,5,0,Math.PI*2);ctx.fillStyle=needleColor;ctx.fill();
-  const v=verdWithConflict(score);
+  const v=verd(score);
   document.getElementById('gscore').textContent=Math.round(score);document.getElementById('gscore').style.color=sCol(score);
   document.getElementById('gverdict').textContent=v.l;document.getElementById('gverdict').style.color=v.col;
   const gconfEl=document.getElementById('gconf'); if(gconfEl) gconfEl.textContent=v.c;
@@ -5296,7 +5263,7 @@ async function runAnalysis(){
 
     // Update status bar with computed scores
     const _sc = Math.round(bScore('high')*BW.high + bScore('med')*BW.med);
-    const _vc = verdWithConflict(_sc).l, _cc = verdWithConflict(_sc).col;
+    const _vc = verd(_sc).l, _cc = sCol(_sc);
     const _cnc = window._lastSymbolName ? ` · ${window._lastSymbolName}` : '';
     const priceC = document.getElementById('price-val').textContent || '';
     const _dcC = window._dailyChangeText ? `<span style="color:${window._dailyChangeColor||''};font-size:13px;font-weight:600;margin-left:4px;">${window._dailyChangeText}</span>` : '';
@@ -5326,7 +5293,7 @@ async function runAnalysis(){
       recalc();
       // Also force status bar
       const sc2 = Math.round(bScore('high')*BW.high + bScore('med')*BW.med);
-      const vc2 = verdWithConflict(sc2).l, cc2 = verdWithConflict(sc2).col;
+      const vc2 = verd(sc2).l, cc2 = sCol(sc2);
       const cn2 = window._lastSymbolName ? ` · ${window._lastSymbolName}` : '';
       const pr2 = document.getElementById('price-val').textContent || '';
       const dc2 = window._dailyChangeText ? `<span style="color:${window._dailyChangeColor||''};font-size:13px;font-weight:600;margin-left:4px;">${window._dailyChangeText}</span>` : '';
@@ -5431,7 +5398,7 @@ All values plain text only — no HTML, no citations. N/A if unknown.`;
       const priceText = document.getElementById('price-val').textContent || '';
       const _cname=window._lastSymbolName?` · ${window._lastSymbolName}`:'';
       const _aiScore = Math.round(bScore('high')*BW.high + bScore('med')*BW.med);
-      const _aiVerdict = verdWithConflict(_aiScore).l, _aiCol = verdWithConflict(_aiScore).col;
+      const _aiVerdict = verd(_aiScore).l, _aiCol = sCol(_aiScore);
       const _dcAi = window._dailyChangeText ? `<span style="color:${window._dailyChangeColor||''};font-size:13px;font-weight:600;margin-left:4px;">${window._dailyChangeText}</span>` : '';
       dot.className='sdot active';st.className='stext active';st.style.animation='';st.style.color='';
       st.innerHTML=`<span class="sticker">${parsed.ticker||ticker}</span>${tierBadgeHtml(parsed.ticker||ticker)}${_cname} — <span style="color:${_aiCol};font-weight:600">${_aiVerdict}</span> · ${priceText}${_dcAi}`;
@@ -5443,7 +5410,7 @@ All values plain text only — no HTML, no citations. N/A if unknown.`;
             const cur=document.getElementById('stext');
             if(cur && cur.innerHTML.includes(ticker)){
               const _s2 = Math.round(bScore('high')*BW.high + bScore('med')*BW.med);
-              const _v2 = verdWithConflict(_s2).l, _c2 = verdWithConflict(_s2).col;
+              const _v2 = verd(_s2).l, _c2 = sCol(_s2);
               const priceNow = document.getElementById('price-val').textContent || '';
               const _dcLate = window._dailyChangeText ? `<span style="color:${window._dailyChangeColor||''};font-size:13px;font-weight:600;margin-left:4px;">${window._dailyChangeText}</span>` : '';
               cur.innerHTML=`<span class="sticker">${ticker}</span>${tierBadgeHtml(ticker)} · ${window._lastSymbolName} — <span style="color:${_c2};font-weight:600">${_v2}</span> · ${priceNow}${_dcLate}`;
@@ -6029,6 +5996,9 @@ async function loadCoastalConditions(){
       badge.textContent = 'unavailable';
     }
 
+    // ── Salmon & bottom fishing seasonal status (no fetch — calendar-driven) ──
+    renderCoastFishing();
+
     coastLoaded = true;
   } catch(err){
     badge.textContent = 'error';
@@ -6107,6 +6077,126 @@ async function fetchWeatherData(){
     shortForecast: now.shortForecast
   };
 }
+
+// ═══ SALMON & BOTTOM FISHING — Central Oregon Coast seasonal status ═══
+// Pure calendar-driven. Each species has month-by-month logic. No fetch.
+// Rules of thumb based on typical Oregon central-coast (Newport/Depoe Bay)
+// ocean fisheries — actual annual seasons/quotas are set by ODFW and PFMC
+// each spring, so these are *guidance only*. Tile text + status pill update
+// based on the current month so the panel always feels current.
+function renderCoastFishing(){
+  const grid = document.getElementById('fishing-grid');
+  const monthBadge = document.getElementById('fishing-month-badge');
+  if(!grid) return;
+
+  const today = new Date();
+  const month = today.getMonth() + 1;  // 1–12
+  const monthName = today.toLocaleString('en-US', { month:'long' });
+  if(monthBadge) monthBadge.textContent = monthName + ' outlook';
+
+  // Species definitions — each returns { status, text, note } for the given month.
+  const species = [
+    {
+      name: '🐟 Salmon (Ocean)',
+      pick: m => {
+        if(m === 3)            return { status:'soon',   text:'Spring Chinook ocean season opens late March (PFMC sets exact dates each spring).',                       note:'Tide-influenced bites near Yaquina jetty.' };
+        if(m >= 4 && m <= 5)   return { status:'open',   text:'Spring Chinook open. Trolling herring or anchovy off Newport. Coho still saltwater-bound.',                note:'Watch ODFW for in-season quota updates.' };
+        if(m === 6)            return { status:'open',   text:'Chinook bite peaks; coho selective fishery often opens late June.',                                       note:'Check coho mark-rate (hatchery only).' };
+        if(m >= 7 && m <= 8)   return { status:'open',   text:'Peak summer salmon. Chinook + selective coho. Fish hold near 100–200 ft offshore.',                       note:'Fastest-burning rec quota of the year.' };
+        if(m === 9)            return { status:'open',   text:'Coho often closes mid-September; Chinook continues. Fall fish moving toward rivers.',                     note:'Tides matter — fish near tide changes.' };
+        if(m === 10)           return { status:'closed', text:'Ocean salmon typically closed by mid-October. River Chinook still active inland.',                        note:'Moves to lower Columbia, Tillamook bays.' };
+        return                     { status:'closed', text:'Ocean salmon season closed. Returns in spring.',                                                              note:'Inland steelhead is the winter fishery.' };
+      }
+    },
+    {
+      name: '🐠 Bottomfish (Rockfish + Lingcod)',
+      pick: m => {
+        if(m >= 1 && m <= 3)   return { status:'open',   text:'Open inside 30-fathom line + long-leader gear offshore. Black + blue rockfish reliable.',                  note:'Daily limit ~5 marine fish, 2 lingcod.' };
+        if(m === 4)            return { status:'open',   text:'Inside 30-fathom open year-round; deeper depths reopen after Apr 1 in many recent years.',                 note:'Long-leader allowed for offshore yellowtail.' };
+        if(m >= 5 && m <= 9)   return { status:'open',   text:'Peak season. All-depth bottomfish open many years May–Sep. Lingcod aggressive — try jigs near reefs.',     note:'Watch for canary/yelloweye sub-limits.' };
+        if(m === 10)           return { status:'open',   text:'Final weeks of all-depth season for many years. Inside-30-fm always open.',                                note:'Fewer good-weather days — pick windows.' };
+        return                     { status:'open',   text:'Restricted to inside 30-fathom line. Long-leader gear for offshore.',                                          note:'Winter weather is the limiting factor.' };
+      }
+    },
+    {
+      name: '🐟 Halibut',
+      pick: m => {
+        if(m >= 1 && m <= 3)   return { status:'closed', text:'Closed. Pacific halibut season set annually by IPHC; opens in spring.',                                    note:'Final dates posted by ODFW in March.' };
+        if(m === 4)            return { status:'soon',   text:'All-Depth season typically opens early-to-mid May, just a few days. Plan ahead.',                          note:'Charter boats book up fast for opener.' };
+        if(m === 5)            return { status:'open',   text:'All-Depth halibut opener — 3–5 days only. Nearshore (inside 40 fathoms) opens too.',                       note:'Quota burns quick — go opening day.' };
+        if(m >= 6 && m <= 7)   return { status:'open',   text:'Nearshore + Spring All-Depth (back-up days) typically active. Summer All-Depth July dates.',               note:'Drift large herring on flat-line gear.' };
+        if(m >= 8 && m <= 10)  return { status:'open',   text:'Late All-Depth season — often Friday/Saturday only. Final closures in October.',                           note:'Confirm specific dates with ODFW each week.' };
+        return                     { status:'closed', text:'Closed November–April.',                                                                                       note:'Returns May.' };
+      }
+    },
+    {
+      name: '🦀 Dungeness Crab',
+      pick: m => {
+        if(m === 10 || m === 11) return { status:'check', text:'Recreational year-round in ocean + bays, but Oct–Nov sometimes biotoxin-closed.',                          note:'Call ODFW shellfish hotline 1-800-448-2474.' };
+        return                       { status:'open',   text:'Year-round recreational. Limit 12 male crab ≥ 5¾". Yaquina Bay productive on outgoing tide.',               note:'Razor clam beaches often closed for domoic acid.' };
+      }
+    },
+  ];
+
+  grid.innerHTML = species.map(s => {
+    const r = s.pick(month);
+    const statusLabel = { open:'Open', soon:'Opens soon', closed:'Closed', check:'Check ODFW' }[r.status];
+    return `
+      <div class="fish-tile">
+        <div class="fish-tile-row">
+          <span class="fish-tile-name">${s.name}</span>
+          <span class="fish-status fish-status-${r.status}">${statusLabel}</span>
+        </div>
+        <div class="fish-tile-text">${r.text}</div>
+        <div class="fish-tile-note">${r.note}</div>
+      </div>`;
+  }).join('');
+}
+
+// ═══ BONNEVILLE DAM FISH COUNTS ═══
+let fishLoaded = false;
+
+function toggleFishPanel(){
+  const body = document.getElementById('fish-body');
+  const chev = document.getElementById('fish-chevron');
+  if(!body) return;
+  body.classList.toggle('open');
+  chev.classList.toggle('open');
+  if(body.classList.contains('open') && !fishLoaded) loadBonnevilleFish();
+}
+
+function loadBonnevilleFish(species){
+  const code = species || 'fc';  // default Chinook
+  const img  = document.getElementById('fish-chart-img');
+  const meta = document.getElementById('fish-meta');
+  const badge = document.getElementById('fish-badge');
+  if(!img) return;
+
+  // Cache-bust by date so the browser fetches a fresh PNG once per day.
+  const today = new Date();
+  const ymd = `${today.getFullYear()}${String(today.getMonth()+1).padStart(2,'0')}${String(today.getDate()).padStart(2,'0')}`;
+  const speciesNames = { fc:'Adult Chinook', fcj:'Jack Chinook', fs:'Adult Steelhead', fb:'Adult Sockeye', fk:'Adult Coho' };
+
+  img.alt = `${speciesNames[code] || 'Fish'} passage at Columbia Basin dams (Bonneville, McNary, Ice Harbor, Lower Granite, Priest Rapids, Wells)`;
+  img.src = `https://www.cbr.washington.edu/dart/cs/graphics/adultpass_all_${code}.png?d=${ymd}`;
+
+  if(meta) meta.textContent = `${speciesNames[code] || 'Fish'} · all 6 mainstem dams · current year vs. 10-year average · Source: cbr.washington.edu/dart`;
+  if(badge) badge.textContent = `${today.toLocaleString('en-US',{month:'short',day:'numeric'})}`;
+
+  fishLoaded = true;
+
+  // Mark the active tab
+  document.querySelectorAll('.fish-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.species === code);
+  });
+}
+
+// Wire up tab clicks (delegated)
+document.addEventListener('click', (e) => {
+  const tab = e.target.closest('.fish-tab');
+  if(!tab) return;
+  loadBonnevilleFish(tab.dataset.species);
+});
 
 function renderTideChart(curve, hilos){
   const canvas = document.getElementById('coastTideChart');
@@ -6399,7 +6489,7 @@ Together, they help you avoid the classic "great company, terrible entry" trap.
 <h3>Operational Framing</h3>
 <p>The operational framing remains: a trend-quality detector for cyclical-growth and safe-haven instruments, whose 5-year edge is concentrated in roughly 20 high-confidence names, with weaker but real edge on a second tier of 10 high-conviction near-misses and a third tier of 5 lower-confidence tracked names, no measurable edge on broader watchlists or defensive sectors, and a recurrent failure mode at leadership transitions that admits at least two structural variants. The system is useful within its specialty. The right way to operate it is now what's actually operating: tier-aware alert framing on a curated universe with a regime-aware design problem still open.</p>
 
-<p class="gd-disclaimer">Signal Catcher is built for fun &amp; education — not financial advice. 🎣<br>Version 15.5 · April 2026</p>
+<p class="gd-disclaimer">Signal Catcher is built for fun &amp; education — not financial advice. 🎣<br>Version 15.7 · April 2026</p>
 </div>
 </div>
 
