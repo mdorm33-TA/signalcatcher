@@ -318,7 +318,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:18
 .confl-strength.strong{background:#0a8a4e22;color:var(--bull);}
 .confl-strength.moderate{background:#4dd9a022;color:#22b87a;}
 
-/* ── FALLING KNIFE ALERT ── */
+/* ── EXHAUSTION ALERT (Falling Knife / Blow-Off Top) ── */
 .knife-card{background:linear-gradient(145deg,#1a1508 0%,#12100a 100%);border:2px solid #f59e0b;border-radius:12px;padding:16px;display:none;box-shadow:0 2px 12px rgba(245,158,11,.25),0 0 20px rgba(245,158,11,.1);position:relative;overflow:hidden;}
 .knife-card::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:conic-gradient(from 0deg,transparent,rgba(245,158,11,.06),transparent,rgba(245,158,11,.06),transparent);animation:knifeGlow 6s linear infinite;}
 @keyframes knifeGlow{to{transform:rotate(360deg);}}
@@ -909,11 +909,11 @@ body.dark-mode .conflict-item.backbone{background:rgba(255,160,80,.06);}
       <textarea class="dnta" id="div-note" placeholder="e.g. AMLP: ~8.2% yield adds total return floor. Div-adj SMA 200 ~$44 vs price-only $47."></textarea>
     </div>
 
-    <!-- FALLING KNIFE ALERT -->
+    <!-- EXHAUSTION ALERT (Falling Knife / Blow-Off Top) -->
     <div class="knife-card" id="knife-card">
       <div class="knife-hdr">
-        <span class="knife-icon">🔪</span>
-        <span class="knife-title">Falling Knife Alert</span>
+        <span class="knife-icon" id="knife-icon">🔪</span>
+        <span class="knife-title" id="knife-title">Exhaustion Alert</span>
       </div>
       <div class="knife-body">
         <div class="knife-desc" id="knife-desc"></div>
@@ -4463,6 +4463,17 @@ function detectFallingKnife(){
 
   const isKnife = alertType === 'knife';
   const strengthLabel = strength >= 4 ? 'EXTREME' : strength >= 3 ? 'STRONG' : 'MODERATE';
+
+  // Set the dynamic title and icon for whichever pattern is firing.
+  // "Falling Knife" is a market saying about catching a dropping stock — it
+  // ONLY applies to potential exhaustion bottoms in a downtrend (you'd "get
+  // cut" trying to catch the bottom too early). The mirror pattern in an
+  // uptrend is the well-known "Blow-Off Top." These are two different alerts
+  // and must be labeled separately.
+  const titleEl = document.getElementById('knife-title');
+  const iconEl  = document.getElementById('knife-icon');
+  if(titleEl) titleEl.textContent = isKnife ? 'Falling Knife Alert' : 'Blow-Off Top Alert';
+  if(iconEl)  iconEl.textContent  = isKnife ? '🔪' : '🚀';
 
   // Build description
   desc.innerHTML = isKnife
