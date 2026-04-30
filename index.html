@@ -4070,7 +4070,20 @@ function buildModalChart(indId, container){
       plugins: { legend: { display: false }, annotation: hasAnnotation ? { annotations } : {} },
       scales: {
         x: { display: true, grid: { color: gridColor }, ticks: { color: textColor, font: { size: 9 }, maxTicksLimit: 6 } },
-        y: { display: true, grid: { color: gridColor }, ticks: { color: textColor, font: { size: 9 }, maxTicksLimit: 5 } }
+        y: { display: true, position: 'left', grid: { color: gridColor }, ticks: { color: textColor, font: { size: 9 }, maxTicksLimit: 5 } },
+        // Mirror of y on the right side — no gridlines (avoids double-drawing),
+        // synced to y's computed bounds via afterDataLimits so both axes always match.
+        y1: {
+          display: true, position: 'right',
+          grid: { drawOnChartArea: false },
+          ticks: { color: textColor, font: { size: 9 }, maxTicksLimit: 5 },
+          afterDataLimits(axis) {
+            const y = axis.chart.scales.y;
+            if (y && typeof y.min === 'number' && typeof y.max === 'number') {
+              axis.min = y.min; axis.max = y.max;
+            }
+          }
+        }
       },
       interaction: { intersect: false, mode: 'index' },
     }
