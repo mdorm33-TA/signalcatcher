@@ -960,11 +960,11 @@ body.dark-mode .fish-links a{color:#7ec898;}
       <textarea class="dnta" id="div-note" placeholder="e.g. AMLP: ~8.2% yield adds total return floor. Div-adj SMA 200 ~$44 vs price-only $47."></textarea>
     </div>
 
-    <!-- FALLING KNIFE ALERT -->
+    <!-- EXHAUSTION ALERT (Falling Knife / Blow-Off Top) -->
     <div class="knife-card" id="knife-card">
       <div class="knife-hdr">
-        <span class="knife-icon">🔪</span>
-        <span class="knife-title">Falling Knife Alert</span>
+        <span class="knife-icon" id="knife-icon">🔪</span>
+        <span class="knife-title" id="knife-title">Exhaustion Alert</span>
       </div>
       <div class="knife-body">
         <div class="knife-desc" id="knife-desc"></div>
@@ -4506,6 +4506,17 @@ function detectFallingKnife(){
 
   const isKnife = alertType === 'knife';
   const strengthLabel = strength >= 4 ? 'EXTREME' : strength >= 3 ? 'STRONG' : 'MODERATE';
+
+  // Set the dynamic title and icon for whichever pattern is firing.
+  // "Falling Knife" is a market saying about catching a dropping stock — it
+  // ONLY applies to potential exhaustion bottoms in a downtrend (you'd "get
+  // cut" trying to catch the bottom too early). The mirror pattern in an
+  // uptrend is the well-known "Blow-Off Top." These are two different alerts
+  // and must be labeled separately.
+  const titleEl = document.getElementById('knife-title');
+  const iconEl  = document.getElementById('knife-icon');
+  if(titleEl) titleEl.textContent = isKnife ? 'Falling Knife Alert' : 'Blow-Off Top Alert';
+  if(iconEl)  iconEl.textContent  = isKnife ? '🔪' : '🚀';
 
   // Build description
   desc.innerHTML = isKnife
