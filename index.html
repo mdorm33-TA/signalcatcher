@@ -1102,7 +1102,11 @@ body.dark-mode .fish-links a{color:#7ec898;}
           <strong style="color:#a78bfa">MED confidence (40%)</strong> — Money Flow Index (MFI), Bollinger Bands, DeMark Sequential<br>
           <div class="si-section">
             <h4>ADX Trend Overlay</h4>
-            ADX (Average Directional Index) measures trend strength and adjusts the weights of trend-following indicators (SMA 200, MA Cross). In strong trends these indicators get boosted; in choppy markets they get dampened.
+            ADX (Average Directional Index) measures trend strength and adjusts the weights of the two trend-direction indicators only — <strong>SMA 200</strong> and <strong>MA Cross 50/200</strong>. In strong trends (ADX ≥25) these two get boosted; in choppy markets (ADX &lt;20) they get dampened. Other indicators are unaffected.
+          </div>
+          <div class="si-section">
+            <h4>Timeframe Preset</h4>
+            The Timeframe selector above the gauge rebalances both bucket weights (HIGH/MED split) and individual indicator weights to match your horizon — Swing (1–2 wk) emphasizes RSI/MFI/Bollinger/DeMark; Long-Term (1 yr+) emphasizes SMA 200 (1.8×) and dampens short-cycle signals. Position (1–3 mo) is the default.
           </div>
           <div class="si-section">
             <h4>Confluence &amp; Conflicts</h4>
@@ -6395,8 +6399,8 @@ document.addEventListener('DOMContentLoaded',()=>{
 <h2>📖 Signal Catcher Guide</h2>
 
 <h3>What Is Signal Catcher?</h3>
-<p>Signal Catcher takes daily price and trading volume data from Yahoo's free dataset — Open, High, Low, Close, Volume (OHLCV) — and computes 9 widely followed technical trading indicators. These technical indicators are normally viewed on a chart with price, but Signal Catcher converts chart analysis into rule-based scoring.</p>
-<p>For each stock, nine indicators evaluate price and volume data. Each applies a fixed condition (e.g., price vs. 200-day moving average, RSI above or below thresholds) and outputs a 0–100 score.</p>
+<p>Signal Catcher takes daily price and trading volume data from Yahoo's free dataset — Open, High, Low, Close, Volume (OHLCV) — and computes 8 widely followed technical trading indicators. These technical indicators are normally viewed on a chart with price, but Signal Catcher converts chart analysis into rule-based scoring.</p>
+<p>For each stock, eight indicators evaluate price and volume data. Each applies a fixed condition (e.g., price vs. 200-day moving average, RSI above or below thresholds) and outputs a 0–100 score.</p>
 <p>Scores are combined using a weighted formula. Structural indicators (trend, volume) carry more weight than timing signals. Agreement across indicators increases the composite score. Conflicts are explicitly flagged.</p>
 <p>The result is a single 0–100 score reflecting the degree and strength of alignment in the data. Identical inputs produce identical outputs. No interpretation required.</p>
 <p>There is no AI speculation inside the scoring engine. No fundamental analysis. No subjective chart drawings or analyst opinions. Just clean, deterministic mathematics — the same input data will always produce the exact same score, no matter who computes it or when.</p>
@@ -6430,16 +6434,17 @@ Together, they help you avoid the classic "great company, terrible entry" trap.
 <p><strong>Bollinger Bands</strong> — Plots bands at 2 standard deviations around a 20-day SMA. Scored as contrarian: price at the lower band suggests oversold (bullish reversal); price at the upper band suggests overbought (bearish reversal). A band squeeze (very narrow bands) signals a breakout is building.</p>
 
 <h4>Regime Overlay (Not Scored)</h4>
-<p><strong>ADX</strong> — The Average Directional Index doesn't produce a score. Instead, it tells the system <em>how much to trust</em> the trend-following indicators. In strong trends (ADX above 25), trend signals get boosted. In choppy, range-bound markets (ADX below 20), they get dampened. It's the "trust gate" for the entire trend family.</p>
+<p><strong>ADX</strong> — The Average Directional Index doesn't produce a score. Instead, it tells the system <em>how much to trust</em> the two trend-direction indicators specifically: <strong>SMA 200</strong> and <strong>MA Cross 50/200</strong>. In strong trends (ADX above 25), those two signals get boosted. In choppy, range-bound markets (ADX below 20), they get dampened. Other indicators — including MFI, OBV, and the contrarian set — are not affected by ADX.</p>
 
 <h3>Two Families of Indicators</h3>
-<p>These 8 indicators fall into two philosophical families. Every market speaks in two voices at once:</p>
+<p>Six of the eight scored indicators fall into two philosophical families. Every market speaks in two voices at once:</p>
 <table>
 <tr><th>Family</th><th>What It Measures</th><th>Indicators</th></tr>
 <tr><td><strong>Trend-Following</strong></td><td>Persistence &amp; strength of the current move</td><td>SMA 200, MA Cross 50/200</td></tr>
 <tr><td><strong>Contrarian</strong></td><td>When a move has gone too far (exhaustion)</td><td>RSI Extreme, DeMark Sequential, Bollinger Bands, MFI</td></tr>
 </table>
-<p><strong>When both families agree →</strong> highest-conviction setup. The trend is strong AND it's not exhausted.<br>
+<p>The remaining two — <strong>Volume Profile</strong> and <strong>OBV</strong> — sit outside this dichotomy. They're <em>structural anchors</em> that describe where institutional money has been flowing, independent of trend direction or exhaustion. Their disagreement with either family is often the earliest warning that a regime is shifting.</p>
+<p><strong>When trend and contrarian agree →</strong> highest-conviction setup. The trend is strong AND it's not exhausted.<br>
 <strong>When they clash →</strong> the system flags the exact tension — those moments often mark transitions where the biggest opportunities and risks hide.</p>
 
 <h3 style="color:#f59e0b;">Why Not Elliott Wave, Fibonacci, or Trend Lines?</h3>
@@ -6462,7 +6467,19 @@ Together, they help you avoid the classic "great company, terrible entry" trap.
 <tr><td><strong>HIGH</strong></td><td>60%</td><td>Volume Profile, SMA 200, MA Cross, RSI Extreme, OBV (On-Balance Volume)</td><td>Structural, institutional-grade anchors</td></tr>
 <tr><td><strong>MED</strong></td><td>40%</td><td>MFI, Bollinger Bands, DeMark</td><td>Interpretive timing tools</td></tr>
 </table>
-<p>Each indicator has an <strong>intra-weight</strong> reflecting its authority. SMA 200 carries the highest (1.4×) — the most widely watched institutional level. RSI Extreme is second (1.2×) — the strongest contrarian signal.</p>
+<p>Each indicator has an <strong>intra-weight</strong> reflecting its authority. The defaults (Position timeframe) are:</p>
+<table>
+<tr><th>Indicator</th><th>Bucket</th><th>iW</th><th>Why</th></tr>
+<tr><td><strong>SMA 200</strong></td><td>HIGH</td><td>1.4×</td><td>Most widely watched institutional level</td></tr>
+<tr><td><strong>RSI Extreme</strong></td><td>HIGH</td><td>1.2×</td><td>Strongest contrarian signal</td></tr>
+<tr><td><strong>Volume Profile</strong></td><td>HIGH</td><td>1.1×</td><td>Where institutional volume traded</td></tr>
+<tr><td><strong>MA Cross 50/200</strong></td><td>HIGH</td><td>1.1×</td><td>Structural trend shifts</td></tr>
+<tr><td><strong>MFI</strong></td><td>MED</td><td>1.1×</td><td>Volume-weighted oscillator</td></tr>
+<tr><td><strong>OBV</strong></td><td>HIGH</td><td>1.0×</td><td>Cumulative volume flow</td></tr>
+<tr><td><strong>Bollinger Bands</strong></td><td>MED</td><td>0.9×</td><td>Statistical price extremes</td></tr>
+<tr><td><strong>DeMark Sequential</strong></td><td>MED</td><td>0.9×</td><td>Sequential exhaustion count</td></tr>
+</table>
+<p style="font-size:12px;color:var(--text3);margin-top:-4px;">These weights shift when you change the Timeframe preset (see below).</p>
 
 <h4>3. ADX Regime Overlay</h4>
 <p>ADX doesn't contribute a score — it's a <strong>market regime switch</strong> that adjusts trend-follower weights:</p>
@@ -6500,7 +6517,26 @@ Together, they help you avoid the classic "great company, terrible entry" trap.
 <tr><td>MFI vs. OBV</td><td>Short-term volume impulse vs. long-term volume trend</td></tr>
 </table>
 
-<h4>5. Specialized Alerts</h4>
+<p><strong>Conflict Regimes.</strong> Three of the six conflict pairs are <em>backbone</em> tensions (marked 🔑): SMA 200 vs RSI, DeMark vs SMA 200, and OBV vs SMA 200. The system tallies how many conflicts are active and what kind, producing one of three regimes that affect the final score:</p>
+<table>
+<tr><th>Regime</th><th>Trigger</th><th>Effect on Score</th></tr>
+<tr><td><strong>Clear</strong></td><td>Few or no conflicts</td><td>Normal scoring</td></tr>
+<tr><td><strong>Elevated</strong></td><td>Multiple conflicts, <em>or</em> one 🔑 backbone conflict</td><td>Conviction reduced; warning shown</td></tr>
+<tr><td><strong>Transition</strong></td><td>Many conflicts, <em>or</em> two+ 🔑 backbone conflicts</td><td>Score capped toward neutral (max 65 bull / min 35 bear). The conflict pattern itself is the primary signal.</td></tr>
+</table>
+
+<h4>5. Timeframe Presets</h4>
+<p>The Timeframe selector above the gauge re-balances both the bucket weights and the individual indicator weights to match your trade horizon. Same eight indicators, different emphasis:</p>
+<table>
+<tr><th>Preset</th><th>HIGH/MED Split</th><th>Emphasis</th></tr>
+<tr><td><strong>Swing (1–2 wk)</strong></td><td>55% / 45%</td><td>RSI, MFI, Bollinger, DeMark dominate; SMA 200 dampened</td></tr>
+<tr><td><strong>Position (1–3 mo)</strong> <em>default</em></td><td>60% / 40%</td><td>Balanced — the system's tuned baseline</td></tr>
+<tr><td><strong>Intermediate (3–12 mo)</strong></td><td>65% / 35%</td><td>Trend structure &amp; volume profile lead</td></tr>
+<tr><td><strong>Long-Term (1 yr+)</strong></td><td>65% / 35%</td><td>SMA 200 dominates (1.8×); short-cycle signals minimized</td></tr>
+</table>
+<p style="font-size:12px;color:var(--text3);margin-top:-4px;">Switching timeframes recomputes the composite score from cached indicator values — no re-fetch required.</p>
+
+<h4>6. Specialized Alerts</h4>
 <p><strong>Falling Knife</strong> — three simultaneous conditions (RSI oversold + DeMark buy + confirmed downtrend) detect potential capitulation bottoms. Bollinger oversold, ADX trending, and OBV accumulation each strengthen the signal as bonus confirmations.<br>
 <strong>Blow-Off Top</strong> — the mirror image: RSI overbought + DeMark sell + confirmed uptrend. Bonus strength from Bollinger overbought, ADX trending, and OBV distribution.</p>
 
@@ -6513,7 +6549,7 @@ Together, they help you avoid the classic "great company, terrible entry" trap.
 <h3>Operational Framing</h3>
 <p>The operational framing remains: a trend-quality detector for cyclical-growth and safe-haven instruments, whose 5-year edge is concentrated in roughly 20 high-confidence names, with weaker but real edge on a second tier of 10 high-conviction near-misses and a third tier of 5 lower-confidence tracked names, no measurable edge on broader watchlists or defensive sectors, and a recurrent failure mode at leadership transitions that admits at least two structural variants. The system is useful within its specialty. The right way to operate it is now what's actually operating: tier-aware alert framing on a curated universe with a regime-aware design problem still open.</p>
 
-<p class="gd-disclaimer">Signal Catcher is built for fun &amp; education — not financial advice. 🎣<br>Version 15.7 · April 2026</p>
+<p class="gd-disclaimer">Signal Catcher is built for fun &amp; education — not financial advice. 🎣<br>Version 15.7 · April 30 2026</p>
 </div>
 </div>
 
