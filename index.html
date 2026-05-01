@@ -4043,18 +4043,30 @@ function buildModalChart(indId, container){
     datasets[0] = { label: 'Close', data: tailCloses, borderColor: sCol(vals[indId]??50), borderWidth: 1.5, pointRadius: 0, tension: 0.3, fill: false };
 
     const dm = CI.demark;
-    // Mark the setup completion or current count position — only if within window
-    if(dm.setupCount > 0 && dm.barsSinceSetup != null && dm.barsSinceSetup < tail.length){
-      const setupIdx = tail.length - 1 - (dm.barsSinceSetup || 0);
-      const countLabel = dm.setupCount >= 9 ? `${dm.lastSetup?.toUpperCase()||'?'} 9 ✓` : `${(dm.lastSetup||'?').toUpperCase()} ${dm.setupCount}/9`;
-      if(hasAnnotation) annotations.setup = { type: 'point', xValue: setupIdx, yValue: tailCloses[setupIdx], backgroundColor: dm.lastSetup === 'buy' ? '#00d97e' : '#ff4560', radius: 6, borderColor: '#fff', borderWidth: 1.5 };
-      if(hasAnnotation) annotations.setupLbl = { type: 'label', xValue: setupIdx, yValue: tailCloses[setupIdx], content: countLabel, font: { size: 9, weight: 'bold' }, color: dm.lastSetup === 'buy' ? '#00d97e' : '#ff4560', yAdjust: -16 };
+    // Mark the most recent COMPLETED Setup 9 if it's within the visible window.
+    // Field names must match computeDeMark() return shape: { lastSetup, barsSince, perfect, ... }.
+    // (An earlier version of this code used dm.setupCount / dm.barsSinceSetup — those fields don't exist.)
+    if(dm.lastSetup && dm.barsSince !== null && dm.barsSince < tail.length){
+      const setupIdx = tail.length - 1 - dm.barsSince;
+      const countLabel = `${dm.lastSetup.toUpperCase()} 9${dm.perfect ? ' ★' : ' ✓'}`;
+      const sCol = dm.lastSetup === 'buy' ? '#00d97e' : '#ff4560';
+      if(hasAnnotation) annotations.setup    = { type: 'point', xValue: setupIdx, yValue: tailCloses[setupIdx], backgroundColor: sCol, radius: 6, borderColor: '#fff', borderWidth: 1.5 };
+      if(hasAnnotation) annotations.setupLbl = { type: 'label', xValue: setupIdx, yValue: tailCloses[setupIdx], content: countLabel, font: { size: 10, weight: 'bold' }, color: sCol, yAdjust: -16, backgroundColor: 'rgba(0,0,0,0.55)', padding: 3, borderRadius: 3 };
     }
-    // Also mark countdown 13 if within window
+    // No completed setup yet, but a setup is actively counting (≥5 of 9). Mark the current bar.
+    else if(!dm.lastSetup && (dm.activeBuy >= 5 || dm.activeSell >= 5) && hasAnnotation){
+      const dir = dm.activeBuy > dm.activeSell ? 'buy' : 'sell';
+      const cnt = Math.max(dm.activeBuy, dm.activeSell);
+      const idx = tail.length - 1;
+      const sCol = dir === 'buy' ? '#00d97e' : '#ff4560';
+      annotations.setup    = { type: 'point', xValue: idx, yValue: tailCloses[idx], backgroundColor: sCol, radius: 5, borderColor: '#fff', borderWidth: 1.5 };
+      annotations.setupLbl = { type: 'label', xValue: idx, yValue: tailCloses[idx], content: `${dir.toUpperCase()} ${cnt}/9`, font: { size: 10, weight: 'bold' }, color: sCol, yAdjust: -16, backgroundColor: 'rgba(0,0,0,0.55)', padding: 3, borderRadius: 3 };
+    }
+    // Also mark countdown 13 if within window (this block was already correct; field names match computeDeMark)
     if(dm.lastCd && dm.barsSinceCd != null && dm.barsSinceCd < tail.length && hasAnnotation){
       const cdIdx = tail.length - 1 - dm.barsSinceCd;
-      annotations.cd13 = { type: 'point', xValue: cdIdx, yValue: tailCloses[cdIdx], backgroundColor: '#f0b429', radius: 7, borderColor: '#fff', borderWidth: 2 };
-      annotations.cd13Lbl = { type: 'label', xValue: cdIdx, yValue: tailCloses[cdIdx], content: `CD13 ${dm.lastCd.toUpperCase()}`, font: { size: 9, weight: 'bold' }, color: '#f0b429', yAdjust: -18 };
+      annotations.cd13    = { type: 'point', xValue: cdIdx, yValue: tailCloses[cdIdx], backgroundColor: '#f0b429', radius: 7, borderColor: '#fff', borderWidth: 2 };
+      annotations.cd13Lbl = { type: 'label', xValue: cdIdx, yValue: tailCloses[cdIdx], content: `CD13 ${dm.lastCd.toUpperCase()}`, font: { size: 10, weight: 'bold' }, color: '#f0b429', yAdjust: -18, backgroundColor: 'rgba(0,0,0,0.55)', padding: 3, borderRadius: 3 };
     }
   }
 
