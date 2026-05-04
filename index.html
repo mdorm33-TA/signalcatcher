@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Signal Catcher v15.8 — Dashboard</title>
+<title>Signal Catcher v15.9 — Dashboard</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -891,7 +891,7 @@ body.dark-mode .fish-links a{color:#7ec898;}
   <div class="sdot active" id="sdot"></div>
   <span class="stext active" id="stext"></span>
   <span class="sstream" id="sstream"></span>
-  <span class="v-badge" title="Build version — if this doesn't match your expected version, do a hard refresh to clear cache">v15.8</span>
+  <span class="v-badge" title="Build version — if this doesn't match your expected version, do a hard refresh to clear cache">v15.9</span>
 </div>
 
 <!-- VERDICT SUMMARY BAR -->
@@ -1303,7 +1303,7 @@ body.dark-mode .fish-links a{color:#7ec898;}
     <div class="fish-body" id="fish-body">
       <div class="fish-content">
         <div class="fish-intro">
-          Adult salmon and steelhead passage at Bonneville Dam, the first dam upstream from the mouth of the Columbia River. Charts show this year's daily counts alongside last year and the 10-year average — handy for tracking when the runs are early, late, or strong vs. recent history. Updated daily by Columbia Basin Research (UW) from US Army Corps of Engineers data.
+          Adult salmon and steelhead passage at Bonneville Dam, the first dam upstream from the mouth of the Columbia River. Charts show this year's daily counts alongside last year's full-year for direct comparison — handy for tracking when the runs are early, late, or strong vs. last year. Updated daily by Columbia Basin Research (UW) from US Army Corps of Engineers data.
         </div>
         <div class="fish-tabs" id="fish-tabs">
           <button class="fish-tab active" data-species="fc">Chinook</button>
@@ -6219,34 +6219,46 @@ function loadBonnevilleFish(species){
   const ymd = `${currYear}${String(today.getMonth()+1).padStart(2,'0')}${String(today.getDate()).padStart(2,'0')}`;
   const speciesNames = { fc:'Adult Chinook', fcj:'Jack Chinook', fs:'Adult Steelhead', fb:'Adult Sockeye', fk:'Adult Coho' };
 
-  // DART multi-graph endpoint — Bonneville only, current year + last year + 10-year average overlay.
-  // URL pattern reverse-engineered from DART's adult_bon Historical Run Timing table:
-  //   mg.php?ftype[]=<species>&loc[]=BON&year[]=<curr>&year[]=<last>&avgyear=10&...
-  // Using URL-encoded brackets (%5B%5D) for safety. outputFormat=plotImage returns a PNG.
-  const params = [
-    'mgconfig=adult',
-    `ftype%5B%5D=${code}`,
-    'loc%5B%5D=BON',
-    `year%5B%5D=${currYear}`,
-    `year%5B%5D=${lastYear}`,
-    'avgyear=10',
-    'startdate=1%2F1',
-    'enddate=12%2F31',
-    'sumAttribute=none',
-    'consolidate=1',
-    'zeros=1',
-    'grid=1',
-    'size=large',
-    'y1min=0',
-    'outputFormat=plotImage',
-    `d=${ymd}`,
-  ].join('&');
-  const url = `https://www.cbr.washington.edu/dart/cs/php/rpt/mg.php?${params}`;
+  // PRIMARY: DART mg.php multi-graph — Bonneville only, current year + last year overlay.
+  // URL params mirror exactly what DART's own historical run timing table uses,
+  // just with TWO year[] entries instead of one to overlay both years on one chart.
+  // (10-year average overlay omitted — its data[] code isn't documented; can be added later.)
+  // Brackets unencoded — browsers auto-encode for img src.
+  const urlPrimary = 'https://www.cbr.washington.edu/dart/cs/php/rpt/mg.php?'
+    + 'internal=1'
+    + `&ftype[]=${code}`
+    + '&mgconfig=adult'
+    + '&loc[]=BON'
+    + '&startdate=1/1&enddate=12/31'
+    + '&data[]=&data[]='
+    + '&avgyear=0'
+    + '&sumAttribute=none&consolidate=1&zeros=1&grid=1'
+    + '&size=medium'
+    + '&y1min=0&y1max=&y2min=&y2max=&y3min=&y3max=&y4min=&y4max='
+    + '&outputFormat=plotImage'
+    + `&year[]=${currYear}&year[]=${lastYear}`
+    + `&d=${ymd}`;
 
-  img.alt = `Bonneville Dam ${speciesNames[code] || 'Fish'} passage — ${currYear} vs. ${lastYear} vs. 10-year average`;
-  img.src = url;
+  // FALLBACK: DART's static all-dams chart (current year + 10-year average, no last year).
+  // We know this URL works because we used it in v15.6 and saw it render. If mg.php fails
+  // for any reason (params shift, server error, etc.), we degrade to this.
+  const urlFallback = `https://www.cbr.washington.edu/dart/cs/graphics/adultpass_all_${code}.png?d=${ymd}`;
 
-  if(meta) meta.textContent = `Bonneville Dam · ${speciesNames[code] || 'Fish'} · ${currYear} (this year) vs. ${lastYear} (last year) vs. 10-year average · Source: cbr.washington.edu/dart`;
+  // One-shot error handler: if primary fails, swap to fallback. Reset before reassigning
+  // so re-entry (tab clicks) doesn't carry stale handlers.
+  img.onerror = () => {
+    if(img.src !== urlFallback){
+      console.warn('[fish] mg.php failed, falling back to static all-dams chart');
+      img.onerror = null;
+      img.src = urlFallback;
+      if(meta) meta.textContent = `${speciesNames[code] || 'Fish'} · all 6 mainstem dams · ${currYear} (this year) vs. 10-year average · Source: cbr.washington.edu/dart (year-over-year view temporarily unavailable)`;
+    }
+  };
+
+  img.alt = `Bonneville Dam ${speciesNames[code] || 'Fish'} passage — ${currYear} vs. ${lastYear}`;
+  img.src = urlPrimary;
+
+  if(meta) meta.textContent = `Bonneville Dam · ${speciesNames[code] || 'Fish'} · ${currYear} (this year) vs. ${lastYear} (last year) · Source: cbr.washington.edu/dart`;
   if(badge) badge.textContent = `${today.toLocaleString('en-US',{month:'short',day:'numeric'})}`;
 
   fishLoaded = true;
@@ -6587,7 +6599,7 @@ Together, they help you avoid the classic "great company, terrible entry" trap.
 <h3>Operational Framing</h3>
 <p>The operational framing remains: a trend-quality detector for cyclical-growth and safe-haven instruments, whose 5-year edge is concentrated in a top tier of high-confidence names, with weaker but real edge on a second tier of high-conviction near-misses and a third tier of lower-confidence tracked names, alongside a set of untiered symbols that round out the curated universe. No measurable edge on broader watchlists or defensive sectors, and a recurrent failure mode at leadership transitions that admits at least two structural variants. The system is useful within its specialty. The right way to operate it is now what's actually operating: tier-aware alert framing on a curated universe with a regime-aware design problem still open.</p>
 
-<p class="gd-disclaimer">Signal Catcher is built for fun &amp; education — not financial advice. 🎣<br>Version 15.8 · April 30 2026</p>
+<p class="gd-disclaimer">Signal Catcher is built for fun &amp; education — not financial advice. 🎣<br>Version 15.9 · May 4 2026</p>
 </div>
 </div>
 
