@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Signal Catcher v15.9 — Dashboard</title>
+<title>Signal Catcher v15.10 — Dashboard</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -737,6 +737,10 @@ body.dark-mode .fish-tab.active{background:#2a5e38;border-color:#2a5e38;}
 .fish-chart-wrap img{max-width:100%;height:auto;display:block;margin:0 auto;border-radius:4px;}
 body.dark-mode .fish-chart-wrap img{filter:brightness(.92) contrast(1.05);}
 .fish-meta{font-family:var(--mono);font-size:11px;color:var(--text3);padding:6px 2px 0;text-align:center;}
+.fish-legend{display:flex;flex-wrap:wrap;justify-content:center;gap:4px 6px;padding:8px 4px 2px;font-family:var(--mono);font-size:10px;color:var(--text2);}
+.fish-legend-title{flex-basis:100%;text-align:center;font-weight:600;color:var(--text3);letter-spacing:.06em;text-transform:uppercase;font-size:9px;padding-bottom:2px;}
+.fish-legend-item{background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:2px 7px;white-space:nowrap;}
+.fish-legend-item b{color:var(--text);font-weight:700;}
 .fish-links{display:flex;gap:12px;flex-wrap:wrap;margin-top:10px;font-size:12px;}
 .fish-links a{color:#3f8a55;text-decoration:none;font-family:var(--mono);font-weight:500;}
 body.dark-mode .fish-links a{color:#7ec898;}
@@ -891,7 +895,7 @@ body.dark-mode .fish-links a{color:#7ec898;}
   <div class="sdot active" id="sdot"></div>
   <span class="stext active" id="stext"></span>
   <span class="sstream" id="sstream"></span>
-  <span class="v-badge" title="Build version — if this doesn't match your expected version, do a hard refresh to clear cache">v15.9</span>
+  <span class="v-badge" title="Build version — if this doesn't match your expected version, do a hard refresh to clear cache">v15.10</span>
 </div>
 
 <!-- VERDICT SUMMARY BAR -->
@@ -1314,6 +1318,15 @@ body.dark-mode .fish-links a{color:#7ec898;}
         </div>
         <div class="fish-chart-wrap" id="fish-chart-wrap">
           <img id="fish-chart-img" src="" alt="Bonneville fish counts chart" loading="lazy">
+        </div>
+        <div class="fish-legend" id="fish-legend">
+          <div class="fish-legend-title">Dam locations · Columbia &amp; Snake Rivers</div>
+          <span class="fish-legend-item"><b>BON</b> · Bonneville</span>
+          <span class="fish-legend-item"><b>MCN</b> · McNary</span>
+          <span class="fish-legend-item"><b>IHR</b> · Ice Harbor</span>
+          <span class="fish-legend-item"><b>LWG</b> · Lower Granite</span>
+          <span class="fish-legend-item"><b>PRD</b> · Priest Rapids</span>
+          <span class="fish-legend-item"><b>WEL</b> · Wells</span>
         </div>
         <div class="fish-meta" id="fish-meta">Bonneville Dam · current year vs. last year vs. 10-year average · Source: cbr.washington.edu/dart</div>
         <div class="fish-links">
@@ -6246,17 +6259,22 @@ function loadBonnevilleFish(species){
 
   // One-shot error handler: if primary fails, swap to fallback. Reset before reassigning
   // so re-entry (tab clicks) doesn't carry stale handlers.
+  const legend = document.getElementById('fish-legend');
   img.onerror = () => {
     if(img.src !== urlFallback){
       console.warn('[fish] mg.php failed, falling back to static all-dams chart');
       img.onerror = null;
       img.src = urlFallback;
       if(meta) meta.textContent = `${speciesNames[code] || 'Fish'} · all 6 mainstem dams · ${currYear} (this year) vs. 10-year average · Source: cbr.washington.edu/dart (year-over-year view temporarily unavailable)`;
+      // The fallback chart shows 6 dams with abbreviations — show the legend.
+      if(legend) legend.style.display = '';
     }
   };
 
   img.alt = `Bonneville Dam ${speciesNames[code] || 'Fish'} passage — ${currYear} vs. ${lastYear}`;
   img.src = urlPrimary;
+  // Primary chart is Bonneville-only — hide the multi-dam legend until/unless fallback fires.
+  if(legend) legend.style.display = 'none';
 
   if(meta) meta.textContent = `Bonneville Dam · ${speciesNames[code] || 'Fish'} · ${currYear} (this year) vs. ${lastYear} (last year) · Source: cbr.washington.edu/dart`;
   if(badge) badge.textContent = `${today.toLocaleString('en-US',{month:'short',day:'numeric'})}`;
@@ -6599,7 +6617,7 @@ Together, they help you avoid the classic "great company, terrible entry" trap.
 <h3>Operational Framing</h3>
 <p>The operational framing remains: a trend-quality detector for cyclical-growth and safe-haven instruments, whose 5-year edge is concentrated in a top tier of high-confidence names, with weaker but real edge on a second tier of high-conviction near-misses and a third tier of lower-confidence tracked names, alongside a set of untiered symbols that round out the curated universe. No measurable edge on broader watchlists or defensive sectors, and a recurrent failure mode at leadership transitions that admits at least two structural variants. The system is useful within its specialty. The right way to operate it is now what's actually operating: tier-aware alert framing on a curated universe with a regime-aware design problem still open.</p>
 
-<p class="gd-disclaimer">Signal Catcher is built for fun &amp; education — not financial advice. 🎣<br>Version 15.9 · May 4 2026</p>
+<p class="gd-disclaimer">Signal Catcher is built for fun &amp; education — not financial advice. 🎣<br>Version 15.10 · May 4 2026</p>
 </div>
 </div>
 
