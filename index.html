@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Signal Catcher v15.11 — Dashboard</title>
+<title>Signal Catcher v15.12 — Dashboard</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -898,7 +898,7 @@ body.dark-mode .fish-links a{color:#7ec898;}
   <div class="sdot active" id="sdot"></div>
   <span class="stext active" id="stext"></span>
   <span class="sstream" id="sstream"></span>
-  <span class="v-badge" title="Build version — if this doesn't match your expected version, do a hard refresh to clear cache">v15.11</span>
+  <span class="v-badge" title="Build version — if this doesn't match your expected version, do a hard refresh to clear cache">v15.12</span>
 </div>
 
 <!-- VERDICT SUMMARY BAR -->
@@ -2512,9 +2512,9 @@ Format as clean HTML (no markdown). Structure:
 
     let cleaned = answer.join('').replace(/```html?\n?/gi, '').replace(/```/g, '').trim();
     // Belt-and-suspenders: if narration landed in the same block as the answer,
-    // slice from the first heading the prompt requires.
-    const firstStrong = cleaned.indexOf('<strong>');
-    if (firstStrong > 0) cleaned = cleaned.slice(firstStrong);
+    // slice from the first real HTML tag (the answer always opens with one).
+    const tagMatch = cleaned.match(/<(?:strong|p|ul|ol|h[1-6]|div|br)\b/i);
+    if (tagMatch && tagMatch.index > 0) cleaned = cleaned.slice(tagMatch.index);
 
     content.innerHTML = cleaned;
     badge.className = 'news-badge loaded';
