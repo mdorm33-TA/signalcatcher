@@ -2475,7 +2475,8 @@ Format as clean HTML (no markdown). Structure:
 </ul>
 
 - Focus on the last 1-4 weeks. 4-6 catalysts max. Be specific with dates and figures from sources.
-- Plain HTML only, no markdown backticks, no citation markup.`;
+- Plain HTML only, no markdown backticks, no citation markup.
+- Output ONLY the HTML. No preamble, no narration of your search process ("I'll research…", "Let me…", "I have enough to write the read"). Begin your reply directly with <strong>Price Action Read</strong>.`;
 
   try {
     const asofNote = window._priceAsOf
@@ -2499,11 +2500,21 @@ Format as clean HTML (no markdown). Structure:
     }
 
     const data = await res.json();
-    const textBlocks = data.content.filter(b => b.type === 'text').map(b => b.text);
-    if (textBlocks.length === 0) throw new Error('No text in response');
+    const blocks = data.content || [];
+    // With web_search, the model emits text blocks AROUND each search call
+    // (e.g. "I'll research…", "I have enough to write the read."). Keep only the
+    // text that comes AFTER the last tool block — that's the actual answer.
+    let lastToolIdx = -1;
+    blocks.forEach((b, i) => { if (b.type !== 'text') lastToolIdx = i; });
+    let answer = blocks.slice(lastToolIdx + 1).filter(b => b.type === 'text').map(b => b.text);
+    if (answer.length === 0) answer = blocks.filter(b => b.type === 'text').map(b => b.text);
+    if (answer.length === 0) throw new Error('No text in response');
 
-    const raw = textBlocks.join('');
-    const cleaned = raw.replace(/```html?\n?/gi, '').replace(/```/g, '').trim();
+    let cleaned = answer.join('').replace(/```html?\n?/gi, '').replace(/```/g, '').trim();
+    // Belt-and-suspenders: if narration landed in the same block as the answer,
+    // slice from the first heading the prompt requires.
+    const firstStrong = cleaned.indexOf('<strong>');
+    if (firstStrong > 0) cleaned = cleaned.slice(firstStrong);
 
     content.innerHTML = cleaned;
     badge.className = 'news-badge loaded';
