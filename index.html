@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Signal Catcher v15.10 — Dashboard</title>
+<title>Signal Catcher v15.11 — Dashboard</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -132,6 +132,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:18
 .pdisp .pv{color:var(--hdr-text);font-weight:500;}
 .pdisp .pfetch{font-size:10px;cursor:pointer;color:var(--text3);margin-left:6px;text-decoration:underline;text-decoration-style:dotted;}
 .pdisp .pfetch:hover{color:var(--accent);}
+.pdisp .price-asof{font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;letter-spacing:.02em;}
+.pdisp .price-asof.stale{color:#f59e0b;font-weight:600;}
 .asel{background:var(--surface3);border:1px solid var(--border2);color:var(--text2);font-family:var(--mono);font-size:13px;padding:4px 7px;border-radius:4px;outline:none;cursor:pointer;}
 .asel:focus{border-color:var(--accent);}
 .run-btn{padding:6px 14px;background:linear-gradient(135deg,#1a6fd4 0%,#1558b0 100%);border:none;border-radius:6px;color:#fff;font-family:var(--mono);font-size:13px;font-weight:600;letter-spacing:.06em;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:6px;transition:all .15s;flex-shrink:0;box-shadow:0 2px 8px rgba(26,111,212,.3);}
@@ -880,6 +882,7 @@ body.dark-mode .fish-links a{color:#7ec898;}
     <div class="pdisp">
       Price: <span class="pv" id="price-val">$422.90</span>
       <span class="pfetch" onclick="fetchPrice()" id="price-fetch-lbl" title="Fetch live price">↻</span>
+      <span class="price-asof" id="price-asof" title="Market timestamp of the last fetched quote"></span>
     </div>
     <button class="run-btn" id="run-btn" onclick="runAnalysis()">
       <div class="spinner"></div><span class="btn-text">▶ Analyze</span>
@@ -895,7 +898,7 @@ body.dark-mode .fish-links a{color:#7ec898;}
   <div class="sdot active" id="sdot"></div>
   <span class="stext active" id="stext"></span>
   <span class="sstream" id="sstream"></span>
-  <span class="v-badge" title="Build version — if this doesn't match your expected version, do a hard refresh to clear cache">v15.10</span>
+  <span class="v-badge" title="Build version — if this doesn't match your expected version, do a hard refresh to clear cache">v15.11</span>
 </div>
 
 <!-- VERDICT SUMMARY BAR -->
@@ -1189,9 +1192,10 @@ body.dark-mode .fish-links a{color:#7ec898;}
       <div class="fund-panel-hdr" onclick="toggleFundPanel()">
         <div class="fund-panel-title">
           📊 Fundamentals Dashboard
-          <span class="fund-badge" id="fund-badge">— run Analyze</span>
+          <span class="fund-badge" id="fund-badge">— click Fetch</span>
           <span class="fund-context-note">Context only — no weighting applied to TA score</span>
         </div>
+        <button class="news-fetch-btn" id="fund-fetch-btn" onclick="event.stopPropagation();fetchFundamentals(document.getElementById('ticker-input').value.trim().toUpperCase(), getAC())">🔍 Fetch</button>
         <span class="fund-chevron" id="fund-chevron">▼</span>
       </div>
       <div class="fund-body" id="fund-body">
@@ -2210,6 +2214,16 @@ function toggleDarkMode(){
 })();
 
 
+// ═══ OPERATING RULES CONFIG ═══
+// Synthesis/judgment pass uses Opus 4.8 (Operating Rules: model tier sharpens
+// judgment on fetched data; it does NOT fix sourcing or timing).
+// NOTE: tacall worker must allow this model + the web_search tool, or the call
+// falls back / errors. If opus is rejected by tacall, set this to claude-sonnet-4-6.
+const SYNTH_MODEL = 'claude-opus-4-8';
+// Flag a fetched price as stale if its market timestamp is older than this many
+// minutes. Staleness is a fetch-cadence issue — surfaced here, fixed at the pull.
+const PRICE_STALE_MIN = 15;
+
 // ═══ FUNDAMENTALS DASHBOARD ═══
 
 // Stored fundamentals data
@@ -2252,13 +2266,13 @@ function renderFundamentals(){
     badge.className = 'fund-badge na'; badge.textContent = '⚠ error';
     const msg = document.createElement('div'); msg.className = 'fund-na';
     msg.style.color = 'var(--bear)';
-    msg.textContent = fundData?.error || 'No fundamental data. Run Analyze to populate.';
+    msg.textContent = fundData?.error || 'No fundamentals loaded. Click Fetch to pull live data from the web.';
     body.appendChild(msg); body.classList.add('open'); if(chev) chev.classList.add('open');
     return;
   }
 
   badge.className = 'fund-badge loaded';
-  badge.textContent = '✓ ' + (fundData.sector || 'loaded');
+  badge.textContent = '✓ ' + (fundData.sector && fundData.sector !== 'unavailable' ? fundData.sector : 'fetched');
 
   const f = fundData;
   const isLimited = FUND_LIMITED[ac];
@@ -2267,7 +2281,7 @@ function renderFundamentals(){
   const card = document.createElement('div'); card.className = 'fund-cat'; card.style.margin='10px 0 4px';
 
   function row(label, val, note){
-    if(!val || val==='N/A' || val==='—') return;
+    if(!val || val==='N/A' || val==='—' || val==='unavailable') return;
     const r = document.createElement('div'); r.className = 'fund-row';
     const nm = document.createElement('div'); nm.className = 'fund-name'; nm.textContent = label;
     const vl = document.createElement('div'); vl.className = 'fund-val'; vl.textContent = val;
@@ -2286,16 +2300,18 @@ function renderFundamentals(){
     s.textContent = title; card.appendChild(s);
   }
 
+  const isAvail = v => v && v !== 'N/A' && v !== 'unavailable' && v !== '—';
+
   // Valuation
-  if(!isLimited && f.pe_fwd && f.pe_fwd !== 'N/A'){
+  if(!isLimited && isAvail(f.pe_fwd)){
     sep('Valuation'); row('P/E (Forward)', f.pe_fwd);
   }
 
   // Growth
-  if(!isLimited && f.rev_growth && f.rev_growth !== 'N/A'){
+  if(!isLimited && isAvail(f.rev_growth)){
     sep('Growth'); row('Revenue Growth (YoY)', f.rev_growth);
     // PEG Ratio = P/E ÷ Growth Rate (computed client-side from existing data)
-    if(f.pe_fwd && f.pe_fwd !== 'N/A'){
+    if(isAvail(f.pe_fwd)){
       const peNum = parseFloat(String(f.pe_fwd).replace(/[^0-9.\-]/g, ''));
       const grNum = parseFloat(String(f.rev_growth).replace(/[^0-9.\-]/g, ''));
       if(!isNaN(peNum) && !isNaN(grNum) && grNum > 0){
@@ -2311,13 +2327,13 @@ function renderFundamentals(){
   row('Debt / Equity', f.debt_equity);
 
   // Income
-  if(f.div_yield && f.div_yield !== 'N/A' && f.div_yield !== '0%'){
+  if(isAvail(f.div_yield) && f.div_yield !== '0%'){
     sep(isLimited ? 'Distribution' : 'Income');
     row(isLimited ? 'Distribution Yield' : 'Dividend Yield', f.div_yield);
   }
 
   // Total Returns
-  const hasReturns = [f.return_3yr, f.return_5yr, f.return_10yr].some(v => v && v !== 'N/A');
+  const hasReturns = [f.return_3yr, f.return_5yr, f.return_10yr].some(v => isAvail(v));
   if(hasReturns){
     sep('Total Return — annualised, dividends reinvested');
     row('3-Year',  f.return_3yr);
@@ -2327,19 +2343,37 @@ function renderFundamentals(){
 
   body.appendChild(card);
 
-  if(f.context){
+  if(f.context && f.context !== 'null'){
     const cn = document.createElement('div'); cn.className = 'fund-footnote';
     cn.textContent = '⚠ ' + f.context; body.appendChild(cn);
   }
 
+  // ── All-unavailable case: be explicit rather than showing an empty card
+  const anyValue = ['pe_fwd','rev_growth','fcf_yield','debt_equity','div_yield','return_3yr','return_5yr','return_10yr']
+    .some(k => isAvail(f[k]));
+  if(!anyValue){
+    const none = document.createElement('div'); none.className = 'fund-na';
+    none.style.color = 'var(--text3)';
+    none.textContent = 'No figures could be fetched from the web for this ticker — shown as unavailable rather than recalled.';
+    body.appendChild(none);
+  }
+
+  // ── As-of / source stamp (Operating Rules: stamp every fetched figure)
+  const stamp = document.createElement('div'); stamp.className = 'fund-footnote';
+  const asOf   = isAvail(f.as_of)  ? f.as_of  : 'unavailable';
+  const src    = isAvail(f.source) ? f.source : 'unavailable';
+  stamp.textContent = `As of: ${asOf} · Source: ${src}${f._fetchedAt ? ' · fetched ' + f._fetchedAt : ''}`;
+  body.appendChild(stamp);
+
   const fn = document.createElement('div'); fn.className = 'fund-footnote';
-  fn.textContent = 'Source: AI training data · Estimates only — verify before acting · No weighting applied to TA score';
+  fn.textContent = 'Web-fetched estimates — verify against the primary source before acting · No weighting applied to TA score';
   body.appendChild(fn);
 
   body.classList.add('open'); if(chev) chev.classList.add('open');
 }
 
 async function fetchFundamentals(ticker, ac){
+  if(!ticker){ showToast('Enter a ticker first'); return; }
   if(fundNotApplicable(ac)){
     fundData = { error: null };
     renderFundamentals();
@@ -2347,24 +2381,37 @@ async function fetchFundamentals(ticker, ac){
   }
 
   const isLimited = FUND_LIMITED[ac];
+  const btn   = document.getElementById('fund-fetch-btn');
+  const badge = document.getElementById('fund-badge');
+  if(btn){ btn.disabled = true; btn.textContent = '⏳ Fetching…'; }
+  if(badge){ badge.className = 'fund-badge'; badge.textContent = '— searching…'; }
 
-  // Streamlined prompt — no web search, no sector comparison, just 7 key metrics
-  const sys = `You are a JSON API. Respond with ONLY a raw JSON object — no text before or after, no explanation, start with { end with }. Financial data for the given ticker:
-{"sector":"sector or category","pe_fwd":"value or N/A","rev_growth":"value% or N/A","fcf_yield":"value% or N/A","debt_equity":"value or N/A","div_yield":"value% or N/A","return_3yr":"value% or N/A","return_5yr":"value% or N/A","return_10yr":"value% or N/A","context":"one sentence of key context or null"}
-return_3yr, return_5yr, return_10yr must be TOTAL RETURN (price + dividends reinvested), annualised. Not price-only return.
-${isLimited ? 'This is a Bond/MLP/ETF — pe_fwd and rev_growth likely N/A. Focus on div_yield and total returns.' : ''}
-All values plain text only — no HTML, no citations. Use N/A if unknown. Return ONLY the JSON.`;
+  // Operating Rules: every figure must come from a live web fetch, never recall.
+  // If a number cannot be fetched, it is "unavailable" — NOT supplied from memory.
+  const sys = `You are a financial-data fetcher. Use the web_search tool to look up CURRENT fundamental data for the given ticker from primary or reputable financial sources (company filings, exchange pages, established financial data sites).
+
+HARD RULES:
+- Every numeric value MUST come from a search result you actually retrieved this session. If you did not find a figure in search results, output the exact string "unavailable" for that field. NEVER fill a value from your own training/memory — a remembered value is a defect, not a fallback.
+- Do not estimate, interpolate, or round a figure you did not see in a result.
+- "as_of" = the date or period the figures reflect (e.g. "Q1 2026" or "2026-06-16"), taken from the source. "source" = where the numbers came from (e.g. "company 10-Q via SEC", "exchange quote page"). If you could not fetch anything, set both to "unavailable".
+
+Respond with ONLY a raw JSON object — no text before or after, start with { end with }:
+{"sector":"sector or unavailable","pe_fwd":"value or unavailable","rev_growth":"value% or unavailable","fcf_yield":"value% or unavailable","debt_equity":"value or unavailable","div_yield":"value% or unavailable","return_3yr":"value% or unavailable","return_5yr":"value% or unavailable","return_10yr":"value% or unavailable","as_of":"period/date or unavailable","source":"source or unavailable","context":"one sentence of fetched context, or null"}
+return_3yr/5yr/10yr must be TOTAL RETURN (price + dividends reinvested), annualised — not price-only. If only price return was found, mark the returns "unavailable".
+${isLimited ? 'This is a Bond/MLP/ETF — pe_fwd and rev_growth are typically unavailable; focus on div_yield and total returns.' : ''}
+All values plain text only — no HTML, no citation markup. Return ONLY the JSON.`;
 
   try{
     const res = await fetch('https://tacall.mdorm33.workers.dev',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
-        model:'claude-sonnet-4-6', max_tokens:400, system:sys,
-        messages:[{role:'user',content:`Return fundamental data JSON for ${ticker}.`}]
+        model: SYNTH_MODEL, max_tokens: 1200, system: sys,
+        tools: [{ type: 'web_search_20250305', name: 'web_search' }],
+        messages:[{role:'user',content:`Fetch current fundamental data for ${ticker}${window._lastSymbolName ? ' ('+window._lastSymbolName+')' : ''}. Search reputable financial sources, then return the JSON. Use "unavailable" for anything you could not find in a search result.`}]
       })
     });
-    if(!res.ok){ const e=await res.json(); throw new Error(e.error?.message||'API '+res.status); }
+    if(!res.ok){ const e=await res.json().catch(()=>({})); throw new Error(e.error?.message||'API '+res.status); }
     const data = await res.json();
     const textBlocks = data.content.filter(b=>b.type==='text').map(b=>b.text);
     if(textBlocks.length === 0) throw new Error('No text in response');
@@ -2373,9 +2420,12 @@ All values plain text only — no HTML, no citations. Use N/A if unknown. Return
     const jsonEnd   = raw.lastIndexOf('}');
     if(jsonStart === -1 || jsonEnd === -1) throw new Error('No JSON found');
     fundData = JSON.parse(raw.slice(jsonStart, jsonEnd + 1));
+    fundData._fetchedAt = nowStamp();
+    if(btn){ btn.disabled = false; btn.textContent = '🔍 Refresh'; }
   } catch(err){
     fundData = { error: 'Fundamentals fetch failed: ' + err.message };
     console.error('Fundamentals fetch failed:', err);
+    if(btn){ btn.disabled = false; btn.textContent = '🔍 Retry'; }
   }
   renderFundamentals();
 }
@@ -2406,36 +2456,40 @@ async function fetchNewsAnalysis(){
   const priceStr = priceEl ? priceEl.textContent.replace(/[^0-9.]/g,'') : '';
   const companyName = window._lastSymbolName || '';
 
-  const sys = `You are a financial news analyst. Search the web for the most recent news, events, and developments for the given stock ticker. Then provide a concise analysis of what is driving recent price action.
+  const sys = `You are a financial news analyst. Use the web_search tool to find the most recent news, events, and developments for the given ticker, then summarise what is driving recent price action. Everything you report must come from search results you actually retrieved — never from memory.
 
-Format your response as clean HTML (no markdown). Use this structure:
+VERIFICATION DISCIPLINE (apply to every claim):
+- Separate VERIFIED facts (found in a retrieved source) from ESTIMATES/interpretation. Label interpretation as such.
+- State the date an event OCCURRED or was FILED, not the date a story covered it.
+- Distinguish a single-event move (e.g. one-day drop) from a cumulative move (e.g. decline since a date). Never conflate them — say which one a number is.
+- Flag any contested or single-sourced claim as contested and name the dispute (e.g. "Reuters reported X; the company disputes it"). Do not state anonymously-sourced reporting as settled fact.
+- If little or no news exists, say so plainly. Do not invent catalysts.
+- Keep this NEWS/FUNDAMENTAL read separate from the technical read. Do not assert that news confirms or weights the indicator score.
+
+Format as clean HTML (no markdown). Structure:
 <strong>Price Action Read</strong>
-<p>2-3 sentences interpreting what the technicals + news together suggest about near-term direction. Include speculative investor sentiment analysis connecting specific dated news to price behavior.</p>
+<p>2-3 sentences on what recent dated news suggests about near-term direction. Mark anything speculative as interpretation, not fact.</p>
 <strong>Recent Catalysts</strong>
 <ul>
-<li><strong>[Date or timeframe]:</strong> Brief description of the event/news</li>
+<li><strong>[Occurrence/filing date]:</strong> what happened — verified vs reported, contested if applicable</li>
 </ul>
 
-Rules:
-- Lead with the price action interpretation and sentiment read — this is the most important section
-- Focus on the last 1-4 weeks of news
-- Include earnings, analyst actions, sector moves, regulatory news, insider activity if relevant
-- Be specific with dates and numbers where possible
-- If very little news exists for this ticker, say so honestly
-- Keep it concise — 4-6 bullet points max for catalysts
-- No generic filler — every bullet should be a specific, dated event
-- Plain HTML only, no markdown backticks`;
+- Focus on the last 1-4 weeks. 4-6 catalysts max. Be specific with dates and figures from sources.
+- Plain HTML only, no markdown backticks, no citation markup.`;
 
   try {
+    const asofNote = window._priceAsOf
+      ? ` (price as of ${new Date(window._priceAsOf).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}${window._priceStale ? ', possibly stale' : ''})`
+      : '';
     const res = await fetch('https://tacall.mdorm33.workers.dev', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
+        model: SYNTH_MODEL,
         max_tokens: 1000,
         system: sys,
         tools: [{ type: 'web_search_20250305', name: 'web_search' }],
-        messages: [{ role: 'user', content: `What is driving recent price action for ${ticker}${companyName ? ' (' + companyName + ')' : ''}? Current price: $${priceStr}. Search for the latest news and events.` }]
+        messages: [{ role: 'user', content: `What is driving recent price action for ${ticker}${companyName ? ' (' + companyName + ')' : ''}? Current price: $${priceStr}${asofNote}. Search for the latest dated news and events.` }]
       })
     });
 
@@ -5168,6 +5222,22 @@ async function fetchPrice(){
     if(!meta||!meta.regularMarketPrice) throw new Error('No price available');
     const price=meta.regularMarketPrice;
     document.getElementById('price-val').textContent='$'+Number(price).toFixed(2);syncPriceLvl();
+    // ── As-of stamp + staleness (Operating Rules: stamp every fetched figure;
+    //    flag stale at the pull). regularMarketTime is the quote's market time
+    //    in unix seconds. Note Yahoo quotes are themselves ~15 min delayed.
+    const mt = meta.regularMarketTime ? meta.regularMarketTime * 1000 : Date.now();
+    window._priceAsOf = mt;
+    const ageMin = (Date.now() - mt) / 60000;
+    window._priceStale = ageMin > PRICE_STALE_MIN;
+    const asofEl = document.getElementById('price-asof');
+    if(asofEl){
+      const tstr = new Date(mt).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});
+      const dstr = new Date(mt).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+      asofEl.textContent = window._priceStale
+        ? `⚠ as of ${dstr} ${tstr} · stale (>${PRICE_STALE_MIN}m)`
+        : `as of ${dstr} ${tstr}`;
+      asofEl.className = 'price-asof' + (window._priceStale ? ' stale' : '');
+    }
     // Daily change from prior close
     // Prefer regularMarketPreviousClose — it's the canonical "yesterday's regular session close".
     // chartPreviousClose is the close before the CHART'S range starts, which can be 2+ days back
@@ -5260,12 +5330,13 @@ async function runAnalysis(){
   if(os) os.textContent='Loading…';
   document.getElementById('orient-price-wrap').style.display='none';
   document.getElementById('orient-rsi-wrap').style.display='none';
-  // Reset fundamentals panel
+  // Reset fundamentals panel — now on-demand (web-grounded Fetch button), not auto
   fundData = null;
   document.getElementById('fund-body').innerHTML = '';
   document.getElementById('fund-body').classList.remove('open');
   document.getElementById('fund-chevron').classList.remove('open');
-  const fb = document.getElementById('fund-badge'); if(fb){ fb.className='fund-badge'; fb.textContent='— loading…'; }
+  const fb = document.getElementById('fund-badge'); if(fb){ fb.className='fund-badge'; fb.textContent='— click Fetch'; }
+  const ffb = document.getElementById('fund-fetch-btn'); if(ffb){ ffb.disabled=false; ffb.textContent='🔍 Fetch'; }
 
   ['r1','r2','s1','s2','stop','target'].forEach(k=>{const el=document.getElementById(k);if(el)el.value='';});
   document.getElementById('div-note').value='';
@@ -5322,7 +5393,7 @@ async function runAnalysis(){
     const _dcC = window._dailyChangeText ? `<span style="color:${window._dailyChangeColor||''};font-size:13px;font-weight:600;margin-left:4px;">${window._dailyChangeText}</span>` : '';
     dot.className='sdot active';st.className='stext active';st.style.animation='';st.style.color='';
     st.innerHTML=`<span class="sticker">${ticker}</span>${tierBadgeHtml(ticker)}${_cnc} — <span style="color:${_cc};font-weight:600">${_vc}</span> · ${priceC}${_dcC}`;
-    so.textContent='Waiting for AI (divNote + fundamentals)…';
+    so.textContent='Waiting for AI (dividend note)…';
     btn.disabled=false;btn.classList.remove('loading');
     console.log('runAnalysis: ALL DONE. Score:', _sc);
 
@@ -5382,14 +5453,13 @@ async function runAnalysis(){
   const companyHint = window._lastSymbolName ? ` (${window._lastSymbolName})` : '';
 
   const sys = isNA
-    ? `JSON API. Respond with ONLY a raw JSON object. Output: {"ticker":"SYMBOL","divNote":"one sentence on dividend/return context"} Plain text only, no HTML.`
+    ? `JSON API. Respond with ONLY a raw JSON object. Output: {"ticker":"SYMBOL","divNote":"one QUALITATIVE sentence on dividend/return character — NO specific figures, ratios, yields, or returns from memory"} Plain text only, no HTML.`
     : `JSON API. Respond with ONLY a raw JSON object — no text before or after.
-{"ticker":"SYMBOL","divNote":"one sentence on dividend/return context","sector":"sector","pe_fwd":"val or N/A","rev_growth":"val% or N/A","fcf_yield":"val% or N/A","debt_equity":"val or N/A","div_yield":"val% or N/A","return_3yr":"val% or N/A","return_5yr":"val% or N/A","return_10yr":"val% or N/A","context":"one sentence or null"}
-return_3yr/5yr/10yr: TOTAL RETURN (price + dividends reinvested), annualised. Not price-only.
-${isLimited ? 'Bond/MLP/ETF — pe_fwd and rev_growth likely N/A. Focus on div_yield and total returns.' : ''}
-All values plain text only — no HTML, no citations. N/A if unknown.`;
+{"ticker":"SYMBOL","divNote":"one QUALITATIVE sentence on dividend/return character"}
+divNote must be qualitative only (e.g. "long-running dividend grower", "no dividend, reinvests for growth"). Do NOT state any specific number — no P/E, yield %, growth %, or return figures. Those are fetched separately and on demand. Plain text only, no HTML, no citations.`;
 
-  // Sonnet 4.6 — smarter, less hallucination. At ~$0.01/query without web search, cost is negligible.
+  // Auto-Analyze divNote is qualitative-only (no numbers), so a light model is fine.
+  // Load-bearing numbers come from the on-demand, web-grounded Fundamentals fetch.
   const MODEL = 'claude-sonnet-4-6';
 
   // ── AI CALL: fire-and-forget — never blocks scoring UI ──
