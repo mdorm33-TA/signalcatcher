@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Signal Catcher v15.12 — Dashboard</title>
+<title>Signal Catcher v15.13 — Dashboard</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -898,7 +898,7 @@ body.dark-mode .fish-links a{color:#7ec898;}
   <div class="sdot active" id="sdot"></div>
   <span class="stext active" id="stext"></span>
   <span class="sstream" id="sstream"></span>
-  <span class="v-badge" title="Build version — if this doesn't match your expected version, do a hard refresh to clear cache">v15.12</span>
+  <span class="v-badge" title="Build version — if this doesn't match your expected version, do a hard refresh to clear cache">v15.13</span>
 </div>
 
 <!-- VERDICT SUMMARY BAR -->
@@ -1240,6 +1240,20 @@ body.dark-mode .fish-links a{color:#7ec898;}
         </div>
         <div id="reg-summary" style="margin-top:8px;padding:8px;border-radius:6px;background:var(--surface3);font-size:12px;color:var(--text2);line-height:1.5;">
           Click "Fetch Live" or run Analyze to load macro data.
+        </div>
+      </div>
+
+      <!-- RIVER CONDITIONS (v15.13 — USGS live gauges via Worker /rivers, no scoring weight) -->
+      <div class="fg-card" id="river-card">
+        <div class="stitle" style="display:flex;justify-content:space-between;align-items:center;">
+          <span>🎣 River Conditions</span>
+          <button class="fg-fetch" id="river-fetch-btn" onclick="fetchRiverConditions()">↻ Fetch</button>
+        </div>
+        <div id="river-body" style="display:flex;flex-direction:column;gap:8px;margin-top:6px;">
+          <div style="font-size:12px;color:var(--text3);">Click "Fetch" to load current flows and water temps from USGS.</div>
+        </div>
+        <div style="margin-top:8px;font-family:var(--mono);font-size:9px;color:var(--text3);line-height:1.5;">
+          Source: USGS real-time gauges (provisional data, subject to revision). Readings stamped with gauge time; flagged ⚠ if older than 2 hours. Context only — no weighting applied to TA score.
         </div>
       </div>
 
@@ -5033,6 +5047,80 @@ async function fetchFG(){
 function applyFGManual(){const v=parseInt(document.getElementById('fg-manual').value);if(isNaN(v)||v<0||v>100){alert('Enter 0–100.');return;}setFGDisplay(v);}
 
 // ═══ MACRO REGIME FETCH ═══
+/* ═══ RIVER CONDITIONS (v15.13) — via ta-alerts Worker /rivers ═══
+   Deterministic fetch-and-display. No model recall, no estimates:
+   every number comes from the USGS feed (proxied + normalized by the
+   Worker, which drops dead-sensor readings >6h old) or renders
+   "unavailable". As-of stamp = the gauge's own reading time. */
+
+const RIVER_ENDPOINT = 'https://ta-alerts.mdorm33.workers.dev/rivers';
+const RIVER_GAUGES = [
+  { site:'14092500', name:'Deschutes — Madras',  note:'below Pelton Dam · Warm Springs–Trout Creek' },
+  { site:'14103000', name:'Deschutes — Moody',   note:'at mouth · summer steelhead temps' },
+  { site:'14305500', name:'Siletz — at Siletz',  note:'' },
+  { site:'14303600', name:'Nestucca — Beaver',   note:'' },
+  { site:'14301500', name:'Wilson — Tillamook',  note:'' }
+];
+const RIVER_STALE_MS = 2 * 60 * 60 * 1000;   // 2 h — gauges transmit every 15–60 min
+
+async function fetchRiverConditions(){
+  const body = document.getElementById('river-body');
+  const btn  = document.getElementById('river-fetch-btn');
+  btn.disabled = true; btn.textContent = '↻ Fetching…';
+  body.innerHTML = '<div style="font-size:12px;color:var(--text3);">Fetching USGS gauges…</div>';
+  try{
+    const resp = await fetch(RIVER_ENDPOINT);
+    if(!resp.ok) throw new Error('Worker HTTP ' + resp.status);
+    const data = await resp.json();
+    if(data.error) throw new Error(data.error);
+
+    body.innerHTML = '';
+    const now = Date.now();
+    for(const g of RIVER_GAUGES){
+      const rec    = (data.sites && data.sites[g.site]) || {};
+      const flow   = rec.flow;
+      const height = rec.height;
+      const temp   = rec.tempC;
+
+      /* Anything not in the feed renders "unavailable" — never filled. */
+      const parts = [];
+      parts.push(flow   ? Math.round(flow.v).toLocaleString() + ' cfs' : 'flow unavailable');
+      parts.push(height ? height.v.toFixed(2) + ' ft'                  : 'ht unavailable');
+      parts.push(temp   ? (temp.v * 9/5 + 32).toFixed(1) + ' °F'       : 'temp unavailable');
+
+      /* As-of = the gauge's own newest reading time (never our fetch time). */
+      const times = [flow,height,temp].filter(x => x && x.t).map(x => new Date(x.t));
+      let asOf = 'no data', stale = false;
+      if(times.length){
+        const newest = times.reduce((a,b)=> b > a ? b : a);
+        stale = (now - newest.getTime()) > RIVER_STALE_MS;
+        asOf  = 'as of ' + newest.toLocaleTimeString([], {hour:'numeric', minute:'2-digit'});
+      }
+
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;flex-direction:column;gap:1px;padding:4px 0;border-bottom:1px solid var(--border);';
+      row.innerHTML =
+        '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:6px;">'
+        +   '<span style="font-size:13px;font-weight:600;color:var(--text);">' + g.name + '</span>'
+        +   '<span style="font-family:var(--mono);font-size:10px;color:' + (stale ? 'var(--neu)' : 'var(--text3)') + ';white-space:nowrap;">'
+        +      (stale ? '⚠ ' : '') + asOf + (stale ? ' — stale' : '') + '</span>'
+        + '</div>'
+        + (g.note ? '<div style="font-size:10px;color:var(--text3);font-style:italic;">' + g.note + '</div>' : '')
+        + '<div style="font-family:var(--mono);font-size:13px;color:var(--text2);">' + parts.join(' · ') + '</div>';
+      body.appendChild(row);
+    }
+    if(body.lastElementChild) body.lastElementChild.style.borderBottom = 'none';
+    btn.textContent = '↻ Refresh';
+  }catch(err){
+    body.innerHTML = '<div style="font-size:12px;color:var(--bear);">River fetch failed: '
+                   + (err && err.message ? err.message : 'unknown error')
+                   + '. Readings unavailable — try again.</div>';
+    btn.textContent = '↻ Fetch';
+  }finally{
+    btn.disabled = false;
+  }
+}
+
 async function fetchRegimeData(){
   const btn = document.getElementById('regime-fetch-btn');
   if(btn){ btn.textContent='↻ Fetching…'; btn.disabled=true; }
