@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Signal Catcher v15.16 — Dashboard</title>
+<title>Signal Catcher v15.18 — Dashboard</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -898,7 +898,7 @@ body.dark-mode .fish-links a{color:#7ec898;}
   <div class="sdot active" id="sdot"></div>
   <span class="stext active" id="stext"></span>
   <span class="sstream" id="sstream"></span>
-  <span class="v-badge" title="Build version — if this doesn't match your expected version, do a hard refresh to clear cache">v15.16</span>
+  <span class="v-badge" title="Build version — if this doesn't match your expected version, do a hard refresh to clear cache">v15.18</span>
 </div>
 
 <!-- VERDICT SUMMARY BAR -->
@@ -1082,6 +1082,44 @@ body.dark-mode .fish-links a{color:#7ec898;}
       <div class="ind-group-body" id="grp-contrarian"></div>
     </div>
 
+
+    <!-- DEPOE BAY COASTAL CONDITIONS (v15.17 — moved into left indicator panel) -->
+    <div class="coast-card">
+    <div class="coast-hdr" onclick="toggleCoastPanel()">
+      <div class="coast-hdr-left">
+        <span class="coast-hdr-title">🌊 Depoe Bay Coastal Conditions</span>
+        <span class="coast-hdr-badge" id="coast-badge">loading…</span>
+      </div>
+      <div class="coast-hdr-wx" id="coast-wx-hdr"></div>
+      <span class="coast-chevron" id="coast-chevron">▼</span>
+    </div>
+    <div class="coast-body" id="coast-body">
+      <div class="coast-content">
+        <div class="coast-wx-row" id="coast-wx-pills"></div>
+        <div class="coast-tide-status" id="coast-tide-status"></div>
+        <div style="font:600 10px/1 var(--mono);color:var(--text3);letter-spacing:.06em;text-transform:uppercase;padding:4px 0 2px;">🌊 Today's Tide Chart</div>
+        <div class="coast-chart-wrap"><canvas id="coastTideChart"></canvas></div>
+        <div id="coast-tide-table"></div>
+
+        <!-- ── SALMON & BOTTOM FISHING — month-aware seasonal status ── -->
+        <div class="fishing-section">
+          <div class="fishing-section-hdr">
+            <span>🎣 Salmon &amp; Bottom Fishing · Newport / Depoe Bay</span>
+            <span class="fishing-section-hdr-month" id="fishing-month-badge">—</span>
+          </div>
+          <div class="fishing-grid" id="fishing-grid"></div>
+          <div class="fishing-meta">⚠ Seasons, quotas, and depth rules change every year. Always verify with ODFW before launching.</div>
+        </div>
+
+        <div class="coast-links">
+          <a href="https://www.usharbors.com/harbor/oregon/depoe-bay-or/tides/" target="_blank">📍 Full tides at USHarbors →</a>
+          <a href="https://myodfw.com/recreation-report/fishing-report/marine-zone" target="_blank">🐟 ODFW Marine Zone fishing report →</a>
+          <a href="https://myodfw.com/fishing/regulations/marine-zone" target="_blank">📜 ODFW Marine Zone regulations →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
   </div>
 
   <!-- ═══ RIGHT: SCORE PANEL ═══ -->
@@ -1246,7 +1284,7 @@ body.dark-mode .fish-links a{color:#7ec898;}
       <!-- RIVER CONDITIONS (v15.16 — USGS live gauges via Worker /rivers, no scoring weight) -->
       <div class="fg-card" id="river-card">
         <div class="stitle" style="display:flex;justify-content:space-between;align-items:center;">
-          <span>🎣 River Conditions</span>
+          <span style="color:var(--accent);">🎣 River Conditions</span>
           <button class="fg-fetch" id="river-fetch-btn" onclick="fetchRiverConditions()">↻ Fetch</button>
         </div>
         <div id="river-body" style="display:flex;flex-direction:column;gap:8px;margin-top:6px;">
@@ -1268,53 +1306,8 @@ body.dark-mode .fish-links a{color:#7ec898;}
       <div class="btn primary" onclick="exportPDF()">⬇ PDF</div>
     </div>
 
-    <!-- COASTAL CONDITIONS moved outside layout -->
-
-  </div>
-</div>
-
-<!-- DEPOE BAY COASTAL CONDITIONS — full width below layout -->
-<div style="padding:0 12px 20px;background:var(--bg);">
-  <div class="coast-card">
-    <div class="coast-hdr" onclick="toggleCoastPanel()">
-      <div class="coast-hdr-left">
-        <span class="coast-hdr-title">🌊 Depoe Bay Coastal Conditions</span>
-        <span class="coast-hdr-badge" id="coast-badge">loading…</span>
-      </div>
-      <div class="coast-hdr-wx" id="coast-wx-hdr"></div>
-      <span class="coast-chevron" id="coast-chevron">▼</span>
-    </div>
-    <div class="coast-body" id="coast-body">
-      <div class="coast-content">
-        <div class="coast-wx-row" id="coast-wx-pills"></div>
-        <div class="coast-tide-status" id="coast-tide-status"></div>
-        <div style="font:600 10px/1 var(--mono);color:var(--text3);letter-spacing:.06em;text-transform:uppercase;padding:4px 0 2px;">🌊 Today's Tide Chart</div>
-        <div class="coast-chart-wrap"><canvas id="coastTideChart"></canvas></div>
-        <div id="coast-tide-table"></div>
-
-        <!-- ── SALMON & BOTTOM FISHING — month-aware seasonal status ── -->
-        <div class="fishing-section">
-          <div class="fishing-section-hdr">
-            <span>🎣 Salmon &amp; Bottom Fishing · Newport / Depoe Bay</span>
-            <span class="fishing-section-hdr-month" id="fishing-month-badge">—</span>
-          </div>
-          <div class="fishing-grid" id="fishing-grid"></div>
-          <div class="fishing-meta">⚠ Seasons, quotas, and depth rules change every year. Always verify with ODFW before launching.</div>
-        </div>
-
-        <div class="coast-links">
-          <a href="https://www.usharbors.com/harbor/oregon/depoe-bay-or/tides/" target="_blank">📍 Full tides at USHarbors →</a>
-          <a href="https://myodfw.com/recreation-report/fishing-report/marine-zone" target="_blank">🐟 ODFW Marine Zone fishing report →</a>
-          <a href="https://myodfw.com/fishing/regulations/marine-zone" target="_blank">📜 ODFW Marine Zone regulations →</a>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- BONNEVILLE DAM FISH COUNTS — full width below coastal card -->
-<div style="padding:0 12px 20px;background:var(--bg);">
-  <div class="fish-card">
+    <!-- BONNEVILLE DAM FISH COUNTS (v15.18 — moved into right score panel, under River Conditions) -->
+    <div class="fish-card">
     <div class="fish-hdr" onclick="toggleFishPanel()">
       <div class="fish-hdr-left">
         <span class="fish-hdr-title">🐟 Bonneville Dam Fish Counts</span>
@@ -1354,6 +1347,8 @@ body.dark-mode .fish-links a{color:#7ec898;}
         </div>
       </div>
     </div>
+  </div>
+
   </div>
 </div>
 
