@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Signal Catcher v15.15 — Dashboard</title>
+<title>Signal Catcher v15.16 — Dashboard</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -898,7 +898,7 @@ body.dark-mode .fish-links a{color:#7ec898;}
   <div class="sdot active" id="sdot"></div>
   <span class="stext active" id="stext"></span>
   <span class="sstream" id="sstream"></span>
-  <span class="v-badge" title="Build version — if this doesn't match your expected version, do a hard refresh to clear cache">v15.15</span>
+  <span class="v-badge" title="Build version — if this doesn't match your expected version, do a hard refresh to clear cache">v15.16</span>
 </div>
 
 <!-- VERDICT SUMMARY BAR -->
@@ -1243,7 +1243,7 @@ body.dark-mode .fish-links a{color:#7ec898;}
         </div>
       </div>
 
-      <!-- RIVER CONDITIONS (v15.15 — USGS live gauges via Worker /rivers, no scoring weight) -->
+      <!-- RIVER CONDITIONS (v15.16 — USGS live gauges via Worker /rivers, no scoring weight) -->
       <div class="fg-card" id="river-card">
         <div class="stitle" style="display:flex;justify-content:space-between;align-items:center;">
           <span>🎣 River Conditions</span>
@@ -5047,7 +5047,7 @@ async function fetchFG(){
 function applyFGManual(){const v=parseInt(document.getElementById('fg-manual').value);if(isNaN(v)||v<0||v>100){alert('Enter 0–100.');return;}setFGDisplay(v);}
 
 // ═══ MACRO REGIME FETCH ═══
-/* ═══ RIVER CONDITIONS (v15.15) — via ta-alerts Worker /rivers ═══
+/* ═══ RIVER CONDITIONS (v15.16) — via ta-alerts Worker /rivers ═══
    Deterministic fetch-and-display. No model recall, no estimates:
    every number comes from the USGS feed (proxied + normalized by the
    Worker, which drops dead-sensor readings >6h old) or renders
@@ -5055,13 +5055,14 @@ function applyFGManual(){const v=parseInt(document.getElementById('fg-manual').v
 
 const RIVER_ENDPOINT = 'https://ta-alerts.mdorm33.workers.dev/rivers';
 const RIVER_GAUGES = [
-  { site:'14092500', name:'Deschutes — Madras',  note:'below Pelton Dam · Warm Springs–Trout Creek' },
-  { site:'14103000', name:'Deschutes — Moody',   note:'at mouth · summer steelhead temps' },
-  { site:'14305500', name:'Siletz — at Siletz',  note:'' },
-  { site:'14303600', name:'Nestucca — Beaver',   note:'' },
-  { site:'14301500', name:'Wilson — Tillamook',  note:'' },
-  { site:'14302020', name:'Wilson — Sollie Smith Br', note:'tidewater near mouth · temp gauge · stage is tide-influenced' },
-  { site:'14306500', name:'Alsea — near Tidewater', note:'head of tidewater' }
+  { site:'14306500', name:'Alsea — near Tidewater',     note:'head of tidewater' },
+  { site:'14092500', name:'Deschutes — Madras',         note:'below Pelton Dam · Warm Springs–Trout Creek' },
+  { site:'14103000', name:'Deschutes — Moody',          note:'at mouth · summer steelhead temps' },
+  { site:'14303600', name:'Nestucca — Beaver',          note:'' },
+  { site:'14305500', name:'Siletz — at Siletz',         note:'' },
+  { site:'HCDI1',    name:'Snake — Hells Canyon Dam',   note:'below dam · flow swings daily with power generation · NWS/Idaho Power data' },
+  { site:'14302020', name:'Wilson — Sollie Smith Br',   note:'tidewater near mouth · temp gauge · stage is tide-influenced' },
+  { site:'14301500', name:'Wilson — Tillamook',         note:'' }
 ];
 const RIVER_STALE_MS = 2 * 60 * 60 * 1000;   // 2 h — gauges transmit every 15–60 min
 
@@ -6189,8 +6190,8 @@ async function loadCoastalConditions(){
     if(tide){
       // Status line
       const arrowStr = tide.rising === null ? '' : tide.rising ? '↑ rising' : '↓ falling';
-      statusEl.innerHTML = `<strong>Now: ${tide.currentFt} ft ${arrowStr}</strong> · Depoe Bay, OR · ${tide.dateLabel}`;
-      badge.textContent = `${tide.currentFt} ft ${tide.rising === null ? '' : tide.rising ? '↑' : '↓'}`;
+      statusEl.innerHTML = `<strong>Now: ~${tide.currentFt} ft ${arrowStr}</strong> · estimated from NOAA hi/lo predictions · Depoe Bay, OR · ${tide.dateLabel}`;
+      badge.textContent = `~${tide.currentFt} ft ${tide.rising === null ? '' : tide.rising ? '↑' : '↓'}`;
 
       // Tide curve chart
       renderTideChart(tide.curve, tide.hilos);
@@ -6240,29 +6241,49 @@ function fmtTideTime(t){
 }
 
 async function fetchTideData(){
-  const station = '9435827';
+  // v15.16: NOAA's datagetter gateway has been 504ing from browsers; predictions
+  // now come via the ta-alerts Worker /tides endpoint (KV-cached — tide
+  // predictions are astronomically fixed). Depoe Bay 9435827 is a subordinate
+  // station, so NOAA only publishes high/low times; the intra-day curve below is
+  // cosine-INTERPOLATED between those extremes — an estimate of a prediction,
+  // labeled as estimated in the UI, never presented as a measurement.
   const today = new Date();
-  const fmt = d => `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
   const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const dateLabel = `${monthNames[today.getMonth()]} ${today.getDate()}, ${today.getFullYear()}`;
-
-  // Fetch hi/lo and 6-minute curve in parallel
-  const hiloUrl = `https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?station=${station}&product=predictions&datum=MLLW&time_zone=lst_ldt&interval=hilo&units=english&application=SignalCatcher&format=json&begin_date=${fmt(today)}&end_date=${fmt(today)}`;
-  const curveUrl = `https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?station=${station}&product=predictions&datum=MLLW&time_zone=lst_ldt&interval=6&units=english&application=SignalCatcher&format=json&begin_date=${fmt(today)}&end_date=${fmt(today)}`;
-
-  const [hiloRes, curveRes] = await Promise.all([fetch(hiloUrl), fetch(curveUrl)]);
-  const hiloData = await hiloRes.json();
-  const curveData = await curveRes.json();
-
-  const hilos = hiloData.predictions || [];
-  const curve = curveData.predictions || [];
-  if(!hilos.length) throw new Error('No hi/lo tide data');
-
-  // Current level from curve data
-  const nowHr = today.getHours();
-  const nowMin = today.getMinutes();
-  const nowBucket = `${String(nowHr).padStart(2,'0')}:${String(Math.floor(nowMin/6)*6).padStart(2,'0')}`;
   const todayYMD = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+
+  const resp = await fetch('https://ta-alerts.mdorm33.workers.dev/tides');
+  if(!resp.ok) throw new Error('Worker HTTP ' + resp.status);
+  const data = await resp.json();
+  if(data.error) throw new Error(data.error);
+
+  const all = (data.predictions || []).map(p => ({ t: p.t, v: p.v, type: p.type }))
+              .sort((a,b) => a.t < b.t ? -1 : 1);
+  const hilos = all.filter(p => p.t.slice(0,10) === todayYMD);
+  if(!hilos.length) throw new Error('No hi/lo tide data for today');
+
+  // Cosine interpolation between consecutive extremes at 6-min steps, clipped to
+  // today. The 8-day Worker window includes yesterday, so today's pre-dawn hours
+  // are bracketed by a real extreme on each side.
+  const toDate = s => { const [d,tm] = s.split(' '); const [Y,M,D] = d.split('-').map(Number); const [h,m] = tm.split(':').map(Number); return new Date(Y, M-1, D, h, m); };
+  const curve = [];
+  for(let i=0;i<all.length-1;i++){
+    const a = all[i], b = all[i+1];
+    const t0 = toDate(a.t).getTime(), t1 = toDate(b.t).getTime();
+    const v0 = parseFloat(a.v), v1 = parseFloat(b.v);
+    if(!(t1 > t0) || !isFinite(v0) || !isFinite(v1)) continue;
+    for(let ts = t0; ts < t1; ts += 6*60000){
+      const frac = (ts - t0) / (t1 - t0);
+      const v = v0 + (v1 - v0) * (1 - Math.cos(Math.PI * frac)) / 2;
+      const dt = new Date(ts);
+      const ymd = `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+      if(ymd !== todayYMD) continue;
+      curve.push({ t: `${ymd} ${String(dt.getHours()).padStart(2,'0')}:${String(dt.getMinutes()).padStart(2,'0')}`, v: v.toFixed(2) });
+    }
+  }
+
+  // Current level — estimated from the interpolated curve, never shown without a ~
+  const nowBucket = `${String(today.getHours()).padStart(2,'0')}:${String(Math.floor(today.getMinutes()/6)*6).padStart(2,'0')}`;
   const nowEntry = curve.find(p => p.t >= `${todayYMD} ${nowBucket}`);
   const prevIdx = nowEntry ? curve.indexOf(nowEntry) - 1 : -1;
   const prevEntry = prevIdx >= 0 ? curve[prevIdx] : null;
