@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Signal Catcher v15.18 — Dashboard</title>
+<title>Signal Catcher v15.19 — Dashboard</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -717,7 +717,7 @@ body.dark-mode .fish-status-closed{background:#cc334433;color:#ee6677;}
 }
 
 /* ── BONNEVILLE FISH COUNTS card ── */
-.fish-card{background:var(--surface);border-radius:10px;box-shadow:var(--card-shadow);overflow:hidden;margin-top:10px;}
+.fish-card{background:var(--surface);border-radius:10px;box-shadow:var(--card-shadow);overflow:hidden;margin-top:10px;flex-shrink:0;}
 body.dark-mode .fish-card{background:var(--surface);box-shadow:var(--card-shadow);}
 .fish-hdr{background:linear-gradient(135deg,#2d6a3f,#3f8a55);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;cursor:pointer;}
 body.dark-mode .fish-hdr{background:linear-gradient(135deg,#1c4528,#2a5e38);}
@@ -898,7 +898,7 @@ body.dark-mode .fish-links a{color:#7ec898;}
   <div class="sdot active" id="sdot"></div>
   <span class="stext active" id="stext"></span>
   <span class="sstream" id="sstream"></span>
-  <span class="v-badge" title="Build version — if this doesn't match your expected version, do a hard refresh to clear cache">v15.18</span>
+  <span class="v-badge" title="Build version — if this doesn't match your expected version, do a hard refresh to clear cache">v15.19</span>
 </div>
 
 <!-- VERDICT SUMMARY BAR -->
@@ -1097,8 +1097,8 @@ body.dark-mode .fish-links a{color:#7ec898;}
       <div class="coast-content">
         <div class="coast-wx-row" id="coast-wx-pills"></div>
         <div class="coast-tide-status" id="coast-tide-status"></div>
-        <div style="font:600 10px/1 var(--mono);color:var(--text3);letter-spacing:.06em;text-transform:uppercase;padding:4px 0 2px;">🌊 Today's Tide Chart</div>
-        <div class="coast-chart-wrap"><canvas id="coastTideChart"></canvas></div>
+        <div id="coast-chart-hdr" style="font:600 10px/1 var(--mono);color:var(--text3);letter-spacing:.06em;text-transform:uppercase;padding:4px 0 2px;">🌊 Today's Tide Chart</div>
+        <div class="coast-chart-wrap" id="coast-chart-box"><canvas id="coastTideChart"></canvas></div>
         <div id="coast-tide-table"></div>
 
         <!-- ── SALMON & BOTTOM FISHING — month-aware seasonal status ── -->
@@ -6189,6 +6189,10 @@ async function loadCoastalConditions(){
       badge.textContent = `~${tide.currentFt} ft ${tide.rising === null ? '' : tide.rising ? '↑' : '↓'}`;
 
       // Tide curve chart
+      const chartHdr = document.getElementById('coast-chart-hdr');
+      const chartBox = document.getElementById('coast-chart-box');
+      if(chartHdr) chartHdr.style.display = '';
+      if(chartBox) chartBox.style.display = '';
       renderTideChart(tide.curve, tide.hilos);
 
       // Hi/Lo table
@@ -6214,6 +6218,10 @@ async function loadCoastalConditions(){
     } else {
       statusEl.innerHTML = '⚠ Tide data unavailable';
       badge.textContent = 'unavailable';
+      const chartHdr = document.getElementById('coast-chart-hdr');
+      const chartBox = document.getElementById('coast-chart-box');
+      if(chartHdr) chartHdr.style.display = 'none';
+      if(chartBox) chartBox.style.display = 'none';
     }
 
     // ── Salmon & bottom fishing seasonal status (no fetch — calendar-driven) ──
