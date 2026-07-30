@@ -1156,10 +1156,9 @@ body.dark-mode .fish-links a{color:#7ec898;}
           <div class="si-section">
             <h4>Confluence &amp; Conflicts</h4>
             When related indicators align (e.g. Dual Trend: SMA200 + MA Cross), the score gets a confidence boost. When they diverge (e.g. trend vs. exhaustion), conflicts are flagged.<br><br>
-            <strong>Conflict Regimes:</strong> Three conflict pairs are especially important — they represent the deepest trend-vs-exhaustion tensions (SMA 200 vs RSI, DeMark vs SMA 200, OBV vs SMA 200). These are marked with a 🔑 icon when they fire; other conflicts get a ⚡ icon.<br>
-            • <strong>Clear</strong> — few or no conflicts: normal scoring<br>
-            • <strong>Elevated</strong> — multiple conflicts, or one 🔑 conflict: conviction reduced, warning shown<br>
-            • <strong>Transition</strong> — many conflicts, or two or more 🔑 conflicts: score capped toward neutral (65 bull / 35 bear); the conflict pattern itself is the primary signal
+            <strong>Backbone conflicts:</strong> Three of the six conflict pairs are especially important — they represent the deepest trend-vs-exhaustion tensions (SMA 200 vs RSI, DeMark vs SMA 200, OBV vs SMA 200). These are marked with a 🔑 icon when they fire; other conflicts get a ⚡ icon.<br><br>
+            <strong>Conflicts do not reduce the score.</strong> They are shown for diagnosis only. Walk-forward testing (Apr 2026) found that when the backbone pair disagrees, forward returns run <em>above</em> the unconditional average, not below — so the old Elevated / Transition score caps were removed. Read a conflict as "two honest readings of the same chart," not as a warning.<br><br>
+            Regime detection now happens at the <strong>universe</strong> level instead: when the watchlist as a whole shows stretched trend plus weak momentum, the alert email carries an amber banner.
           </div>
           <div class="si-section">
             <h4>Score Bands</h4>
@@ -4403,7 +4402,11 @@ function recalc(){
   drawGauge(t,dispersion,rawT); updBD(bs,t); updWB(); detectFallingKnife(); detectDualSignalCommentary();
   updateDashTiles();
 }
-function sCol(s){if(s>=70)return'#00d97e';if(s>=60)return'#4dd9a0';if(s>=55)return'#a0cfb8';if(s>=45)return'#f0b429';if(s>=40)return'#ff9a7c';if(s>=30)return'#ff7c8a';return'#ff4560';}
+// Cut points aligned to verd() and the documented Score Bands, July 30 2026.
+// Previously broke at 70/60/55/45/40/30 while verd() broke at 72/62/55/45/38/28,
+// so a 71 painted Strongly-Bullish green under a "BULLISH" label (same skew at
+// 60–61, 38–39, 28–29). One band table now drives colour everywhere sCol is used.
+function sCol(s){if(s>=72)return'#00d97e';if(s>=62)return'#4dd9a0';if(s>=55)return'#a0cfb8';if(s>=45)return'#f0b429';if(s>=38)return'#ff9a7c';if(s>=28)return'#ff7c8a';return'#ff4560';}
 function verd(s){
   if(s>=72)return{l:'STRONGLY BULLISH', c:'~70–80% bullish probability',col:'#00d97e'};
   if(s>=62)return{l:'BULLISH',          c:'~60–70% bullish probability',col:'#4dd9a0'};
@@ -4477,19 +4480,13 @@ function detectConflicts(){
   if(conflicts.length===0){return;}
   card.classList.add('has-conflicts');
 
-  // Apply regime class for styling
-  if(currentConflictRegime.regime==='transition') card.classList.add('regime-transition');
-  else if(currentConflictRegime.regime==='elevated') card.classList.add('regime-elevated');
-
-  // Update header text based on regime
+  // Regime styling / regime-specific headers removed July 30 2026 (v12 audit).
+  // classifyConflictRegime() has been a no-op returning regime='clear' since
+  // Apr 28 2026, so the transition/elevated branches here were unreachable.
+  // Header now reports the count only — conflicts are diagnostic, not penal.
   if(hdr){
-    if(currentConflictRegime.regime==='transition'){
-      hdr.innerHTML='🔴 Transition Regime — '+currentConflictRegime.conflictCount+' conflicts · Score capped';
-    } else if(currentConflictRegime.regime==='elevated'){
-      hdr.innerHTML='⚠ Elevated Conflict — '+currentConflictRegime.conflictCount+' conflicts';
-    } else {
-      hdr.innerHTML='⚠ Indicator Conflicts Detected';
-    }
+    const n=currentConflictRegime.conflictCount||conflicts.length;
+    hdr.innerHTML='⚠ Indicator Conflicts Detected'+(n?' — '+n+' active':'');
   }
 
   conflicts.forEach(cf=>{
@@ -4840,23 +4837,12 @@ function drawGauge(score, dispersion, rawScore){
     if(el){el.textContent=lbl+' (σ='+d.toFixed(0)+')';el.style.color=col;}
     if(fill){fill.style.width=agreement+'%';fill.style.background=col;}
   }
-  // Conflict regime badge
+  // Conflict regime badge — permanently hidden as of July 30 2026 (v12 audit).
+  // The per-symbol regime classifier was retired Apr 28 2026; this badge could
+  // only ever have rendered a "score capped" message for a cap that no longer
+  // exists. Element left in the DOM so CSS/layout is untouched.
   const badge=document.getElementById('gregime-badge');
-  if(badge){
-    const cr=currentConflictRegime;
-    if(cr.regime==='transition'){
-      const rawRound=rawScore!=null?Math.round(rawScore):null;
-      badge.className='gregime-badge transition';
-      badge.textContent='🔴 TRANSITION REGIME'+(rawRound!=null&&rawRound!==Math.round(score)?' · raw score '+rawRound+' → capped to '+Math.round(score):'');
-      badge.style.display='';
-    } else if(cr.regime==='elevated'){
-      badge.className='gregime-badge elevated';
-      badge.textContent='⚠ ELEVATED CONFLICT';
-      badge.style.display='';
-    } else {
-      badge.style.display='none';
-    }
-  }
+  if(badge) badge.style.display='none';
   // Update verdict summary bar
   const vbs=document.getElementById('vbar-score'),vbv=document.getElementById('vbar-verdict'),vbc=document.getElementById('vbar-conf');
   if(vbs){vbs.textContent=Math.round(score);vbs.style.color=sCol(score);}
@@ -4866,7 +4852,10 @@ function drawGauge(score, dispersion, rawScore){
 
 function updBD(bs,t){
   const el=document.getElementById('bdown');if(!el)return;
-  [{l:'HIGH',s:bs.high,w:'60%',c:'#4c8ef7'},{l:'MED',s:bs.med,w:'40%',c:'#a78bfa'},{l:'TOTAL',s:t,w:'100%',c:sCol(t)}]
+  // Bucket weights read live from BW — they change with the Timeframe preset
+  // (Swing is 55/45, Intermediate and Long-Term are 65/35). Previously
+  // hardcoded to 60/40, which was wrong on three of the four presets.
+  [{l:'HIGH',s:bs.high,w:Math.round(BW.high*100)+'%',c:'#4c8ef7'},{l:'MED',s:bs.med,w:Math.round(BW.med*100)+'%',c:'#a78bfa'},{l:'TOTAL',s:t,w:'100%',c:sCol(t)}]
   .forEach((r,i)=>{const d=document.createElement('div');d.className='bsr';if(i===2)d.style.marginTop='6px';
     d.innerHTML=`<div class="bsr-l" style="color:${r.c}">${r.l}</div><div class="bsr-bw"><div class="bsr-b" style="width:${r.s}%;background:${r.c}88"></div></div><div class="bsr-v" style="color:${r.c}">${Math.round(r.s)}</div><div class="bsr-w">${r.w}</div>`;
     el.appendChild(d);});
@@ -5960,6 +5949,7 @@ function buildRpt(){
     weightedScore:Math.round(t*10)/10,rawWeightedScore:Math.round(rawT*10)/10,verdict:v.l,confidence:v.c,
     conflictRegime:currentConflictRegime,
     bucketScores:{high:Math.round(bs.high*10)/10,med:Math.round(bs.med*10)/10},
+    bucketWeights:{high:BW.high,med:BW.med},
     indicators:ais.map(i=>({id:i.id,name:i.name,bucket:i.bkt,signal:vals[i.id],label:getSig(vals[i.id]).txt,notes:(document.getElementById('nt-'+i.id)||{}).value||''})),
     conflicts:conflictList,
     confluences:confluenceList,
@@ -5979,9 +5969,9 @@ function copyReport(){
   const lines=['════════════════════════════════════════','TA WEIGHTED SCORE REPORT v5','════════════════════════════════════════',
     `Symbol     : ${d.meta.ticker}`,`Asset Class: ${d.meta.assetClass.toUpperCase()}`,`Timeframe  : ${d.meta.timeframe}`,`Price      : ${d.meta.price}`,`Run Date   : ${d.meta.runDate}`,
     `F&G Index  : ${d.fearGreed?d.fearGreed.value+'/100 ('+d.fearGreed.sentiment+')':'not loaded'}`,'',
-    `WEIGHTED SCORE : ${d.weightedScore} / 100${d.conflictRegime.regime==='transition'?' (capped from '+d.rawWeightedScore+')':''}`,`VERDICT        : ${d.verdict}`,`CONFIDENCE     : ${d.confidence}`,
+    `WEIGHTED SCORE : ${d.weightedScore} / 100`,`VERDICT        : ${d.verdict}`,`CONFIDENCE     : ${d.confidence}`,
     d.conflictRegime.regime!=='clear'?`CONFLICT REGIME: ${d.conflictRegime.label} (${d.conflictRegime.conflictCount} conflicts)`:null,'',
-    'BUCKET SCORES',`  HIGH (60%) : ${d.bucketScores.high}`,`  MED  (40%) : ${d.bucketScores.med}`].filter(l=>l!==null);
+    'BUCKET SCORES',`  HIGH (${Math.round(d.bucketWeights.high*100)}%) : ${d.bucketScores.high}`,`  MED  (${Math.round(d.bucketWeights.med*100)}%) : ${d.bucketScores.med}`].filter(l=>l!==null);
   if(d.conflicts.length>0){lines.push('','⚠ CONFLICTS DETECTED',...d.conflicts.map(c=>`  ${c.tier==='backbone'?'🔑':'•'} ${c.desc}`));}
   if(d.confluences.length>0){lines.push('','🔒 CONFLUENCES CONFIRMED',...d.confluences.map(c=>`  • ${c}`));}
   if(d.fallingKnife){lines.push('',`🔪 ${d.fallingKnife} ALERT ACTIVE`,'  Exhaustion indicators firing into a confirmed opposing trend.');}
@@ -6029,7 +6019,7 @@ async function exportPDF(){
 
     // Bucket scores
     doc.setFillColor(240,242,245); doc.roundedRect(margin,y,180,20,3,3,'F');
-    [[`HIGH (60%) : ${d.bucketScores.high}`,76,142,247],[`MED  (40%) : ${d.bucketScores.med}`,167,139,250]].forEach(([txt,r,g,b],i)=>{
+    [[`HIGH (${Math.round(d.bucketWeights.high*100)}%) : ${d.bucketScores.high}`,76,142,247],[`MED  (${Math.round(d.bucketWeights.med*100)}%) : ${d.bucketScores.med}`,167,139,250]].forEach(([txt,r,g,b],i)=>{
       doc.setTextColor(r,g,b); doc.setFontSize(8); doc.setFont('courier','normal');
       doc.text(txt,margin+4+(i*90),y+12);
     });
@@ -6780,13 +6770,13 @@ Together, they help you avoid the classic "great company, terrible entry" trap.
 <tr><td>MFI vs. OBV</td><td>Short-term volume impulse vs. long-term volume trend</td></tr>
 </table>
 
-<p><strong>Conflict Regimes.</strong> Three of the six conflict pairs are <em>backbone</em> tensions (marked 🔑): SMA 200 vs RSI, DeMark vs SMA 200, and OBV vs SMA 200. The system tallies how many conflicts are active and what kind, producing one of three regimes that affect the final score:</p>
-<table>
-<tr><th>Regime</th><th>Trigger</th><th>Effect on Score</th></tr>
-<tr><td><strong>Clear</strong></td><td>Few or no conflicts</td><td>Normal scoring</td></tr>
-<tr><td><strong>Elevated</strong></td><td>Multiple conflicts, <em>or</em> one 🔑 backbone conflict</td><td>Conviction reduced; warning shown</td></tr>
-<tr><td><strong>Transition</strong></td><td>Many conflicts, <em>or</em> two+ 🔑 backbone conflicts</td><td>Score capped toward neutral (max 65 bull / min 35 bear). The conflict pattern itself is the primary signal.</td></tr>
-</table>
+<p><strong>Backbone conflicts.</strong> Three of the six conflict pairs are <em>backbone</em> tensions (marked 🔑): SMA 200 vs RSI, DeMark vs SMA 200, and OBV vs SMA 200. These are the pairs where a disagreement is most structurally meaningful.</p>
+
+<p><strong>Conflicts are diagnostic, not penal — they do not change the score.</strong> This is a deliberate reversal. Earlier versions classified the conflict environment into Clear / Elevated / Transition regimes and capped the composite toward neutral (65 bull / 35 bear) in Transition. Walk-forward analysis in April 2026 killed that: across 603 observations, months where the backbone pair disagreed returned a mean +7.75% forward versus +4.89% unconditional — <em>5.5 points better</em>, not worse. The caps were penalizing exactly the setups that were working, so they were removed.</p>
+
+<p>Conflicts are still detected, counted, and displayed. Read one as two defensible readings of the same chart rather than as a reason to stand down.</p>
+
+<p><strong>Regime detection moved up a level.</strong> Instead of judging regime per symbol from conflict counts, the system now evaluates the <em>universe</em>: when the tiered watchlist collectively shows stretched trend structure alongside weak momentum, the alert email carries an amber caution banner. That signal held up in testing where the per-symbol version did not.</p>
 
 <h4>5. Timeframe Presets</h4>
 <p>The Timeframe selector above the gauge re-balances both the bucket weights and the individual indicator weights to match your trade horizon. Same eight indicators, different emphasis:</p>
