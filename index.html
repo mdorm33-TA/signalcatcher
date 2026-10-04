@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Signal Catcher v15.23 — Dashboard</title>
+<title>Signal Catcher v15.24 — Dashboard</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -898,7 +898,7 @@ body.dark-mode .fish-links a{color:#7ec898;}
   <div class="sdot active" id="sdot"></div>
   <span class="stext active" id="stext"></span>
   <span class="sstream" id="sstream"></span>
-  <span class="v-badge" title="Build version — if this doesn't match your expected version, do a hard refresh to clear cache">v15.23</span>
+  <span class="v-badge" title="Build version — if this doesn't match your expected version, do a hard refresh to clear cache">v15.24</span>
 </div>
 
 <!-- VERDICT SUMMARY BAR -->
@@ -1552,7 +1552,10 @@ function computeMFI(bars, period=14) {
       if(tp[j] > tp[j-1]) posFlow += rawFlow;
       else if(tp[j] < tp[j-1]) negFlow += rawFlow;
     }
-    const mfi = negFlow === 0 ? 100 : 100 - 100 / (1 + posFlow / negFlow);
+    const mfi = (posFlow === 0 && negFlow === 0) ? 50
+      : negFlow === 0 ? 100
+      : posFlow === 0 ? 0
+      : 100 - 100 / (1 + posFlow / negFlow);
     series.push(mfi);
   }
   const n = series.length;
@@ -2090,7 +2093,7 @@ const TIPS = {
   sma_cross:    {name:'MA Cross 50/200',   desc:'<strong>MA</strong> (Moving Average) crossover system using the <strong>50-day</strong> and <strong>200-day</strong> Simple Moving Averages (requires at least 210 bars of history). Golden Cross (50-day SMA crosses above 200-day SMA) = bullish structural signal; Death Cross = bearish. Engine scans the full price history for the most recent cross, then scores by recency: a fresh cross within the last <strong>60 trading days</strong> earns a premium score (72–90 bullish / 10–28 bearish), decaying linearly with age. Older or absent crosses are graded by SMA spread — wider gap = stronger trend (64–75 or 25–36). Computed from real <strong>OHLC</strong> (Open/High/Low/Close) data.'},
   rsi_extreme:  {name:'RSI Extreme',       desc:'<strong>RSI</strong> (Relative Strength Index) measures momentum on a 0–100 scale using <strong>Wilder\'s 14-period smoothing</strong> (~3 weeks of trading days) of average gains vs average losses. This is a CONTRARIAN indicator: RSI below 30 = oversold → scored BULLISH (potential reversal up, sellers exhausted). RSI above 70 = overbought → scored BEARISH (potential reversal down, buyers exhausted). Signal Catcher uses a <strong>35–65 neutral scoring dead zone</strong>; 30–35 and 65–70 are approach zones that fade toward the conventional 30/70 extremes. During an open U.S. cash session, RSI intentionally includes the current daily candle for early warning and is labeled <strong>provisional intraday</strong> until the close. In strong trends RSI can remain extreme for extended periods — check trend context.'},
   demark_seq:   {name:'DeMark Sequential', desc:'<strong>TD</strong> (Tom DeMark) Sequential counts <strong>9 consecutive closes</strong> compared with the close <strong>4 bars earlier</strong>. A completed Setup 9 can be classified as perfected when bar 8 or 9 exceeds the relevant extremes of bars 6 and 7. <strong>Countdown 13</strong> then uses non-consecutive close-vs-high/low comparisons two bars earlier, with the 13-vs-8 deferral rule. An <strong>incomplete</strong> Countdown can be canceled by an opposite Setup or TDST violation; a <strong>completed Countdown 13 remains completed</strong>. Signal Catcher scores DeMark from completed daily candles only; an in-progress U.S. session is shown as provisional and is not included in the DeMark score.'},
-  mfi:          {name:'Money Flow Index',  desc:'<strong>MFI</strong> (Money Flow Index) is a <strong>14-period</strong> volume-weighted RSI. Each bar\'s typical price (high + low + close)/3 is multiplied by volume to weigh buying vs. selling pressure over the trailing <strong>14 trading days</strong> (~3 weeks) — money flowing IN (price up on volume) vs money flowing OUT (price down on volume).<br><br><strong>CONTRARIAN scoring:</strong> MFI ≤ 20 → oversold (bullish buy signal); MFI ≥ 80 → overbought (bearish sell signal). MFI divergences from price are powerful reversal signals.<br><br><strong>Pairs with On-Balance Volume (OBV):</strong> OBV confirms the big-picture volume trend; MFI times the exact entry on momentum extremes. Computed from real OHLCV data.'},
+  mfi:          {name:'Money Flow Index',  desc:'<strong>MFI</strong> (Money Flow Index) is a <strong>14-period</strong> volume-weighted momentum oscillator. Each bar\'s typical price (high + low + close)/3 is multiplied by volume; positive and negative money flow are classified by whether typical price rose or fell from the prior bar. <strong>Unchanged typical price contributes neither positive nor negative flow.</strong><br><br><strong>Signal Catcher scoring is contrarian:</strong> MFI ≤ 20 is treated as oversold/bullish context and MFI ≥ 80 as overbought/bearish context, but these are <strong>not standalone buy/sell signals</strong>. The calibrated score also uses intermediate lean zones: 20–30 and 30–40 lean bullish; 40–60 is neutral; 60–70 and 70–80 lean bearish. MFI is most useful with confirming price/trend/volume evidence.<br><br><strong>Pairs with On-Balance Volume (OBV):</strong> OBV tracks the broader cumulative volume trend while MFI measures shorter-cycle volume-weighted momentum. During an open U.S. cash session the current daily price and volume are included for early warning and are <strong>provisional intraday</strong> until the close. Computed from real OHLCV data.'},
   bollinger:    {name:'Bollinger Bands',   desc:'Bollinger Bands use a <strong>20-day SMA</strong> of closing prices with upper/lower bands at <strong>±2 population standard deviations</strong> of those same 20 closes. <strong>%B</strong> locates the latest close relative to the envelope: 0 = lower band, 0.5 = middle band, 1 = upper band. John Bollinger cautions that band tags are <strong>not standalone reversal signals</strong> and that closes outside a band are initially continuation information. <strong>Signal Catcher deliberately applies a calibrated contrarian score</strong>, softened when the SMA200 confirms a strong trend, and uses outside-band readings only with additional evidence in exhaustion alerts. Its bandwidth &lt;4% rule is a Signal Catcher near-neutral squeeze heuristic (score 52), not a universal Bollinger threshold. During an open U.S. cash session the current daily candle is included for early warning and is <strong>provisional intraday</strong> until the close. Computed from closing-price data.'},
   obv:          {name:'OBV Trend',         desc:'<strong>OBV</strong> (On-Balance Volume) tracks <em>cumulative</em> volume flow from the start of the dataset — it adds the day\'s volume on up closes and subtracts it on down closes. Trend direction is measured by comparing the <strong>20-day SMA of OBV</strong> against the <strong>50-day SMA of OBV</strong> (20 above 50 = accumulation; 20 below 50 = distribution). Trend slope is read off the 20-day SMA itself across a <strong>5-day window</strong>. Divergence is checked over a <strong>20-day window</strong>: if price is up over 20 days but OBV is down, that warns of distribution (smart money selling); the opposite signals stealth accumulation. Requires at least 50 bars of history to score. Computed from real OHLC + volume data.'},
   adx:          {name:'ADX Trend Overlay', desc:'<strong>ADX</strong> (Average Directional Index) measures TREND STRENGTH (not direction), computed using <strong>Wilder\'s 14-period smoothing</strong> (~3 weeks of trading days) of the <strong>DMI</strong> (Directional Movement Index). Not scored directly — acts as an overlay multiplier on the two trend-direction indicators only: <strong>SMA 200</strong> and <strong>MA Cross 50/200</strong>. Below 20 = no trend (choppy, weights dampened 0.85×). 20–25 = transitional (1.00×). 25–30 = trending (1.06×). 30–40 = strong trend (1.12×). Above 40 = very strong trend (1.20×). <strong>+DI</strong> (Positive Directional Indicator) vs <strong>−DI</strong> (Negative Directional Indicator) shows trend direction. ADX rising over a <strong>3-bar window</strong> indicates strengthening trend. Computed from real OHLC data; contrarian and volume indicators (RSI, MFI, Bollinger, DeMark, OBV, Volume Profile) are unaffected by ADX.'},
@@ -2865,19 +2868,24 @@ async function runAllComputed(ticker){
     }
     }
 
-    // MFI (Money Flow Index)
+    // MFI (Money Flow Index) — intentionally live intraday for early warning.
     if(I.mfi){
     const m = I.mfi;
     if(m.mfi !== null){
       const v = m.mfi;
+      const mfiProvisional = !!I.demark?.excludedCurrentSession;
+      window._mfiProvisional = mfiProvisional;
+      const mfiProvSuffix = mfiProvisional ? ' · provisional intraday' : '';
       let mfiDetail;
-      if(v <= 10)      mfiDetail = `Extreme oversold (${v.toFixed(1)}) — strong buy signal`;
-      else if(v <= 20) mfiDetail = `Oversold (${v.toFixed(1)}) — buy signal`;
-      else if(v <= 30) mfiDetail = `Mild oversold (${v.toFixed(1)})`;
-      else if(v <= 70) mfiDetail = `Neutral zone (${v.toFixed(1)})`;
-      else if(v <= 80) mfiDetail = `Mild overbought (${v.toFixed(1)})`;
-      else if(v <= 90) mfiDetail = `Overbought (${v.toFixed(1)}) — sell signal`;
-      else             mfiDetail = `Extreme overbought (${v.toFixed(1)}) — strong sell signal`;
+      if(v <= 10)      mfiDetail = `Extreme oversold (${v.toFixed(1)}) — strong bullish context${mfiProvSuffix}`;
+      else if(v <= 20) mfiDetail = `Oversold (${v.toFixed(1)}) — bullish context${mfiProvSuffix}`;
+      else if(v <= 30) mfiDetail = `Mild oversold (${v.toFixed(1)}) — bullish lean${mfiProvSuffix}`;
+      else if(v <= 40) mfiDetail = `Lower-neutral (${v.toFixed(1)}) — slight bullish lean${mfiProvSuffix}`;
+      else if(v <= 60) mfiDetail = `Neutral zone (${v.toFixed(1)})${mfiProvSuffix}`;
+      else if(v <= 70) mfiDetail = `Upper-neutral (${v.toFixed(1)}) — slight bearish lean${mfiProvSuffix}`;
+      else if(v <= 80) mfiDetail = `Mild overbought (${v.toFixed(1)}) — bearish lean${mfiProvSuffix}`;
+      else if(v <= 90) mfiDetail = `Overbought (${v.toFixed(1)}) — bearish context${mfiProvSuffix}`;
+      else             mfiDetail = `Extreme overbought (${v.toFixed(1)}) — strong bearish context${mfiProvSuffix}`;
       const mfiSub = document.getElementById('sub-mfi');
       if(mfiSub) mfiSub.textContent = mfiDetail;
       const mfiNote = document.getElementById('nt-mfi');
@@ -3961,7 +3969,7 @@ function showTileModal(id){
   const isPlaceholder = subText.includes('computing') || subText.includes('Scanning');
   document.getElementById('dt-modal-label').textContent = (!isPlaceholder && subText.length > 2) ? subText : sig.txt;
   document.getElementById('dt-modal-label').style.color = color;
-  document.getElementById('dt-modal-signal').textContent = `Signal: ${Math.round(score)} / 100${id === 'demark_seq' ? ' · confirmed daily bars only' : (id === 'bollinger' && window._bollingerProvisional ? ' · provisional intraday' : '')}`;
+  document.getElementById('dt-modal-signal').textContent = `Signal: ${Math.round(score)} / 100${id === 'demark_seq' ? ' · confirmed daily bars only' : ((id === 'bollinger' && window._bollingerProvisional) || (id === 'mfi' && window._mfiProvisional) ? ' · provisional intraday' : '')}`;
   const verifyEl = document.getElementById('dt-modal-verify');
   if(verifyEl){
     if(id === 'demark_seq' && window._demarkVerification){
@@ -4475,9 +4483,12 @@ function chartMFI(bars, period){
     for(let j = i - period + 1; j <= i; j++){
       const flow = tp[j] * (bars[j].v || 0);
       if(tp[j] > tp[j-1]) posFlow += flow;
-      else negFlow += flow;
+      else if(tp[j] < tp[j-1]) negFlow += flow;
     }
-    result[i] = negFlow === 0 ? 100 : 100 - 100/(1 + posFlow/negFlow);
+    result[i] = (posFlow === 0 && negFlow === 0) ? 50
+      : negFlow === 0 ? 100
+      : posFlow === 0 ? 0
+      : 100 - 100/(1 + posFlow/negFlow);
   }
   return result;
 }
@@ -6902,7 +6913,7 @@ Together, they help you avoid the classic "great company, terrible entry" trap.
 <h4>Volume &amp; Institutional Flow</h4>
 <p><strong>Volume Profile</strong> — Maps where the heaviest institutional trading occurred. The POC (Point of Control) is the price with the most volume — it acts as a magnet. VAH (Volume Area High) and VAL (Volume Area Low) bracket where 70% of volume traded. Price above POC = bullish structure.</p>
 <p><strong>OBV Trend</strong> — On-Balance Volume tracks cumulative volume flow: adds volume on up days, subtracts on down days. Rising OBV with rising price confirms smart money is accumulating. The key signal is divergence — OBV falling while price rises warns that institutions may be quietly selling.</p>
-<p><strong>MFI</strong> — Money Flow Index is a volume-weighted RSI. It combines price movement with volume to measure actual buying/selling pressure — money flowing in vs. money flowing out. Scored as a contrarian indicator: MFI below 20 = oversold (bullish); above 80 = overbought (bearish). <em>MFI bridges both worlds — it lives in the volume family because it's volume-weighted, but uses contrarian oversold/overbought scoring like the mean-reversion indicators.</em></p>
+<p><strong>MFI</strong> — Money Flow Index is a 14-period volume-weighted momentum oscillator. Typical price is multiplied by volume, then classified as positive or negative money flow according to whether typical price rose or fell; unchanged typical price contributes neither side. Signal Catcher scores MFI contrarianly: below 20 = oversold/bullish context; above 80 = overbought/bearish context, but these readings are <strong>not standalone buy/sell signals</strong>. During the U.S. cash session, the current daily price and partial-day volume are included for early warning and labeled <strong>provisional intraday</strong>. <em>MFI bridges both worlds — it lives in the volume family because it is volume-weighted, but uses contrarian oversold/overbought scoring like the mean-reversion indicators.</em></p>
 
 <h4>Contrarian / Mean-Reversion</h4>
 <p><strong>RSI Extreme</strong> — The Relative Strength Index measures momentum on a 0–100 scale. This is a <em>contrarian</em> indicator: RSI below 30 means sellers are exhausted → scored bullish. RSI above 70 means buyers are exhausted → scored bearish. Carries the second-highest weight (1.2×) because it sits at the opposite philosophical end from SMA 200.</p>
