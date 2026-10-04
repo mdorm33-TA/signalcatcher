@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Signal Catcher v15.20 — Dashboard</title>
+<title>Signal Catcher v15.23 — Dashboard</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -898,7 +898,7 @@ body.dark-mode .fish-links a{color:#7ec898;}
   <div class="sdot active" id="sdot"></div>
   <span class="stext active" id="stext"></span>
   <span class="sstream" id="sstream"></span>
-  <span class="v-badge" title="Build version — if this doesn't match your expected version, do a hard refresh to clear cache">v15.20</span>
+  <span class="v-badge" title="Build version — if this doesn't match your expected version, do a hard refresh to clear cache">v15.23</span>
 </div>
 
 <!-- VERDICT SUMMARY BAR -->
@@ -1402,7 +1402,14 @@ function computeRSI(closes, period = 14) {
     avgGain = (avgGain * (period - 1) + (diff >= 0 ? diff : 0)) / period;
     avgLoss = (avgLoss * (period - 1) + (diff < 0 ? -diff : 0)) / period;
   }
-  const value = avgLoss === 0 ? 100 : 100 - 100 / (1 + avgGain / avgLoss);
+  // RSI edge cases: a completely flat series has no gain AND no loss, so
+  // momentum is neutral (50), not maximally overbought (100). Preserve the
+  // standard one-sided limits for all-gain / all-loss windows.
+  let value;
+  if (avgGain === 0 && avgLoss === 0) value = 50;
+  else if (avgLoss === 0) value = 100;
+  else if (avgGain === 0) value = 0;
+  else value = 100 - 100 / (1 + avgGain / avgLoss);
   return { value, display: Math.round(value * 10) / 10 };
 }
 function scoreRSI(rsi) {
@@ -1504,14 +1511,20 @@ function scoreSMACross(closes, sma50, sma200, precomputedCross) {
 // ─── BOLLINGER BANDS ─────────────────────────────────────────
 function computeBollinger(closes) {
   const n = closes.length;
-  if (n < 20) return { pctB: 0.5, bandwidth: 0.05 };
+  if (n < 20) return { pctB: 0.5, bandwidth: 0.05, upper: null, lower: null, mean: null, sd: null };
   const slice = closes.slice(n - 20);
   const mean = slice.reduce((s, v) => s + v, 0) / 20;
+  // John Bollinger's standard formulation uses the population standard deviation
+  // of the same 20 closes used by the middle SMA (divide by N, not N-1).
   const sd = Math.sqrt(slice.reduce((s, v) => s + (v - mean) ** 2, 0) / 20);
   const upper = mean + 2 * sd, lower = mean - 2 * sd;
-  const pctB = (closes[n - 1] - lower) / (upper - lower);
-  const bandwidth = (upper - lower) / mean;
-  return { pctB, bandwidth, upper, lower, mean };
+  const width = upper - lower;
+  // A perfectly flat 20-bar window has zero band width. Mathematically %B is
+  // 0/0 there; operationally the close is exactly on the middle band, so use
+  // neutral %B=0.5 rather than propagating NaN into UI/alert logic.
+  const pctB = width === 0 ? 0.5 : (closes[n - 1] - lower) / width;
+  const bandwidth = mean === 0 ? 0 : width / Math.abs(mean);
+  return { pctB, bandwidth, upper, lower, mean, sd };
 }
 function scoreBollinger(boll, price, sma200) {
   const { pctB, bandwidth } = boll;
@@ -1599,67 +1612,242 @@ function scoreOBV(obvSeries, bars) {
 }
 
 // ─── DEMARK SEQUENTIAL ──────────────────────────────────────
-function computeDeMark(bars) {
-  const n = bars.length;
-  const close = bars.map(b => b.c), high = bars.map(b => b.h), low = bars.map(b => b.l);
-  const setupDone = [], setupPerf = [];
-  let buyC = 0, sellC = 0;
-  for (let i = 0; i < n; i++) {
-    setupDone.push(null); setupPerf.push(false);
-    if (i < 4) continue;
-    if (close[i] < close[i - 4]) { buyC++; sellC = 0; if (buyC >= 9) { setupDone[i] = 'buy'; setupPerf[i] = close[i] <= Math.min(low[i - 2], low[i - 3]); buyC = 0; } }
-    else if (close[i] > close[i - 4]) { sellC++; buyC = 0; if (sellC >= 9) { setupDone[i] = 'sell'; setupPerf[i] = close[i] >= Math.max(high[i - 2], high[i - 3]); sellC = 0; } }
-    else { buyC = 0; sellC = 0; }
-  }
-  const cdDone = [];
-  let aCdType = null, aCdCount = 0;
-  for (let i = 0; i < n; i++) {
-    cdDone.push(null);
-    if (i < 2) continue;
-    if (setupDone[i]) { aCdType = setupDone[i]; aCdCount = 0; }
-    if (aCdType) {
-      if (aCdType === 'buy' && close[i] <= low[i - 2]) aCdCount++;
-      if (aCdType === 'sell' && close[i] >= high[i - 2]) aCdCount++;
-      if (aCdCount >= 13) { cdDone[i] = aCdType; aCdType = null; aCdCount = 0; }
-    }
-  }
-  let lastSetup = null, lastSetupBar = null, lastSetupPerf = false, lastCd = null, lastCdBar = null;
-  for (let i = n - 1; i >= 4; i--) {
-    if (!lastSetup && setupDone[i]) { lastSetup = setupDone[i]; lastSetupBar = i; lastSetupPerf = setupPerf[i]; }
-    if (!lastCd && cdDone[i]) { lastCd = cdDone[i]; lastCdBar = i; }
-    if (lastSetup && lastCd) break;
-  }
-  // Invalidate stale setup if subsequent price action violates it.
-  // Buy setup voided once any later close breaks below the setup bar's close; mirror for sell.
-  if (lastSetup === 'buy' && lastSetupBar !== null) {
-    for (let i = lastSetupBar + 1; i < n; i++) {
-      if (close[i] < close[lastSetupBar]) { lastSetup = null; lastSetupBar = null; lastSetupPerf = false; break; }
-    }
-  } else if (lastSetup === 'sell' && lastSetupBar !== null) {
-    for (let i = lastSetupBar + 1; i < n; i++) {
-      if (close[i] > close[lastSetupBar]) { lastSetup = null; lastSetupBar = null; lastSetupPerf = false; break; }
-    }
-  }
-  // Invalidate completed countdown if post-trigger price action contradicts it.
-  // Buy CD13 voided once any later close breaks below the CD13 trigger bar close; mirror for sell.
-  // Prevents degenerate "stale CD13" cases where countdown completes long after the real reversal played out.
-  if (lastCd === 'buy' && lastCdBar !== null) {
-    for (let i = lastCdBar + 1; i < n; i++) {
-      if (close[i] < close[lastCdBar]) { lastCd = null; lastCdBar = null; break; }
-    }
-  } else if (lastCd === 'sell' && lastCdBar !== null) {
-    for (let i = lastCdBar + 1; i < n; i++) {
-      if (close[i] > close[lastCdBar]) { lastCd = null; lastCdBar = null; break; }
-    }
-  }
-  let bc2 = 0, sc2 = 0;
-  for (let i = 4; i < n; i++) {
-    if (close[i] < close[i - 4]) { bc2++; sc2 = 0; if (bc2 >= 9) bc2 = 0; }
-    else if (close[i] > close[i - 4]) { sc2++; bc2 = 0; if (sc2 >= 9) sc2 = 0; }
-    else { bc2 = 0; sc2 = 0; }
-  }
-  return { lastSetup, barsSince: lastSetupBar !== null ? n - 1 - lastSetupBar : null, perfect: lastSetupPerf, lastCd, barsSinceCd: lastCdBar !== null ? n - 1 - lastCdBar : null, activeBuy: bc2, activeSell: sc2 };
+// Corrected October 2, 2026 after Phase 1 / 1B golden-test audit.
+// Implements published Sequential mechanics used by Signal Catcher:
+//   • Setup 9 (close vs close four bars earlier)
+//   • Setup perfection (bars 8/9 vs bars 6/7 highs/lows)
+//   • non-consecutive Countdown (close vs high/low two bars earlier)
+//   • Countdown may begin on Setup bar 9
+//   • 13-vs-8 Countdown deferral
+//   • opposite-Setup cancellation while Countdown is incomplete
+//   • TDST cancellation while Countdown is incomplete
+//   • same-direction Recycling: continuous 22-count or 100%-200% Setup range
+//   • completed Setup/Countdown events are never retroactively deleted
+// The optional flags exist for regression isolation; production defaults are all ON.
+
+function _dmTrueHigh(bars, i) {
+  return i === 0 ? bars[i].h : Math.max(bars[i].h, bars[i - 1].c);
 }
+
+function _dmTrueLow(bars, i) {
+  return i === 0 ? bars[i].l : Math.min(bars[i].l, bars[i - 1].c);
+}
+
+function _dmSetupStats(bars, start, end) {
+  let hi = -Infinity, lo = Infinity;
+  for (let i = start; i <= end; i++) {
+    hi = Math.max(hi, _dmTrueHigh(bars, i));
+    lo = Math.min(lo, _dmTrueLow(bars, i));
+  }
+  return { highTrue: hi, lowTrue: lo, range: hi - lo };
+}
+
+function _dmMakeCountdown(setup) {
+  // Buy Setup -> TDST Upside from highest true high.
+  // Sell Setup -> TDST Downside from lowest true low.
+  return {
+    type: setup.type,
+    count: 0,
+    close8: null,
+    originSetupIndex: setup.i,
+    originSetupRange: setup.range,
+    tdst: setup.type === 'buy' ? setup.highTrue : setup.lowTrue,
+  };
+}
+
+function _dmNYParts(ms) {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', hourCycle: 'h23'
+  }).formatToParts(new Date(ms));
+  const get = (type) => parts.find(p => p.type === type)?.value;
+  const year = get('year'), month = get('month'), day = get('day');
+  const hour = Number(get('hour') || 0), minute = Number(get('minute') || 0);
+  return { key: `${year}-${month}-${day}`, minutes: hour * 60 + minute };
+}
+
+function _dmBarNYParts(bar) {
+  const raw = Number.isFinite(bar?.ts) ? bar.ts : (Number.isFinite(bar?.t) ? bar.t : null);
+  if (raw == null) return null;
+  const ms = raw < 1e12 ? raw * 1000 : raw;
+  return _dmNYParts(ms);
+}
+
+function _dmSelectCompletedBars(bars, includeCurrentSession, nowMs) {
+  if (includeCurrentSession || !Array.isArray(bars) || bars.length === 0) {
+    return { bars, excludedCurrentSession: false };
+  }
+  const now = _dmNYParts(nowMs);
+  const lastNY = _dmBarNYParts(bars[bars.length - 1]);
+  // Yahoo's U.S. equity/ETF 1d bars are timestamped at the regular-session open
+  // (about 09:30 New York time). Restrict this auto-exclusion to that shape so
+  // 24-hour assets such as crypto are not accidentally treated as U.S. cash-session bars.
+  const looksLikeUSCashDaily = !!lastNY && lastNY.minutes >= (9 * 60 + 25) && lastNY.minutes <= (9 * 60 + 35);
+  // Daily DeMark is close-based, so an in-progress U.S. cash-session candle is
+  // not scored until the close has had a 15-minute publication buffer.
+  const excludedCurrentSession = looksLikeUSCashDaily && lastNY.key === now.key && now.minutes < (16 * 60 + 15);
+  return {
+    bars: excludedCurrentSession ? bars.slice(0, -1) : bars,
+    excludedCurrentSession,
+  };
+}
+
+function computeDeMark(bars, options = {}) {
+  const {
+    enableDeferral = true,
+    enableTDST = true,
+    enableRecycle22 = true,
+    enableRecycleRange = true,
+    includeCurrentSession = false,
+    nowMs = Date.now(),
+  } = options;
+
+  const selected = _dmSelectCompletedBars(bars, includeCurrentSession, nowMs);
+  bars = selected.bars;
+  const excludedCurrentSession = selected.excludedCurrentSession;
+  const n = bars.length;
+  if (!n) {
+    return { lastSetup:null, barsSince:null, perfect:false, lastCd:null, barsSinceCd:null, activeBuy:0, activeSell:0, excludedCurrentSession, confirmedThrough:null };
+  }
+
+  const close = bars.map(b => b.c);
+  const high = bars.map(b => b.h);
+  const low = bars.map(b => b.l);
+  const setups = [];
+  const countdowns = [];
+
+  let buyStreak = 0, sellStreak = 0;
+  let activeCd = null;
+
+  for (let i = 0; i < n; i++) {
+    let newSetup = null;
+    let recycle22 = false;
+
+    // Setup: nine consecutive closes vs close four bars earlier.
+    // Keep the streak alive beyond 9 so a continuous 22 can trigger Recycling.
+    if (i >= 4) {
+      if (close[i] < close[i - 4]) {
+        buyStreak++;
+        sellStreak = 0;
+
+        if (buyStreak === 9) {
+          const start = i - 8;
+          const perfect =
+            (low[i - 1] <= Math.min(low[i - 3], low[i - 2])) ||
+            (low[i]     <= Math.min(low[i - 3], low[i - 2]));
+          const stats = _dmSetupStats(bars, start, i);
+          newSetup = { i, start, type:'buy', perfect, ...stats };
+          setups.push(newSetup);
+        }
+        if (enableRecycle22 && buyStreak === 22 && activeCd?.type === 'buy') recycle22 = true;
+      } else if (close[i] > close[i - 4]) {
+        sellStreak++;
+        buyStreak = 0;
+
+        if (sellStreak === 9) {
+          const start = i - 8;
+          const perfect =
+            (high[i - 1] >= Math.max(high[i - 3], high[i - 2])) ||
+            (high[i]     >= Math.max(high[i - 3], high[i - 2]));
+          const stats = _dmSetupStats(bars, start, i);
+          newSetup = { i, start, type:'sell', perfect, ...stats };
+          setups.push(newSetup);
+        }
+        if (enableRecycle22 && sellStreak === 22 && activeCd?.type === 'sell') recycle22 = true;
+      } else {
+        buyStreak = 0;
+        sellStreak = 0;
+      }
+    }
+
+    // Setup-driven Countdown start, opposite-direction cancellation,
+    // and same-direction range Recycling.
+    if (newSetup) {
+      if (!activeCd) {
+        activeCd = _dmMakeCountdown(newSetup);
+      } else if (activeCd.type !== newSetup.type) {
+        activeCd = _dmMakeCountdown(newSetup);
+      } else if (enableRecycleRange && activeCd.originSetupRange > 0) {
+        const ratio = newSetup.range / activeCd.originSetupRange;
+        if (ratio >= 1 && ratio <= 2) activeCd = _dmMakeCountdown(newSetup);
+      }
+    }
+
+    // Continuous 22-count Recycling. Refresh the Setup context from the
+    // most recent nine bars at the point the 22-count condition is reached.
+    if (recycle22 && activeCd) {
+      const start = Math.max(0, i - 8);
+      const stats = _dmSetupStats(bars, start, i);
+      activeCd = _dmMakeCountdown({ i, start, type:activeCd.type, perfect:false, ...stats });
+    }
+
+    // TDST cancellation applies only while Countdown is under construction.
+    // Buy Countdown cancels if True Low rises above TDST Upside.
+    // Sell Countdown cancels if True High falls below TDST Downside.
+    if (activeCd && enableTDST && i > activeCd.originSetupIndex) {
+      const cancelled = activeCd.type === 'buy'
+        ? _dmTrueLow(bars, i) > activeCd.tdst
+        : _dmTrueHigh(bars, i) < activeCd.tdst;
+      if (cancelled) activeCd = null;
+    }
+
+    // Sequential Countdown: qualifying bars are non-consecutive.
+    // Setup bar 9 itself may qualify as Countdown bar 1.
+    if (activeCd && i >= 2) {
+      const qualifies = activeCd.type === 'buy'
+        ? close[i] <= low[i - 2]
+        : close[i] >= high[i - 2];
+
+      if (qualifies) {
+        if (activeCd.count < 12) {
+          activeCd.count++;
+          if (activeCd.count === 8) activeCd.close8 = close[i];
+        } else {
+          // 13-vs-8 deferral: a candidate 13 waits until the qualifier is met.
+          const passes13v8 = !enableDeferral || activeCd.close8 == null ||
+            (activeCd.type === 'buy' ? low[i] <= activeCd.close8 : high[i] >= activeCd.close8);
+          if (passes13v8) {
+            countdowns.push({ i, type:activeCd.type });
+            activeCd = null;
+          }
+        }
+      }
+    }
+  }
+
+  // Existing Signal Catcher API: expose current Setup streak only for 1-8;
+  // a completed 9 resets this display/scoring counter to zero.
+  let activeBuy = 0, activeSell = 0;
+  for (let i = 4; i < n; i++) {
+    if (close[i] < close[i - 4]) {
+      activeBuy++; activeSell = 0;
+      if (activeBuy >= 9) activeBuy = 0;
+    } else if (close[i] > close[i - 4]) {
+      activeSell++; activeBuy = 0;
+      if (activeSell >= 9) activeSell = 0;
+    } else {
+      activeBuy = 0; activeSell = 0;
+    }
+  }
+
+  // Completed events remain part of the historical state. Do NOT invalidate
+  // a completed Setup 9 or Countdown 13 based on subsequent price action.
+  const lastSetup = setups.length ? setups[setups.length - 1] : null;
+  const lastCd = countdowns.length ? countdowns[countdowns.length - 1] : null;
+
+  return {
+    lastSetup: lastSetup?.type ?? null,
+    barsSince: lastSetup ? n - 1 - lastSetup.i : null,
+    perfect: lastSetup?.perfect ?? false,
+    lastCd: lastCd?.type ?? null,
+    barsSinceCd: lastCd ? n - 1 - lastCd.i : null,
+    activeBuy,
+    activeSell,
+    excludedCurrentSession,
+    confirmedThrough: bars[n - 1]?.t ?? bars[n - 1]?.ts ?? null,
+  };
+}
+
 function scoreDeMark(dm) {
   const STALE_SETUP = 10, STALE_CD = 15;
   if (dm.lastCd && dm.barsSinceCd !== null && dm.barsSinceCd <= STALE_CD) {
@@ -1900,10 +2088,10 @@ const TIPS = {
   vol_profile:  {name:'Volume Profile',    desc:'Identifies price levels where large institutional transactions occurred. Computed over a <strong>252-trading-day (~1 year) lookback</strong>, partitioned into 24 equal-width price buckets. The <strong>POC</strong> (Point of Control) is the price with the highest traded volume — acts as a magnet. <strong>VAH</strong> (Volume Area High) and <strong>VAL</strong> (Volume Area Low) bracket the zone where 70% of cumulative volume traded. Price above POC = bullish structure; below = bearish.'},
   sma_200:      {name:'SMA 200 Trend',     desc:'The <strong>SMA</strong> (Simple Moving Average) of the last <strong>200 trading days (~10 months)</strong> is the most widely watched long-term trend indicator. Score grades the percentage distance from the SMA — well above (+5% or more) confirms a sustained uptrend; well below confirms a downtrend. Often used as the dividing line between bull and bear markets. Use dividend-adjusted data for income instruments.'},
   sma_cross:    {name:'MA Cross 50/200',   desc:'<strong>MA</strong> (Moving Average) crossover system using the <strong>50-day</strong> and <strong>200-day</strong> Simple Moving Averages (requires at least 210 bars of history). Golden Cross (50-day SMA crosses above 200-day SMA) = bullish structural signal; Death Cross = bearish. Engine scans the full price history for the most recent cross, then scores by recency: a fresh cross within the last <strong>60 trading days</strong> earns a premium score (72–90 bullish / 10–28 bearish), decaying linearly with age. Older or absent crosses are graded by SMA spread — wider gap = stronger trend (64–75 or 25–36). Computed from real <strong>OHLC</strong> (Open/High/Low/Close) data.'},
-  rsi_extreme:  {name:'RSI Extreme',       desc:'<strong>RSI</strong> (Relative Strength Index) measures momentum on a 0–100 scale using <strong>Wilder\'s 14-period smoothing</strong> (~3 weeks of trading days) of average gains vs average losses. This is a CONTRARIAN indicator: RSI below 30 = oversold → scored BULLISH (potential reversal up, sellers exhausted). RSI above 70 = overbought → scored BEARISH (potential reversal down, buyers exhausted). RSI 40–60 = neutral (no extreme signal). In strong trends RSI can remain extreme for extended periods — check trend context.'},
-  demark_seq:   {name:'DeMark Sequential', desc:'<strong>TD</strong> (Tom DeMark) Sequential counts <strong>9 consecutive closes</strong> compared to the close <strong>4 bars earlier</strong> to identify price exhaustion (a Setup pattern spans ~9 trading days minimum, longer if interrupted). A completed Setup 9 — especially "perfected" (bars 8 or 9 making the pattern\'s extreme high/low) — is a high-conviction reversal signal. <strong>Countdown 13</strong> requires 13 additional qualifying closes after Setup completes, often spanning weeks, and is the strongest signal in the system. Setup is invalidated if subsequent price disproves it within 10 bars (stale-setup window). Computed from real OHLC data.'},
+  rsi_extreme:  {name:'RSI Extreme',       desc:'<strong>RSI</strong> (Relative Strength Index) measures momentum on a 0–100 scale using <strong>Wilder\'s 14-period smoothing</strong> (~3 weeks of trading days) of average gains vs average losses. This is a CONTRARIAN indicator: RSI below 30 = oversold → scored BULLISH (potential reversal up, sellers exhausted). RSI above 70 = overbought → scored BEARISH (potential reversal down, buyers exhausted). Signal Catcher uses a <strong>35–65 neutral scoring dead zone</strong>; 30–35 and 65–70 are approach zones that fade toward the conventional 30/70 extremes. During an open U.S. cash session, RSI intentionally includes the current daily candle for early warning and is labeled <strong>provisional intraday</strong> until the close. In strong trends RSI can remain extreme for extended periods — check trend context.'},
+  demark_seq:   {name:'DeMark Sequential', desc:'<strong>TD</strong> (Tom DeMark) Sequential counts <strong>9 consecutive closes</strong> compared with the close <strong>4 bars earlier</strong>. A completed Setup 9 can be classified as perfected when bar 8 or 9 exceeds the relevant extremes of bars 6 and 7. <strong>Countdown 13</strong> then uses non-consecutive close-vs-high/low comparisons two bars earlier, with the 13-vs-8 deferral rule. An <strong>incomplete</strong> Countdown can be canceled by an opposite Setup or TDST violation; a <strong>completed Countdown 13 remains completed</strong>. Signal Catcher scores DeMark from completed daily candles only; an in-progress U.S. session is shown as provisional and is not included in the DeMark score.'},
   mfi:          {name:'Money Flow Index',  desc:'<strong>MFI</strong> (Money Flow Index) is a <strong>14-period</strong> volume-weighted RSI. Each bar\'s typical price (high + low + close)/3 is multiplied by volume to weigh buying vs. selling pressure over the trailing <strong>14 trading days</strong> (~3 weeks) — money flowing IN (price up on volume) vs money flowing OUT (price down on volume).<br><br><strong>CONTRARIAN scoring:</strong> MFI ≤ 20 → oversold (bullish buy signal); MFI ≥ 80 → overbought (bearish sell signal). MFI divergences from price are powerful reversal signals.<br><br><strong>Pairs with On-Balance Volume (OBV):</strong> OBV confirms the big-picture volume trend; MFI times the exact entry on momentum extremes. Computed from real OHLCV data.'},
-  bollinger:    {name:'Bollinger Bands',   desc:'Bollinger Bands plot a <strong>20-day</strong> middle <strong>SMA</strong> (Simple Moving Average) with upper and lower bands at <strong>2 standard deviations</strong> of the same 20-day price window (~4 weeks). CONTRARIAN scoring: <strong>%B</strong> (percent bandwidth, where price sits within the band envelope) near 0 (at lower band) → bullish reversal signal; %B near 1 (at upper band) → bearish reversal signal. Band squeeze (bandwidth below 4% of the mean) → neutral with breakout pending. In strong trends price can "walk the band" — check trend context. Computed from real OHLC data.'},
+  bollinger:    {name:'Bollinger Bands',   desc:'Bollinger Bands use a <strong>20-day SMA</strong> of closing prices with upper/lower bands at <strong>±2 population standard deviations</strong> of those same 20 closes. <strong>%B</strong> locates the latest close relative to the envelope: 0 = lower band, 0.5 = middle band, 1 = upper band. John Bollinger cautions that band tags are <strong>not standalone reversal signals</strong> and that closes outside a band are initially continuation information. <strong>Signal Catcher deliberately applies a calibrated contrarian score</strong>, softened when the SMA200 confirms a strong trend, and uses outside-band readings only with additional evidence in exhaustion alerts. Its bandwidth &lt;4% rule is a Signal Catcher near-neutral squeeze heuristic (score 52), not a universal Bollinger threshold. During an open U.S. cash session the current daily candle is included for early warning and is <strong>provisional intraday</strong> until the close. Computed from closing-price data.'},
   obv:          {name:'OBV Trend',         desc:'<strong>OBV</strong> (On-Balance Volume) tracks <em>cumulative</em> volume flow from the start of the dataset — it adds the day\'s volume on up closes and subtracts it on down closes. Trend direction is measured by comparing the <strong>20-day SMA of OBV</strong> against the <strong>50-day SMA of OBV</strong> (20 above 50 = accumulation; 20 below 50 = distribution). Trend slope is read off the 20-day SMA itself across a <strong>5-day window</strong>. Divergence is checked over a <strong>20-day window</strong>: if price is up over 20 days but OBV is down, that warns of distribution (smart money selling); the opposite signals stealth accumulation. Requires at least 50 bars of history to score. Computed from real OHLC + volume data.'},
   adx:          {name:'ADX Trend Overlay', desc:'<strong>ADX</strong> (Average Directional Index) measures TREND STRENGTH (not direction), computed using <strong>Wilder\'s 14-period smoothing</strong> (~3 weeks of trading days) of the <strong>DMI</strong> (Directional Movement Index). Not scored directly — acts as an overlay multiplier on the two trend-direction indicators only: <strong>SMA 200</strong> and <strong>MA Cross 50/200</strong>. Below 20 = no trend (choppy, weights dampened 0.85×). 20–25 = transitional (1.00×). 25–30 = trending (1.06×). 30–40 = strong trend (1.12×). Above 40 = very strong trend (1.20×). <strong>+DI</strong> (Positive Directional Indicator) vs <strong>−DI</strong> (Negative Directional Indicator) shows trend direction. ADX rising over a <strong>3-bar window</strong> indicates strengthening trend. Computed from real OHLC data; contrarian and volume indicators (RSI, MFI, Bollinger, DeMark, OBV, Volume Profile) are unaffected by ADX.'},
 };
@@ -2621,14 +2809,18 @@ async function runAllComputed(ticker){
     // RSI
     if(I.rsi && I.rsi.value != null){
     const rsiVal = I.rsi.display != null ? I.rsi.display : Math.round(I.rsi.value * 10) / 10;
+    // RSI intentionally includes today's live U.S. daily candle for early warning.
+    // DeMark's session metadata tells us whether that same candle is still provisional.
+    const rsiProvisional = !!I.demark?.excludedCurrentSession;
+    const rsiProvSuffix = rsiProvisional ? ' · provisional intraday' : '';
     let rsiDetail;
-    if(rsiVal >= 80)      rsiDetail = `RSI ${rsiVal} — Extremely Overbought (bearish)`;
-    else if(rsiVal >= 70) rsiDetail = `RSI ${rsiVal} — Overbought (bearish signal)`;
-    else if(rsiVal <= 20) rsiDetail = `RSI ${rsiVal} — Extremely Oversold (bullish)`;
-    else if(rsiVal <= 30) rsiDetail = `RSI ${rsiVal} — Oversold (bullish signal)`;
-    else if(rsiVal > 65)  rsiDetail = `RSI ${rsiVal} — Approaching overbought`;
-    else if(rsiVal < 35)  rsiDetail = `RSI ${rsiVal} — Approaching oversold`;
-    else                  rsiDetail = `RSI ${rsiVal} — Neutral (no contrarian signal)`;
+    if(rsiVal >= 80)      rsiDetail = `RSI ${rsiVal} — Extremely Overbought (bearish)${rsiProvSuffix}`;
+    else if(rsiVal >= 70) rsiDetail = `RSI ${rsiVal} — Overbought (bearish signal)${rsiProvSuffix}`;
+    else if(rsiVal <= 20) rsiDetail = `RSI ${rsiVal} — Extremely Oversold (bullish)${rsiProvSuffix}`;
+    else if(rsiVal <= 30) rsiDetail = `RSI ${rsiVal} — Oversold (bullish signal)${rsiProvSuffix}`;
+    else if(rsiVal > 65)  rsiDetail = `RSI ${rsiVal} — Approaching overbought${rsiProvSuffix}`;
+    else if(rsiVal < 35)  rsiDetail = `RSI ${rsiVal} — Approaching oversold${rsiProvSuffix}`;
+    else                  rsiDetail = `RSI ${rsiVal} — Neutral (no contrarian signal)${rsiProvSuffix}`;
     const rsiSub = document.getElementById('sub-rsi_extreme');
     if(rsiSub) rsiSub.textContent = rsiDetail;
     const rsiNote = document.getElementById('nt-rsi_extreme');
@@ -2693,18 +2885,21 @@ async function runAllComputed(ticker){
     }
     }
 
-    // Bollinger
+    // Bollinger — intentionally live intraday for early warning, like RSI.
     if(I.boll){
     const boll = I.boll;
+    const bollProvisional = !!I.demark?.excludedCurrentSession;
+    window._bollingerProvisional = bollProvisional;
+    const bollProvSuffix = bollProvisional ? ' · provisional intraday' : '';
     let bollDetail;
-    if(boll.bandwidth < 0.04)        bollDetail = `Band squeeze (${(boll.bandwidth*100).toFixed(1)}% width) — breakout pending`;
-    else if(boll.pctB >= 1.0)        bollDetail = (I.sma200 && price > I.sma200*1.05) ? `Walking upper band (%B=${boll.pctB.toFixed(2)}) — uptrend continuation` : `Price above upper band (%B=${boll.pctB.toFixed(2)}) — overbought`;
-    else if(boll.pctB >= 0.85)       bollDetail = `Near upper band (%B=${boll.pctB.toFixed(2)})`;
-    else if(boll.pctB <= 0.0)        bollDetail = (I.sma200 && price < I.sma200*0.95) ? `Walking lower band (%B=${boll.pctB.toFixed(2)}) — downtrend continuation` : `Price below lower band (%B=${boll.pctB.toFixed(2)}) — oversold`;
-    else if(boll.pctB <= 0.15)       bollDetail = `Near lower band (%B=${boll.pctB.toFixed(2)}) — oversold zone`;
-    else if(boll.pctB >= 0.45 && boll.pctB <= 0.55) bollDetail = `At midline (%B=${boll.pctB.toFixed(2)})`;
-    else if(boll.pctB > 0.55)        bollDetail = `Upper half (%B=${boll.pctB.toFixed(2)}) — mild overbought`;
-    else                              bollDetail = `Lower half (%B=${boll.pctB.toFixed(2)}) — mild oversold`;
+    if(boll.bandwidth < 0.04)        bollDetail = `Band squeeze (${(boll.bandwidth*100).toFixed(1)}% width) — near-neutral, breakout watch${bollProvSuffix}`;
+    else if(boll.pctB >= 1.0)        bollDetail = (I.sma200 && price > I.sma200*1.05) ? `Walking upper band (%B=${boll.pctB.toFixed(2)}) — uptrend continuation${bollProvSuffix}` : `Price above upper band (%B=${boll.pctB.toFixed(2)}) — Signal Catcher contrarian extreme${bollProvSuffix}`;
+    else if(boll.pctB >= 0.85)       bollDetail = `Near upper band (%B=${boll.pctB.toFixed(2)})${bollProvSuffix}`;
+    else if(boll.pctB <= 0.0)        bollDetail = (I.sma200 && price < I.sma200*0.95) ? `Walking lower band (%B=${boll.pctB.toFixed(2)}) — downtrend continuation${bollProvSuffix}` : `Price below lower band (%B=${boll.pctB.toFixed(2)}) — Signal Catcher contrarian extreme${bollProvSuffix}`;
+    else if(boll.pctB <= 0.15)       bollDetail = `Near lower band (%B=${boll.pctB.toFixed(2)}) — lower-band zone${bollProvSuffix}`;
+    else if(boll.pctB >= 0.45 && boll.pctB <= 0.55) bollDetail = `At midline (%B=${boll.pctB.toFixed(2)})${bollProvSuffix}`;
+    else if(boll.pctB > 0.55)        bollDetail = `Upper half (%B=${boll.pctB.toFixed(2)})${bollProvSuffix}`;
+    else                              bollDetail = `Lower half (%B=${boll.pctB.toFixed(2)})${bollProvSuffix}`;
     const bollSub = document.getElementById('sub-bollinger');
     if(bollSub) bollSub.textContent = bollDetail;
     const bollNote = document.getElementById('nt-bollinger');
@@ -2788,24 +2983,42 @@ async function runAllComputed(ticker){
       if(vpNote && !vpNote.value) vpNote.value = `[Computed from ${Math.min(n,252)} daily bars] POC:$${vp.poc.toFixed(2)} VAH:$${vp.vah.toFixed(2)} VAL:$${vp.val.toFixed(2)} · ${vpDetail}`;
     }
 
-    // DeMark Sequential
+    // DeMark Sequential — confirmed daily candles drive the score.
+    // If Yahoo is also carrying today's unfinished U.S. daily candle, compute a
+    // separate live/provisional view for transparency, but do NOT score it.
     if(I.demark){
     const dm = I.demark;
     let dmDetail;
     if(dm.lastCd && dm.barsSinceCd !== null && dm.barsSinceCd <= 15)
-      dmDetail = `CD13 ${dm.lastCd.toUpperCase()} · ${dm.barsSinceCd === 0 ? 'Today' : dm.barsSinceCd + ' days ago'}`;
+      dmDetail = `CD13 ${dm.lastCd.toUpperCase()} · ${dm.barsSinceCd === 0 ? 'latest completed bar' : dm.barsSinceCd + ' completed bars ago'}`;
     else if(dm.lastSetup && dm.barsSince !== null && dm.barsSince <= 20)
-      dmDetail = `Setup9 ${dm.lastSetup.toUpperCase()}${dm.perfect ? ' ★' : ''} · ${dm.barsSince === 0 ? 'Today' : dm.barsSince + ' days ago'}`;
+      dmDetail = `Setup9 ${dm.lastSetup.toUpperCase()}${dm.perfect ? ' ★' : ''} · ${dm.barsSince === 0 ? 'latest completed bar' : dm.barsSince + ' completed bars ago'}`;
     else if(dm.activeBuy >= 5)  dmDetail = `Active BUY setup ${dm.activeBuy}/9`;
     else if(dm.activeSell >= 5) dmDetail = `Active SELL setup ${dm.activeSell}/9`;
     else if(dm.activeBuy > 0)   dmDetail = `BUY setup counting: ${dm.activeBuy}/9`;
     else if(dm.activeSell > 0)  dmDetail = `SELL setup counting: ${dm.activeSell}/9`;
-    else                        dmDetail = 'No active signal · score neutral';
+    else                        dmDetail = 'No active confirmed signal · score neutral';
+
+    let dmVerify = `Confirmed through ${dm.confirmedThrough ?? 'latest completed daily bar'}`;
+    if(dm.excludedCurrentSession && scoringBars.length >= 5){
+      const dmLive = computeDeMark(scoringBars, { includeCurrentSession:true });
+      const cur = scoringBars[scoringBars.length - 1];
+      const ref4 = scoringBars[scoringBars.length - 5];
+      let liveText = 'no active setup';
+      if(dmLive.lastCd && dmLive.barsSinceCd === 0) liveText = `CD13 ${dmLive.lastCd.toUpperCase()}`;
+      else if(dmLive.lastSetup && dmLive.barsSince === 0) liveText = `Setup9 ${dmLive.lastSetup.toUpperCase()}${dmLive.perfect ? ' ★' : ''}`;
+      else if(dmLive.activeBuy > 0) liveText = `BUY ${dmLive.activeBuy}/9`;
+      else if(dmLive.activeSell > 0) liveText = `SELL ${dmLive.activeSell}/9`;
+      const cmp = cur.c > ref4.c ? '>' : cur.c < ref4.c ? '<' : '=';
+      dmVerify += ` · Provisional ${cur.t}: ${liveText} · $${cur.c.toFixed(2)} ${cmp} $${ref4.c.toFixed(2)} (${ref4.t}, 4 bars earlier)`;
+      dmDetail = `CONFIRMED: ${dmDetail}`;
+    }
+    window._demarkVerification = dmVerify;
     const dmSub = document.getElementById('sub-demark_seq');
     if(dmSub) dmSub.textContent = dmDetail;
     if(TIPS.demark_seq) TIPS.demark_seq.name = 'DeMark Sequential (computed)';
     const dmNote = document.getElementById('nt-demark_seq');
-    if(dmNote && !dmNote.value) dmNote.value = `[Computed from ${n} daily bars] ${dmDetail}`;
+    if(dmNote && !dmNote.value) dmNote.value = `[Computed from ${n} fetched daily bars] ${dmDetail} · ${dmVerify}`;
     }
 
     console.log('runAllComputed: ALL DONE — detail strings complete for', ticker);
@@ -3748,7 +3961,17 @@ function showTileModal(id){
   const isPlaceholder = subText.includes('computing') || subText.includes('Scanning');
   document.getElementById('dt-modal-label').textContent = (!isPlaceholder && subText.length > 2) ? subText : sig.txt;
   document.getElementById('dt-modal-label').style.color = color;
-  document.getElementById('dt-modal-signal').textContent = `Signal: ${Math.round(score)} / 100`;
+  document.getElementById('dt-modal-signal').textContent = `Signal: ${Math.round(score)} / 100${id === 'demark_seq' ? ' · confirmed daily bars only' : (id === 'bollinger' && window._bollingerProvisional ? ' · provisional intraday' : '')}`;
+  const verifyEl = document.getElementById('dt-modal-verify');
+  if(verifyEl){
+    if(id === 'demark_seq' && window._demarkVerification){
+      verifyEl.textContent = window._demarkVerification;
+      verifyEl.style.display = 'block';
+    } else {
+      verifyEl.textContent = '';
+      verifyEl.style.display = 'none';
+    }
+  }
 
   // Description from TIPS
   const descEl = document.getElementById('dt-modal-desc');
@@ -6684,7 +6907,7 @@ Together, they help you avoid the classic "great company, terrible entry" trap.
 <h4>Contrarian / Mean-Reversion</h4>
 <p><strong>RSI Extreme</strong> — The Relative Strength Index measures momentum on a 0–100 scale. This is a <em>contrarian</em> indicator: RSI below 30 means sellers are exhausted → scored bullish. RSI above 70 means buyers are exhausted → scored bearish. Carries the second-highest weight (1.2×) because it sits at the opposite philosophical end from SMA 200.</p>
 <p><strong>DeMark Sequential</strong> — Tom DeMark's system counts 9 consecutive closes in the same direction to identify price exhaustion. A completed "Setup 9" — especially when "perfected" — is a high-conviction reversal signal. Countdown 13 is the strongest signal. It answers: has this move been going on too long?</p>
-<p><strong>Bollinger Bands</strong> — Plots bands at 2 standard deviations around a 20-day SMA. Scored as contrarian: price at the lower band suggests oversold (bullish reversal); price at the upper band suggests overbought (bearish reversal). A band squeeze (very narrow bands) signals a breakout is building.</p>
+<p><strong>Bollinger Bands</strong> — Uses a 20-day SMA with bands at ±2 population standard deviations. The bands define relative price position; a tag by itself is not a buy/sell signal, and an outside close can initially be continuation. Signal Catcher intentionally converts %B into a contrarian timing score, with a trend guard from SMA200 and stricter multi-indicator gates for exhaustion alerts. Its &lt;4% BandWidth rule is a custom near-neutral squeeze heuristic. During market hours the current daily candle is included and the reading is provisional intraday.</p>
 
 <h4>Regime Overlay (Not Scored)</h4>
 <p><strong>ADX</strong> — The Average Directional Index doesn't produce a score. Instead, it tells the system <em>how much to trust</em> the two trend-direction indicators specifically: <strong>SMA 200</strong> and <strong>MA Cross 50/200</strong>. In strong trends (ADX above 25), those two signals get boosted. In choppy, range-bound markets (ADX below 20), they get dampened. Other indicators — including MFI, OBV, and the contrarian set — are not affected by ADX.</p>
@@ -6821,6 +7044,7 @@ Together, they help you avoid the classic "great company, terrible entry" trap.
       <div>
         <div id="dt-modal-label" style="font:700 13px/1 var(--mono);margin-bottom:4px;">—</div>
         <div id="dt-modal-signal" style="font:400 11px/1 var(--mono);color:var(--text3);">—</div>
+        <div id="dt-modal-verify" style="font:400 10px/1.45 var(--mono);color:var(--text3);margin-top:7px;display:none;"></div>
       </div>
     </div>
     <div class="dt-modal-chart" id="dt-modal-chart"></div>
