@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Signal Catcher v15.24 — Dashboard</title>
+<title>Signal Catcher v15.25 — Dashboard</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -898,7 +898,7 @@ body.dark-mode .fish-links a{color:#7ec898;}
   <div class="sdot active" id="sdot"></div>
   <span class="stext active" id="stext"></span>
   <span class="sstream" id="sstream"></span>
-  <span class="v-badge" title="Build version — if this doesn't match your expected version, do a hard refresh to clear cache">v15.24</span>
+  <span class="v-badge" title="Build version — if this doesn't match your expected version, do a hard refresh to clear cache">v15.25</span>
 </div>
 
 <!-- VERDICT SUMMARY BAR -->
@@ -1597,19 +1597,28 @@ function scoreOBV(obvSeries, bars) {
   const obv20prev = smaArr(obvSeries, 20, n - 6);
   const priceNow = bars[n - 1].c;
   const price20ago = bars[n - 21]?.c;
-  const priceTrend = price20ago ? (priceNow > price20ago ? 'up' : 'down') : null;
-  const obvTrend = obv20prev ? (obv20 > obv20prev ? 'up' : 'down') : null;
-  const divergence = priceTrend && obvTrend && priceTrend !== obvTrend;
+
+  // Treat equality explicitly as neutral. The prior binary up/down branches
+  // classified flat price/OBV states as bearish and could score a perfectly
+  // flat series at 32. Divergence is only meaningful when both directions are
+  // actually directional (up or down).
+  const priceTrend = price20ago == null ? null : priceNow > price20ago ? 'up' : priceNow < price20ago ? 'down' : 'flat';
+  const obvTrend = obv20prev == null ? null : obv20 > obv20prev ? 'up' : obv20 < obv20prev ? 'down' : 'flat';
+
   if (obv20 !== null && obv50 !== null) {
-    const bullTrend = obv20 > obv50;
-    if (divergence && priceTrend === 'up' && obvTrend === 'down') return 18;
-    if (divergence && priceTrend === 'down' && obvTrend === 'up') return 82;
-    if (bullTrend) {
-      const slope = obv20prev ? (obv20 - obv20prev) / Math.abs(obv20prev || 1) : 0;
-      return slope > 0.02 ? 78 : 68;
-    }
-    const slope = obv20prev ? (obv20 - obv20prev) / Math.abs(obv20prev || 1) : 0;
-    return slope < -0.02 ? 22 : 32;
+    if (priceTrend === 'up' && obvTrend === 'down') return 18;
+    if (priceTrend === 'down' && obvTrend === 'up') return 82;
+
+    // Phase 5 audit (Oct 2026): remove the old 78/22 "acceleration" tiers.
+    // The previous +/-2% slope rule depended on OBV's arbitrary full-history
+    // starting level. A start-point-invariant replacement was tested on the
+    // 65-symbol x 60-snapshot raw-OHLC walk-forward and did not add reliable
+    // predictive value. Preserve the validated directional/divergence states:
+    // 82 bullish divergence, 68 accumulation, 50 neutral, 32 distribution,
+    // 18 bearish divergence.
+    if (obv20 > obv50) return 68;
+    if (obv20 < obv50) return 32;
+    return 50;
   }
   return 50;
 }
@@ -2095,7 +2104,7 @@ const TIPS = {
   demark_seq:   {name:'DeMark Sequential', desc:'<strong>TD</strong> (Tom DeMark) Sequential counts <strong>9 consecutive closes</strong> compared with the close <strong>4 bars earlier</strong>. A completed Setup 9 can be classified as perfected when bar 8 or 9 exceeds the relevant extremes of bars 6 and 7. <strong>Countdown 13</strong> then uses non-consecutive close-vs-high/low comparisons two bars earlier, with the 13-vs-8 deferral rule. An <strong>incomplete</strong> Countdown can be canceled by an opposite Setup or TDST violation; a <strong>completed Countdown 13 remains completed</strong>. Signal Catcher scores DeMark from completed daily candles only; an in-progress U.S. session is shown as provisional and is not included in the DeMark score.'},
   mfi:          {name:'Money Flow Index',  desc:'<strong>MFI</strong> (Money Flow Index) is a <strong>14-period</strong> volume-weighted momentum oscillator. Each bar\'s typical price (high + low + close)/3 is multiplied by volume; positive and negative money flow are classified by whether typical price rose or fell from the prior bar. <strong>Unchanged typical price contributes neither positive nor negative flow.</strong><br><br><strong>Signal Catcher scoring is contrarian:</strong> MFI ≤ 20 is treated as oversold/bullish context and MFI ≥ 80 as overbought/bearish context, but these are <strong>not standalone buy/sell signals</strong>. The calibrated score also uses intermediate lean zones: 20–30 and 30–40 lean bullish; 40–60 is neutral; 60–70 and 70–80 lean bearish. MFI is most useful with confirming price/trend/volume evidence.<br><br><strong>Pairs with On-Balance Volume (OBV):</strong> OBV tracks the broader cumulative volume trend while MFI measures shorter-cycle volume-weighted momentum. During an open U.S. cash session the current daily price and volume are included for early warning and are <strong>provisional intraday</strong> until the close. Computed from real OHLCV data.'},
   bollinger:    {name:'Bollinger Bands',   desc:'Bollinger Bands use a <strong>20-day SMA</strong> of closing prices with upper/lower bands at <strong>±2 population standard deviations</strong> of those same 20 closes. <strong>%B</strong> locates the latest close relative to the envelope: 0 = lower band, 0.5 = middle band, 1 = upper band. John Bollinger cautions that band tags are <strong>not standalone reversal signals</strong> and that closes outside a band are initially continuation information. <strong>Signal Catcher deliberately applies a calibrated contrarian score</strong>, softened when the SMA200 confirms a strong trend, and uses outside-band readings only with additional evidence in exhaustion alerts. Its bandwidth &lt;4% rule is a Signal Catcher near-neutral squeeze heuristic (score 52), not a universal Bollinger threshold. During an open U.S. cash session the current daily candle is included for early warning and is <strong>provisional intraday</strong> until the close. Computed from closing-price data.'},
-  obv:          {name:'OBV Trend',         desc:'<strong>OBV</strong> (On-Balance Volume) tracks <em>cumulative</em> volume flow from the start of the dataset — it adds the day\'s volume on up closes and subtracts it on down closes. Trend direction is measured by comparing the <strong>20-day SMA of OBV</strong> against the <strong>50-day SMA of OBV</strong> (20 above 50 = accumulation; 20 below 50 = distribution). Trend slope is read off the 20-day SMA itself across a <strong>5-day window</strong>. Divergence is checked over a <strong>20-day window</strong>: if price is up over 20 days but OBV is down, that warns of distribution (smart money selling); the opposite signals stealth accumulation. Requires at least 50 bars of history to score. Computed from real OHLC + volume data.'},
+  obv:          {name:'OBV Trend',         desc:'<strong>OBV</strong> (On-Balance Volume) is cumulative volume flow: add volume on an up close, subtract volume on a down close, and make no change on an unchanged close. Because the absolute OBV level depends on the arbitrary starting point, Signal Catcher scores <strong>relative structure</strong>, not the raw OBV number. The <strong>20-day average of OBV</strong> above the <strong>50-day average</strong> is accumulation context (score 68); below is distribution context (32); equality is neutral (50). A 20-day price/OBV directional divergence receives the stronger 82/18 scores. The former 78/22 acceleration tiers were removed after a 65-symbol × 60-snapshot walk-forward found no reliable added edge and the old slope measure was start-point dependent. During an open U.S. cash session the current daily price and partial-day volume are included for early warning and are <strong>provisional intraday</strong> until the close. Requires at least 50 bars of history.'},
   adx:          {name:'ADX Trend Overlay', desc:'<strong>ADX</strong> (Average Directional Index) measures TREND STRENGTH (not direction), computed using <strong>Wilder\'s 14-period smoothing</strong> (~3 weeks of trading days) of the <strong>DMI</strong> (Directional Movement Index). Not scored directly — acts as an overlay multiplier on the two trend-direction indicators only: <strong>SMA 200</strong> and <strong>MA Cross 50/200</strong>. Below 20 = no trend (choppy, weights dampened 0.85×). 20–25 = transitional (1.00×). 25–30 = trending (1.06×). 30–40 = strong trend (1.12×). Above 40 = very strong trend (1.20×). <strong>+DI</strong> (Positive Directional Indicator) vs <strong>−DI</strong> (Negative Directional Indicator) shows trend direction. ADX rising over a <strong>3-bar window</strong> indicates strengthening trend. Computed from real OHLC data; contrarian and volume indicators (RSI, MFI, Bollinger, DeMark, OBV, Volume Profile) are unaffected by ADX.'},
 };
 
@@ -2921,20 +2930,19 @@ async function runAllComputed(ticker){
     const obv20 = smaOBV(obvSeries, 20, n-1);
     const obv50 = smaOBV(obvSeries, 50, n-1);
     const obv20prev = smaOBV(obvSeries, 20, n-6);
-    const priceTrend = daily[n-21] ? (price > daily[n-21].c ? 'up' : 'down') : null;
-    const obvTrend = obv20prev ? (obv20 > obv20prev ? 'up' : 'down') : null;
-    const obvDiv = priceTrend && obvTrend && priceTrend !== obvTrend;
+    const price20ago = daily[n-21]?.c;
+    const priceTrend = price20ago == null ? null : price > price20ago ? 'up' : price < price20ago ? 'down' : 'flat';
+    const obvTrend = obv20prev == null ? null : obv20 > obv20prev ? 'up' : obv20 < obv20prev ? 'down' : 'flat';
+    const obvProvisional = !!I.demark?.excludedCurrentSession;
+    window._obvProvisional = obvProvisional;
+    const obvProvSuffix = obvProvisional ? ' · provisional intraday' : '';
     let obvDetail;
     if(obv20 !== null && obv50 !== null){
-      if(obvDiv && priceTrend === 'up')       obvDetail = 'Bearish divergence — price rising, OBV falling (distribution)';
-      else if(obvDiv && priceTrend === 'down') obvDetail = 'Bullish divergence — price falling, OBV rising (accumulation)';
-      else if(obv20 > obv50){
-        const slope = obv20prev ? (obv20 - obv20prev) / Math.abs(obv20prev || 1) : 0;
-        obvDetail = `OBV rising · SMA20 > SMA50${slope > 0.02 ? ' · accelerating' : ''}`;
-      } else {
-        const slope = obv20prev ? (obv20 - obv20prev) / Math.abs(obv20prev || 1) : 0;
-        obvDetail = `OBV falling · SMA20 < SMA50${slope < -0.02 ? ' · accelerating' : ''}`;
-      }
+      if(priceTrend === 'up' && obvTrend === 'down')       obvDetail = `Bearish divergence — price rising while recent OBV trend falls${obvProvSuffix}`;
+      else if(priceTrend === 'down' && obvTrend === 'up') obvDetail = `Bullish divergence — price falling while recent OBV trend rises${obvProvSuffix}`;
+      else if(obv20 > obv50)                              obvDetail = `Accumulation context · OBV 20-day average > 50-day average${obvProvSuffix}`;
+      else if(obv20 < obv50)                              obvDetail = `Distribution context · OBV 20-day average < 50-day average${obvProvSuffix}`;
+      else                                                obvDetail = `Neutral OBV structure · 20-day average = 50-day average${obvProvSuffix}`;
     } else obvDetail = 'Insufficient data for OBV trend';
     const obvSub = document.getElementById('sub-obv');
     if(obvSub) obvSub.textContent = obvDetail;
@@ -3969,7 +3977,7 @@ function showTileModal(id){
   const isPlaceholder = subText.includes('computing') || subText.includes('Scanning');
   document.getElementById('dt-modal-label').textContent = (!isPlaceholder && subText.length > 2) ? subText : sig.txt;
   document.getElementById('dt-modal-label').style.color = color;
-  document.getElementById('dt-modal-signal').textContent = `Signal: ${Math.round(score)} / 100${id === 'demark_seq' ? ' · confirmed daily bars only' : ((id === 'bollinger' && window._bollingerProvisional) || (id === 'mfi' && window._mfiProvisional) ? ' · provisional intraday' : '')}`;
+  document.getElementById('dt-modal-signal').textContent = `Signal: ${Math.round(score)} / 100${id === 'demark_seq' ? ' · confirmed daily bars only' : ((id === 'bollinger' && window._bollingerProvisional) || (id === 'mfi' && window._mfiProvisional) || (id === 'obv' && window._obvProvisional) ? ' · provisional intraday' : '')}`;
   const verifyEl = document.getElementById('dt-modal-verify');
   if(verifyEl){
     if(id === 'demark_seq' && window._demarkVerification){
@@ -6912,7 +6920,7 @@ Together, they help you avoid the classic "great company, terrible entry" trap.
 <p><strong>MA Cross 50/200</strong> — When the 50-day Moving Average crosses above the 200-day, that's a Golden Cross (bullish structural shift); crossing below is a Death Cross (bearish). These events are rare and meaningful — they signal the trend itself is changing, not just price.</p>
 <h4>Volume &amp; Institutional Flow</h4>
 <p><strong>Volume Profile</strong> — Maps where the heaviest institutional trading occurred. The POC (Point of Control) is the price with the most volume — it acts as a magnet. VAH (Volume Area High) and VAL (Volume Area Low) bracket where 70% of volume traded. Price above POC = bullish structure.</p>
-<p><strong>OBV Trend</strong> — On-Balance Volume tracks cumulative volume flow: adds volume on up days, subtracts on down days. Rising OBV with rising price confirms smart money is accumulating. The key signal is divergence — OBV falling while price rises warns that institutions may be quietly selling.</p>
+<p><strong>OBV Trend</strong> — On-Balance Volume adds volume on up closes, subtracts it on down closes, and is unchanged on flat closes. Signal Catcher compares the 20-day and 50-day averages of OBV for accumulation/distribution context and uses 20-day price/OBV directional divergence for its strongest readings. The old 78/22 acceleration tiers were removed after the Phase 5 walk-forward found no reliable added edge. During the U.S. cash session, current-day volume is partial and the OBV reading is labeled <strong>provisional intraday</strong>.</p>
 <p><strong>MFI</strong> — Money Flow Index is a 14-period volume-weighted momentum oscillator. Typical price is multiplied by volume, then classified as positive or negative money flow according to whether typical price rose or fell; unchanged typical price contributes neither side. Signal Catcher scores MFI contrarianly: below 20 = oversold/bullish context; above 80 = overbought/bearish context, but these readings are <strong>not standalone buy/sell signals</strong>. During the U.S. cash session, the current daily price and partial-day volume are included for early warning and labeled <strong>provisional intraday</strong>. <em>MFI bridges both worlds — it lives in the volume family because it is volume-weighted, but uses contrarian oversold/overbought scoring like the mean-reversion indicators.</em></p>
 
 <h4>Contrarian / Mean-Reversion</h4>
