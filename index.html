@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Signal Catcher v15.29 — Dashboard</title>
+<title>Signal Catcher v15.30 — Dashboard</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -898,7 +898,7 @@ body.dark-mode .fish-links a{color:#7ec898;}
   <div class="sdot active" id="sdot"></div>
   <span class="stext active" id="stext"></span>
   <span class="sstream" id="sstream"></span>
-  <span class="v-badge" title="Build version — if this doesn't match your expected version, do a hard refresh to clear cache">v15.29</span>
+  <span class="v-badge" title="Build version — if this doesn't match your expected version, do a hard refresh to clear cache">v15.30</span>
 </div>
 
 <!-- VERDICT SUMMARY BAR -->
@@ -2970,7 +2970,7 @@ async function runAllComputed(ticker){
     const obv20 = smaOBV(obvSeries, 20, n-1);
     const obv50 = smaOBV(obvSeries, 50, n-1);
     const obv20prev = smaOBV(obvSeries, 20, n-6);
-    const price20ago = daily[n-21]?.c;
+    const price20ago = scoringBars[n-21]?.c;
     const priceTrend = price20ago == null ? null : price > price20ago ? 'up' : price < price20ago ? 'down' : 'flat';
     const obvTrend = obv20prev == null ? null : obv20 > obv20prev ? 'up' : obv20 < obv20prev ? 'down' : 'flat';
     const obvProvisional = !!I.demark?.excludedCurrentSession;
