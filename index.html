@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Signal Catcher v15.25 — Dashboard</title>
+<title>Signal Catcher v15.29 — Dashboard</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -898,7 +898,7 @@ body.dark-mode .fish-links a{color:#7ec898;}
   <div class="sdot active" id="sdot"></div>
   <span class="stext active" id="stext"></span>
   <span class="sstream" id="sstream"></span>
-  <span class="v-badge" title="Build version — if this doesn't match your expected version, do a hard refresh to clear cache">v15.25</span>
+  <span class="v-badge" title="Build version — if this doesn't match your expected version, do a hard refresh to clear cache">v15.29</span>
 </div>
 
 <!-- VERDICT SUMMARY BAR -->
@@ -1018,7 +1018,7 @@ body.dark-mode .fish-links a{color:#7ec898;}
         </div>
         <span class="adx-bar-regime" id="adx-bar-regime">—</span>
       </div>
-      <p class="adx-bar-note">ADX (Wilder's 14-period DMI, ~3 weeks of trading days) measures trend strength, not direction. Above 25 = trending (SMA 200 and MA Cross weights boosted up to 1.20× at ADX ≥ 40). Below 20 = choppy (those two weights dampened to 0.85×; contrarian signals more reliable). +DI vs −DI shows trend direction.</p>
+      <p class="adx-bar-note">ADX (Wilder's 14-period DMI) measures trend strength, not direction. ADX ≥25 boosts the SMA 200 and MA Cross weights, up to 1.20× at ADX ≥40; ADX <20 dampens them to 0.85×. +DI vs −DI supplies direction. The current daily bar is provisional intraday during an open U.S. cash session.</p>
     </div>
 
     <!-- CONFLICT DETECTOR (below dashboard) -->
@@ -1434,6 +1434,32 @@ function computeSMA(closes, period) {
   if (n < period) return null;
   return closes.slice(n - period).reduce((s, v) => s + v, 0) / period;
 }
+function getSMA200RecentCross(closes, lookbackBars = 10) {
+  const n = closes?.length || 0;
+  if (n < 201 || lookbackBars < 1) return { direction: null, barsAgo: null, adjustment: 0 };
+  const startBar = Math.max(200, n - lookbackBars);
+  let smaSum = 0;
+  for (let j = startBar - 200; j < startBar; j++) smaSum += closes[j];
+  let direction = null, crossIndex = null;
+  for (let i = startBar; i < n; i++) {
+    const prevSma = smaSum / 200;
+    smaSum += closes[i] - closes[i - 200];
+    const currSma = smaSum / 200;
+    const prevClose = closes[i - 1], currClose = closes[i];
+    const prevDiff = prevClose - prevSma, currDiff = currClose - currSma;
+    // Floating-point tolerance prevents a mathematically exact SMA touch from
+    // becoming a phantom cross because of sub-cent arithmetic noise.
+    const eps = Math.max(1, Math.abs(prevSma), Math.abs(currSma)) * 1e-10;
+    if (prevDiff <= eps && currDiff > eps) {
+      direction = 'up'; crossIndex = i;
+    } else if (prevDiff >= -eps && currDiff < -eps) {
+      direction = 'down'; crossIndex = i;
+    }
+  }
+  return direction
+    ? { direction, barsAgo: n - 1 - crossIndex, adjustment: direction === 'up' ? 5 : -5 }
+    : { direction: null, barsAgo: null, adjustment: 0 };
+}
 function scoreSMA200(price, sma200, closes) {
   if (!sma200) return 50;
   const pct = (price - sma200) / sma200 * 100;
@@ -1445,33 +1471,26 @@ function scoreSMA200(price, sma200, closes) {
   else if (pct >= -5) score = 35;
   else if (pct >= -15) score = 25;
   else score = 15;
-  if (closes && closes.length >= 210) {
-    const n = closes.length;
-    let recentCross = 0;
-    const startBar = Math.max(200, n - 11);
-    let smaSum = 0;
-    for (let j = startBar - 200; j < startBar; j++) smaSum += closes[j];
-    for (let i = startBar; i < n; i++) {
-      const prevSum = smaSum;
-      smaSum += closes[i] - closes[i - 200];
-      const prevAbove = closes[i - 1] > (prevSum / 200);
-      const currAbove = closes[i] > (smaSum / 200);
-      if (!prevAbove && currAbove) recentCross = 5;
-      if (prevAbove && !currAbove) recentCross = -5;
-    }
-    if (recentCross !== 0) score = Math.max(5, Math.min(95, score + recentCross));
-  }
+  const recentCross = getSMA200RecentCross(closes, 10);
+  if (recentCross.adjustment !== 0) score = Math.max(5, Math.min(95, score + recentCross.adjustment));
   return score;
 }
 
 // ─── MA CROSS 50/200 ────────────────────────────────────────
+function _maRelation(a, b) {
+  if (!Number.isFinite(a) || !Number.isFinite(b)) return 0;
+  const eps = 1e-10 * Math.max(1, Math.abs(a), Math.abs(b));
+  if (a > b + eps) return 1;
+  if (a < b - eps) return -1;
+  return 0;
+}
 function detectGoldenDeathCross(closes) {
   const n = closes.length;
-  if (n < 210) return { type: null, barsAgo: null, spread: 0, sma50: null, sma200: null };
+  if (n < 200) return { type: null, barsAgo: null, spread: 0, sma50: null, sma200: null };
   let sum50 = 0, sum200 = 0;
   for (let i = 0; i < 200; i++) sum200 += closes[i];
   for (let i = 150; i < 200; i++) sum50 += closes[i];
-  let crossType = null, barsAgo = null, prevAbove = null;
+  let crossType = null, barsAgo = null, lastNonZeroRelation = null;
   let curS50 = sum50 / 50, curS200 = sum200 / 200;
   for (let i = 199; i < n; i++) {
     if (i > 199) {
@@ -1480,14 +1499,16 @@ function detectGoldenDeathCross(closes) {
       curS200 = sum200 / 200;
       curS50 = sum50 / 50;
     }
-    const above = curS50 > curS200;
-    if (prevAbove !== null && above !== prevAbove) {
-      crossType = above ? 'golden' : 'death';
-      barsAgo = n - 1 - i;
+    const relation = _maRelation(curS50, curS200);
+    if (relation !== 0) {
+      if (lastNonZeroRelation !== null && relation !== lastNonZeroRelation) {
+        crossType = relation > 0 ? 'golden' : 'death';
+        barsAgo = n - 1 - i;
+      }
+      lastNonZeroRelation = relation;
     }
-    prevAbove = above;
   }
-  const spread = curS50 && curS200 ? Math.abs(curS50 - curS200) / curS200 * 100 : 0;
+  const spread = curS50 && curS200 ? Math.abs(curS50 - curS200) / Math.abs(curS200) * 100 : 0;
   return { type: crossType, barsAgo, spread: Math.round(spread * 10) / 10, sma50: curS50, sma200: curS200 };
 }
 function scoreSMACross(closes, sma50, sma200, precomputedCross) {
@@ -1502,9 +1523,10 @@ function scoreSMACross(closes, sma50, sma200, precomputedCross) {
     const fresh = Math.max(0, 1 - cross.barsAgo / STALE);
     return Math.round(28 - fresh * 18);
   }
-  const above = sma50 > sma200;
-  const spread = Math.abs(sma50 - sma200) / sma200 * 100;
-  if (above) return spread > 8 ? 75 : spread > 4 ? 70 : 64;
+  const relation = _maRelation(sma50, sma200);
+  if (relation === 0) return 50;
+  const spread = Math.abs(sma50 - sma200) / Math.abs(sma200) * 100;
+  if (relation > 0) return spread > 8 ? 75 : spread > 4 ? 70 : 64;
   return spread > 8 ? 25 : spread > 4 ? 30 : 36;
 }
 
@@ -1922,8 +1944,8 @@ function scoreDeMarkCombo(dc) {
 // ─── ADX + DI ────────────────────────────────────────────────
 function computeADX(bars) {
   const n = bars.length;
-  if (n < 30) return { adx: 0, plusDI: 0, minusDI: 0, adxRising: false };
   const period = 14;
+  if (n < period * 2) return { adx: 0, plusDI: 0, minusDI: 0, adxRising: false };
   const trArr = [], plusDM = [], minusDM = [];
   for (let i = 1; i < n; i++) {
     trArr.push(Math.max(bars[i].h - bars[i].l, Math.abs(bars[i].h - bars[i - 1].c), Math.abs(bars[i].l - bars[i - 1].c)));
@@ -1931,27 +1953,30 @@ function computeADX(bars) {
     plusDM.push(up > dn && up > 0 ? up : 0);
     minusDM.push(dn > up && dn > 0 ? dn : 0);
   }
-  if (trArr.length < period) return { adx: 0, plusDI: 0, minusDI: 0, adxRising: false };
   let atr14 = trArr.slice(0, period).reduce((s, v) => s + v, 0);
   let pDM14 = plusDM.slice(0, period).reduce((s, v) => s + v, 0);
   let mDM14 = minusDM.slice(0, period).reduce((s, v) => s + v, 0);
   const dxArr = [];
-  for (let i = period; i < trArr.length; i++) {
-    if (i > period) { atr14 = atr14 - atr14 / period + trArr[i]; pDM14 = pDM14 - pDM14 / period + plusDM[i]; mDM14 = mDM14 - mDM14 / period + minusDM[i]; }
-    const pDI = atr14 > 0 ? (pDM14 / atr14) * 100 : 0, mDI = atr14 > 0 ? (mDM14 / atr14) * 100 : 0;
+  const pushDX = () => {
+    const pDI = atr14 > 0 ? (pDM14 / atr14) * 100 : 0;
+    const mDI = atr14 > 0 ? (mDM14 / atr14) * 100 : 0;
     const diSum = pDI + mDI;
     dxArr.push({ dx: diSum > 0 ? Math.abs(pDI - mDI) / diSum * 100 : 0, pDI, mDI });
+  };
+  pushDX();
+  for (let i = period; i < trArr.length; i++) {
+    atr14 = atr14 - atr14 / period + trArr[i];
+    pDM14 = pDM14 - pDM14 / period + plusDM[i];
+    mDM14 = mDM14 - mDM14 / period + minusDM[i];
+    pushDX();
   }
   if (dxArr.length < period) return { adx: 0, plusDI: 0, minusDI: 0, adxRising: false };
-  let adxVal = dxArr.slice(0, period).reduce((s, d) => s + d.dx, 0) / period;
-  for (let i = period; i < dxArr.length; i++) adxVal = (adxVal * (period - 1) + dxArr[i].dx) / period;
-  // ADX trend: 3-bar slope for faster regime detection
   const adxHistory = [];
-  let adxTrack = dxArr.slice(0, period).reduce((s, d) => s + d.dx, 0) / period;
-  adxHistory.push(adxTrack);
+  let adxVal = dxArr.slice(0, period).reduce((s, d) => s + d.dx, 0) / period;
+  adxHistory.push(adxVal);
   for (let i = period; i < dxArr.length; i++) {
-    adxTrack = (adxTrack * (period - 1) + dxArr[i].dx) / period;
-    adxHistory.push(adxTrack);
+    adxVal = (adxVal * (period - 1) + dxArr[i].dx) / period;
+    adxHistory.push(adxVal);
   }
   const adxLen = adxHistory.length;
   const adxPrev3 = adxLen >= 4 ? adxHistory[adxLen - 4] : adxHistory[0];
@@ -1959,6 +1984,9 @@ function computeADX(bars) {
   return { adx: Math.round(adxVal * 10) / 10, plusDI: last.pDI, minusDI: last.mDI, adxRising: adxVal > adxPrev3 };
 }
 function scoreADX(a) {
+  // Retained only for backward compatibility; ADX is not directly scored in
+  // the production composite. Directionally balanced +DI/-DI is neutral.
+  if (Math.abs((a.plusDI ?? 0) - (a.minusDI ?? 0)) <= 1e-12) return 50;
   const bull = a.plusDI > a.minusDI;
   if (a.adx < 15) return 50;
   if (a.adx < 20) return bull ? 54 : 46;
@@ -2098,20 +2126,20 @@ const API_KEY = 'managed-by-cloudflare';
 // ═══════════════════════════════════════════════════
 const TIPS = {
   vol_profile:  {name:'Volume Profile',    desc:'Identifies price levels where large institutional transactions occurred. Computed over a <strong>252-trading-day (~1 year) lookback</strong>, partitioned into 24 equal-width price buckets. The <strong>POC</strong> (Point of Control) is the price with the highest traded volume — acts as a magnet. <strong>VAH</strong> (Volume Area High) and <strong>VAL</strong> (Volume Area Low) bracket the zone where 70% of cumulative volume traded. Price above POC = bullish structure; below = bearish.'},
-  sma_200:      {name:'SMA 200 Trend',     desc:'The <strong>SMA</strong> (Simple Moving Average) of the last <strong>200 trading days (~10 months)</strong> is the most widely watched long-term trend indicator. Score grades the percentage distance from the SMA — well above (+5% or more) confirms a sustained uptrend; well below confirms a downtrend. Often used as the dividing line between bull and bear markets. Use dividend-adjusted data for income instruments.'},
-  sma_cross:    {name:'MA Cross 50/200',   desc:'<strong>MA</strong> (Moving Average) crossover system using the <strong>50-day</strong> and <strong>200-day</strong> Simple Moving Averages (requires at least 210 bars of history). Golden Cross (50-day SMA crosses above 200-day SMA) = bullish structural signal; Death Cross = bearish. Engine scans the full price history for the most recent cross, then scores by recency: a fresh cross within the last <strong>60 trading days</strong> earns a premium score (72–90 bullish / 10–28 bearish), decaying linearly with age. Older or absent crosses are graded by SMA spread — wider gap = stronger trend (64–75 or 25–36). Computed from real <strong>OHLC</strong> (Open/High/Low/Close) data.'},
+  sma_200:      {name:'SMA 200 Trend',     desc:'The <strong>SMA</strong> (Simple Moving Average) is the arithmetic mean of the latest <strong>200 daily closes</strong>. Signal Catcher grades the latest close by percentage distance from the SMA200 using its calibrated distance bands, then applies a <strong>+5 / −5 recent-cross adjustment</strong> when price crosses above / below the SMA200 within the latest <strong>10 bars</strong>. A touch exactly on the SMA is not itself a completed cross. During an open U.S. cash session, the current daily close is included for early warning and the SMA200 reading is <strong>provisional intraday</strong> until the close. The engine uses Yahoo quote closes (not adjusted-close history) for this calculation.'},
+  sma_cross:    {name:'MA Cross 50/200',   desc:'<strong>MA</strong> crossover uses the <strong>50-day</strong> and <strong>200-day</strong> Simple Moving Averages. A Golden Cross is recorded only when SMA50 moves from below SMA200 to above it; a Death Cross is the reverse. <strong>Touching/equality alone is neutral and does not create a cross.</strong> At least 200 bars are needed for both averages. A cross within the last <strong>60 trading days</strong> receives the existing recency score (72–90 bullish / 10–28 bearish); older or absent crosses are graded by SMA spread, with exact equality scored neutral (50). During an open U.S. cash session the current daily close is included for early warning and is <strong>provisional intraday</strong> until the close.'},
   rsi_extreme:  {name:'RSI Extreme',       desc:'<strong>RSI</strong> (Relative Strength Index) measures momentum on a 0–100 scale using <strong>Wilder\'s 14-period smoothing</strong> (~3 weeks of trading days) of average gains vs average losses. This is a CONTRARIAN indicator: RSI below 30 = oversold → scored BULLISH (potential reversal up, sellers exhausted). RSI above 70 = overbought → scored BEARISH (potential reversal down, buyers exhausted). Signal Catcher uses a <strong>35–65 neutral scoring dead zone</strong>; 30–35 and 65–70 are approach zones that fade toward the conventional 30/70 extremes. During an open U.S. cash session, RSI intentionally includes the current daily candle for early warning and is labeled <strong>provisional intraday</strong> until the close. In strong trends RSI can remain extreme for extended periods — check trend context.'},
   demark_seq:   {name:'DeMark Sequential', desc:'<strong>TD</strong> (Tom DeMark) Sequential counts <strong>9 consecutive closes</strong> compared with the close <strong>4 bars earlier</strong>. A completed Setup 9 can be classified as perfected when bar 8 or 9 exceeds the relevant extremes of bars 6 and 7. <strong>Countdown 13</strong> then uses non-consecutive close-vs-high/low comparisons two bars earlier, with the 13-vs-8 deferral rule. An <strong>incomplete</strong> Countdown can be canceled by an opposite Setup or TDST violation; a <strong>completed Countdown 13 remains completed</strong>. Signal Catcher scores DeMark from completed daily candles only; an in-progress U.S. session is shown as provisional and is not included in the DeMark score.'},
   mfi:          {name:'Money Flow Index',  desc:'<strong>MFI</strong> (Money Flow Index) is a <strong>14-period</strong> volume-weighted momentum oscillator. Each bar\'s typical price (high + low + close)/3 is multiplied by volume; positive and negative money flow are classified by whether typical price rose or fell from the prior bar. <strong>Unchanged typical price contributes neither positive nor negative flow.</strong><br><br><strong>Signal Catcher scoring is contrarian:</strong> MFI ≤ 20 is treated as oversold/bullish context and MFI ≥ 80 as overbought/bearish context, but these are <strong>not standalone buy/sell signals</strong>. The calibrated score also uses intermediate lean zones: 20–30 and 30–40 lean bullish; 40–60 is neutral; 60–70 and 70–80 lean bearish. MFI is most useful with confirming price/trend/volume evidence.<br><br><strong>Pairs with On-Balance Volume (OBV):</strong> OBV tracks the broader cumulative volume trend while MFI measures shorter-cycle volume-weighted momentum. During an open U.S. cash session the current daily price and volume are included for early warning and are <strong>provisional intraday</strong> until the close. Computed from real OHLCV data.'},
   bollinger:    {name:'Bollinger Bands',   desc:'Bollinger Bands use a <strong>20-day SMA</strong> of closing prices with upper/lower bands at <strong>±2 population standard deviations</strong> of those same 20 closes. <strong>%B</strong> locates the latest close relative to the envelope: 0 = lower band, 0.5 = middle band, 1 = upper band. John Bollinger cautions that band tags are <strong>not standalone reversal signals</strong> and that closes outside a band are initially continuation information. <strong>Signal Catcher deliberately applies a calibrated contrarian score</strong>, softened when the SMA200 confirms a strong trend, and uses outside-band readings only with additional evidence in exhaustion alerts. Its bandwidth &lt;4% rule is a Signal Catcher near-neutral squeeze heuristic (score 52), not a universal Bollinger threshold. During an open U.S. cash session the current daily candle is included for early warning and is <strong>provisional intraday</strong> until the close. Computed from closing-price data.'},
   obv:          {name:'OBV Trend',         desc:'<strong>OBV</strong> (On-Balance Volume) is cumulative volume flow: add volume on an up close, subtract volume on a down close, and make no change on an unchanged close. Because the absolute OBV level depends on the arbitrary starting point, Signal Catcher scores <strong>relative structure</strong>, not the raw OBV number. The <strong>20-day average of OBV</strong> above the <strong>50-day average</strong> is accumulation context (score 68); below is distribution context (32); equality is neutral (50). A 20-day price/OBV directional divergence receives the stronger 82/18 scores. The former 78/22 acceleration tiers were removed after a 65-symbol × 60-snapshot walk-forward found no reliable added edge and the old slope measure was start-point dependent. During an open U.S. cash session the current daily price and partial-day volume are included for early warning and are <strong>provisional intraday</strong> until the close. Requires at least 50 bars of history.'},
-  adx:          {name:'ADX Trend Overlay', desc:'<strong>ADX</strong> (Average Directional Index) measures TREND STRENGTH (not direction), computed using <strong>Wilder\'s 14-period smoothing</strong> (~3 weeks of trading days) of the <strong>DMI</strong> (Directional Movement Index). Not scored directly — acts as an overlay multiplier on the two trend-direction indicators only: <strong>SMA 200</strong> and <strong>MA Cross 50/200</strong>. Below 20 = no trend (choppy, weights dampened 0.85×). 20–25 = transitional (1.00×). 25–30 = trending (1.06×). 30–40 = strong trend (1.12×). Above 40 = very strong trend (1.20×). <strong>+DI</strong> (Positive Directional Indicator) vs <strong>−DI</strong> (Negative Directional Indicator) shows trend direction. ADX rising over a <strong>3-bar window</strong> indicates strengthening trend. Computed from real OHLC data; contrarian and volume indicators (RSI, MFI, Bollinger, DeMark, OBV, Volume Profile) are unaffected by ADX.'},
+  adx:          {name:'ADX Trend Overlay', desc:'<strong>ADX</strong> (Average Directional Index) measures trend strength, not direction, using <strong>Wilder\'s 14-period DMI smoothing</strong>. It is not scored directly; it multiplies the weights of <strong>SMA 200</strong> and <strong>MA Cross 50/200</strong> only. ADX &lt;20 = 0.85×; 20–25 = 1.00×; 25–30 = 1.06×; 30–40 = 1.12×; ADX ≥40 = 1.20×. <strong>+DI vs −DI</strong> supplies direction; equality is neutral. Signal Catcher defines ADX rising as current ADX above its value three ADX bars earlier. During an open U.S. cash session the current daily OHLC bar is included and is <strong>provisional intraday</strong> until the close.'},
 };
 
 const INDS={
   high:[
     {id:'vol_profile', name:'Volume Profile',   sub:'POC / VAH / VAL — computing…',    iW:1.1},
-    {id:'sma_200',     name:'SMA 200 Trend',    sub:'Price vs. 200-day (div-adj)',       iW:1.4},
+    {id:'sma_200',     name:'SMA 200 Trend',    sub:'Price vs. 200-day — computing…',       iW:1.4},
     {id:'sma_cross',   name:'MA Cross 50/200',  sub:'Golden / Death cross',              iW:1.1},
     {id:'rsi_extreme', name:'RSI Extreme',      sub:'14-period — computing…',            iW:1.2},
     {id:'obv',         name:'OBV Trend',        sub:'On-Balance Volume — computing…',   iW:1.0},
@@ -2130,7 +2158,7 @@ const CONFLICT_PAIRS = [
   ['obv',        'bollinger',   'OBV volume flow and Bollinger price position conflict — volume tells a different story than price bands.', 'standard'],
   ['demark_seq', 'sma_200',     'Exhaustion vs. Trend: DeMark signals a reversal while SMA200 confirms the current trend. If DeMark is perfected AND RSI confirms, the reversal signal gains credibility.', 'backbone'],
   ['mfi',        'rsi_extreme', 'Volume-weighted vs. Price-only: MFI and RSI disagree — money flow tells a different story than price momentum alone.', 'standard'],
-  ['obv',        'sma_200',     'Volume flow (OBV) and price trend (SMA200) diverging — smart money may be accumulating/distributing against the visible price trend.', 'backbone'],
+  ['obv',        'sma_200',     'Volume flow (OBV) and price trend (SMA200) diverging — volume pressure is moving against the visible price trend.', 'backbone'],
   ['mfi',        'obv',         'MFI overbought/oversold vs OBV trend diverging — volume oscillator and cumulative volume flow tell different stories.', 'standard'],
 ];
 const CONFLICT_THRESH = 40; // abs difference to flag
@@ -2195,8 +2223,8 @@ const CONFLUENCE_DEFS = [
   {
     ids: ['obv', 'mfi'],
     thresh: 62,
-    bull: '💪 Smart Money Signal — OBV accumulation + MFI oversold. Volume trend and volume momentum both bullish.',
-    bear: '💪 Smart Money Signal — OBV distribution + MFI overbought. Volume trend and volume momentum both bearish.',
+    bull: '💪 Volume-Flow Alignment — OBV accumulation + MFI oversold. Volume trend and volume momentum both bullish.',
+    bear: '💪 Volume-Flow Alignment — OBV distribution + MFI overbought. Volume trend and volume momentum both bearish.',
     strength: 'strong',
     multiplier: 1.10,
   },
@@ -2839,9 +2867,15 @@ async function runAllComputed(ticker){
     if(rsiNote && !rsiNote.value) rsiNote.value = `[Computed from ${n} daily bars] ${rsiDetail}`;
     }
 
-    // SMA 200
+    // SMA 200 — current-session close is intentionally live for early warning.
     if(I.sma200 !== null){
       const pctAbove = (price - I.sma200) / I.sma200 * 100;
+      const sma200Provisional = !!I.demark?.excludedCurrentSession;
+      const sma200ProvSuffix = sma200Provisional ? ' · provisional intraday' : '';
+      const recentSma200Cross = getSMA200RecentCross(closes, 10);
+      const crossSuffix = recentSma200Cross.adjustment
+        ? ` · ${recentSma200Cross.direction === 'up' ? '+5' : '−5'} recent-cross adjustment (${recentSma200Cross.barsAgo === 0 ? 'today' : recentSma200Cross.barsAgo + ' bars ago'})`
+        : '';
       let sma200Detail;
       if(pctAbove > 15)      sma200Detail = `${pctAbove.toFixed(1)}% above SMA200 ($${I.sma200.toFixed(2)}) — extended bull`;
       else if(pctAbove > 5)  sma200Detail = `${pctAbove.toFixed(1)}% above SMA200 ($${I.sma200.toFixed(2)})`;
@@ -2850,6 +2884,8 @@ async function runAllComputed(ticker){
       else if(pctAbove >= -5) sma200Detail = `${Math.abs(pctAbove).toFixed(1)}% below SMA200 ($${I.sma200.toFixed(2)}) — near line`;
       else if(pctAbove >= -15) sma200Detail = `${Math.abs(pctAbove).toFixed(1)}% below SMA200 ($${I.sma200.toFixed(2)})`;
       else                     sma200Detail = `${Math.abs(pctAbove).toFixed(1)}% below SMA200 ($${I.sma200.toFixed(2)}) — extended bear`;
+      sma200Detail += crossSuffix + sma200ProvSuffix;
+      window._sma200Provisional = sma200Provisional;
       const sma200Sub = document.getElementById('sub-sma_200');
       if(sma200Sub) sma200Sub.textContent = sma200Detail;
       const sma200Note = document.getElementById('nt-sma_200');
@@ -2862,17 +2898,21 @@ async function runAllComputed(ticker){
     // MA Cross
     if(I.cross){
     const cross = I.cross;
+    const maCrossProvisional = !!I.demark?.excludedCurrentSession;
+    window._maCrossProvisional = maCrossProvisional;
     let maDetail;
     const spreadPct = cross.sma50 && cross.sma200 ? Math.abs(cross.sma50 - cross.sma200) / cross.sma200 * 100 : 0;
     if(cross.type === 'golden')     maDetail = `Golden Cross · ${cross.barsAgo === 0 ? 'Today' : cross.barsAgo + ' days ago'}`;
     else if(cross.type === 'death') maDetail = `Death Cross · ${cross.barsAgo === 0 ? 'Today' : cross.barsAgo + ' days ago'}`;
+    else if(Math.abs((cross.sma50 ?? 0) - (cross.sma200 ?? 0)) <= 1e-10 * Math.max(1, Math.abs(cross.sma50 ?? 0), Math.abs(cross.sma200 ?? 0))) maDetail = `SMA50 = SMA200 · neutral`;
     else if(cross.sma50 > cross.sma200) maDetail = `SMA50 > SMA200 · spread ${spreadPct.toFixed(1)}%`;
     else                                maDetail = `SMA50 < SMA200 · spread ${spreadPct.toFixed(1)}%`;
+    if(maCrossProvisional) maDetail += ' · provisional intraday';
     const maSub = document.getElementById('sub-sma_cross');
     if(maSub) maSub.textContent = maDetail;
     const maNote = document.getElementById('nt-sma_cross');
     if(maNote && !maNote.value){
-      const pos = cross.sma50 > cross.sma200 ? 'SMA50 ABOVE SMA200' : 'SMA50 BELOW SMA200';
+      const pos = Math.abs((cross.sma50 ?? 0) - (cross.sma200 ?? 0)) <= 1e-10 * Math.max(1, Math.abs(cross.sma50 ?? 0), Math.abs(cross.sma200 ?? 0)) ? 'SMA50 EQUALS SMA200' : (cross.sma50 > cross.sma200 ? 'SMA50 ABOVE SMA200' : 'SMA50 BELOW SMA200');
       maNote.value = `[Computed from ${n} daily bars] ${pos}${cross.type ? ' · ' + maDetail : ''}`;
     }
     }
@@ -2953,22 +2993,34 @@ async function runAllComputed(ticker){
     // ADX Overlay (not scored — displayed as regime indicator)
     if(I.adx && I.adx.adx != null){
       const adxData = I.adx;
+      const adxProvisional = !!I.demark?.excludedCurrentSession;
+      window._adxProvisional = adxProvisional;
       const bullDir = adxData.plusDI > adxData.minusDI;
+      const bearDir = adxData.minusDI > adxData.plusDI;
+      const diLead = bullDir ? '+DI leads' : bearDir ? '-DI leads' : '+DI = -DI';
+      const dirWord = bullDir ? 'bullish' : bearDir ? 'bearish' : 'direction-neutral';
       let adxDetail;
       if(adxData.adx < 15)      adxDetail = `ADX ${adxData.adx} — No trend (choppy) · trend-follower weights dampened (${adxOverlay.multiplier}×)`;
-      else if(adxData.adx < 20) adxDetail = `ADX ${adxData.adx} — Weak/developing · ${bullDir ? '+DI' : '-DI'} leads · weights dampened (${adxOverlay.multiplier}×)`;
-      else if(adxData.adx < 25) adxDetail = `ADX ${adxData.adx} — Transitional · ${bullDir ? 'bullish' : 'bearish'} lean · weights neutral (${adxOverlay.multiplier}×)`;
-      else if(adxData.adx < 30) adxDetail = bullDir
+      else if(adxData.adx < 20) adxDetail = `ADX ${adxData.adx} — Weak/developing · ${diLead} · weights dampened (${adxOverlay.multiplier}×)`;
+      else if(adxData.adx < 25) adxDetail = `ADX ${adxData.adx} — Transitional · ${dirWord} lean · weights neutral (${adxOverlay.multiplier}×)`;
+      else if(adxData.adx < 30) adxDetail = !bullDir && !bearDir
+        ? `ADX ${adxData.adx} — Moderate trend strength · +DI = -DI · direction neutral · weights boosted (${adxOverlay.multiplier}×)`
+        : bullDir
         ? `ADX ${adxData.adx} — Moderate bullish trend · +DI ${adxData.plusDI.toFixed(0)} > -DI ${adxData.minusDI.toFixed(0)} · weights boosted (${adxOverlay.multiplier}×)`
         : `ADX ${adxData.adx} — Moderate bearish trend · -DI ${adxData.minusDI.toFixed(0)} > +DI ${adxData.plusDI.toFixed(0)} · weights boosted (${adxOverlay.multiplier}×)`;
-      else if(adxData.adx < 40) adxDetail = bullDir
+      else if(adxData.adx < 40) adxDetail = !bullDir && !bearDir
+        ? `ADX ${adxData.adx} — Strong trend strength · +DI = -DI · direction neutral · weights boosted (${adxOverlay.multiplier}×)`
+        : bullDir
         ? `ADX ${adxData.adx} — Strong bullish trend · +DI ${adxData.plusDI.toFixed(0)} > -DI ${adxData.minusDI.toFixed(0)} · weights boosted (${adxOverlay.multiplier}×)`
         : `ADX ${adxData.adx} — Strong bearish trend · -DI ${adxData.minusDI.toFixed(0)} > +DI ${adxData.plusDI.toFixed(0)} · weights boosted (${adxOverlay.multiplier}×)`;
-      else adxDetail = bullDir
+      else adxDetail = !bullDir && !bearDir
+        ? `ADX ${adxData.adx} — Very strong trend strength · +DI = -DI · direction neutral · weights boosted (${adxOverlay.multiplier}×)`
+        : bullDir
         ? `ADX ${adxData.adx} — Very strong bull · +DI ${adxData.plusDI.toFixed(0)} > -DI ${adxData.minusDI.toFixed(0)} · weights boosted (${adxOverlay.multiplier}×)`
         : `ADX ${adxData.adx} — Very strong bear · -DI ${adxData.minusDI.toFixed(0)} > +DI ${adxData.plusDI.toFixed(0)} · weights boosted (${adxOverlay.multiplier}×)`;
       if(adxData.adxRising && adxData.adx >= 20) adxDetail += ' · ADX rising';
       else if(!adxData.adxRising && adxData.adx >= 20) adxDetail += ' · ADX fading';
+      if(adxProvisional) adxDetail += ' · provisional intraday';
       // Display in ADX overlay badge
       const adxBadge = document.getElementById('adx-overlay-badge');
       if(adxBadge) adxBadge.textContent = adxDetail;
@@ -3977,7 +4029,7 @@ function showTileModal(id){
   const isPlaceholder = subText.includes('computing') || subText.includes('Scanning');
   document.getElementById('dt-modal-label').textContent = (!isPlaceholder && subText.length > 2) ? subText : sig.txt;
   document.getElementById('dt-modal-label').style.color = color;
-  document.getElementById('dt-modal-signal').textContent = `Signal: ${Math.round(score)} / 100${id === 'demark_seq' ? ' · confirmed daily bars only' : ((id === 'bollinger' && window._bollingerProvisional) || (id === 'mfi' && window._mfiProvisional) || (id === 'obv' && window._obvProvisional) ? ' · provisional intraday' : '')}`;
+  document.getElementById('dt-modal-signal').textContent = `Signal: ${Math.round(score)} / 100${id === 'demark_seq' ? ' · confirmed daily bars only' : ((id === 'sma_200' && window._sma200Provisional) || (id === 'sma_cross' && window._maCrossProvisional) || (id === 'adx' && window._adxProvisional) || (id === 'bollinger' && window._bollingerProvisional) || (id === 'mfi' && window._mfiProvisional) || (id === 'obv' && window._obvProvisional) ? ' · provisional intraday' : '')}`;
   const verifyEl = document.getElementById('dt-modal-verify');
   if(verifyEl){
     if(id === 'demark_seq' && window._demarkVerification){
@@ -4518,11 +4570,11 @@ function chartOBV(bars){
 // ═══ ADX BAR UPDATE ═══
 
 const ADX_ZONES = [
-  {label:'Choppy',  end:15, color:'#484f58'},
-  {label:'Weak',    end:25, color:'#f0b429'},
-  {label:'Trending',end:40, color:'#4dd9a0'},
-  {label:'Strong',  end:60, color:'#00d97e'},
-  {label:'Extreme', end:70, color:'#4c8ef7'},
+  {label:'Choppy / Weak', end:20, color:'#484f58'},
+  {label:'Transitional',  end:25, color:'#f0b429'},
+  {label:'Trending',      end:30, color:'#4dd9a0'},
+  {label:'Strong',        end:40, color:'#00d97e'},
+  {label:'Very Strong',   end:70, color:'#4c8ef7'},
 ];
 
 function buildADXBarZones(){
@@ -4631,6 +4683,10 @@ function recalc(){
   detectConfluences();
   const bs={high:bScore('high'),med:bScore('med')};
   const rawT=bs.high*BW.high+bs.med*BW.med;
+  // System parity: the shared engine rounds the weighted composite to a whole
+  // point before downstream verdict/alert thresholds. Do the same in-browser so
+  // a displayed 62 can never carry the <62 verdict/color from an unrounded 61.6.
+  const roundedT=Math.round(rawT);
   // Compute dispersion: std dev of all active indicator scores
   const allInds=[...INDS.high,...INDS.med];
   const scores=allInds.map(i=>vals[i.id]??50);
@@ -4640,7 +4696,7 @@ function recalc(){
   // Detect conflicts BEFORE gauge so regime classification is available
   detectConflicts();
   // Apply conflict regime score cap (Transition clamps toward neutral)
-  const t=applyConflictCap(rawT,currentConflictRegime);
+  const t=applyConflictCap(roundedT,currentConflictRegime);
   drawGauge(t,dispersion,rawT); updBD(bs,t); updWB(); detectFallingKnife(); detectDualSignalCommentary();
   updateDashTiles();
 }
@@ -6171,7 +6227,8 @@ function buildRpt(){
   const ticker=document.getElementById('ticker-input').value.toUpperCase();
   const bs={high:bScore('high'),med:bScore('med')};
   const rawT=bs.high*BW.high+bs.med*BW.med;
-  const t=applyConflictCap(rawT,currentConflictRegime);
+  const roundedT=Math.round(rawT);
+  const t=applyConflictCap(roundedT,currentConflictRegime);
   const v=verd(t);
   const ais=[...INDS.high.map(i=>({...i,bkt:'HIGH'})),...INDS.med.map(i=>({...i,bkt:'MED'}))];
   const conflictList=[];
@@ -6188,7 +6245,7 @@ function buildRpt(){
   });
   return{
     meta:{ticker,price:document.getElementById('price-val').textContent,assetClass:getAC(),timeframe:TF_PRESETS[getTF()]?.label||'Position (1-3 mo)',runDate:nowStamp(),generated:new Date().toISOString()},
-    weightedScore:Math.round(t*10)/10,rawWeightedScore:Math.round(rawT*10)/10,verdict:v.l,confidence:v.c,
+    weightedScore:t,rawWeightedScore:Math.round(rawT*10)/10,verdict:v.l,confidence:v.c,
     conflictRegime:currentConflictRegime,
     bucketScores:{high:Math.round(bs.high*10)/10,med:Math.round(bs.med*10)/10},
     bucketWeights:{high:BW.high,med:BW.med},
@@ -6916,7 +6973,7 @@ Together, they help you avoid the classic "great company, terrible entry" trap.
 <p>Each indicator was chosen because it provides unique information no other indicator in the system covers, and each has a long institutional track record. Here's what each one does and why it matters:</p>
 
 <h4>Trend Direction</h4>
-<p><strong>SMA 200 Trend</strong> — The 200-day Simple Moving Average is the single most widely watched level by institutional investors worldwide. Price above it = healthy uptrend; price below = downtrend. It's the dividing line between bull and bear markets. Carries the highest intra-weight (1.4×) for a reason.</p>
+<p><strong>SMA 200 Trend</strong> — Signal Catcher averages the latest 200 daily closes and scores the latest price by its percentage distance from that average. A price/SMA200 cross within the latest 10 bars adds +5 for an upward cross or −5 for a downward cross; touching the SMA exactly is not itself a completed cross. The current U.S. daily close is included intraday for early warning, so the reading is labeled <strong>provisional intraday</strong> until the close. The existing calibrated distance-score thresholds are unchanged.</p>
 <p><strong>MA Cross 50/200</strong> — When the 50-day Moving Average crosses above the 200-day, that's a Golden Cross (bullish structural shift); crossing below is a Death Cross (bearish). These events are rare and meaningful — they signal the trend itself is changing, not just price.</p>
 <h4>Volume &amp; Institutional Flow</h4>
 <p><strong>Volume Profile</strong> — Maps where the heaviest institutional trading occurred. The POC (Point of Control) is the price with the most volume — it acts as a magnet. VAH (Volume Area High) and VAL (Volume Area Low) bracket where 70% of volume traded. Price above POC = bullish structure.</p>
@@ -6997,7 +7054,7 @@ Together, they help you avoid the classic "great company, terrible entry" trap.
 <tr><td>🏦 Volume Confirms Trend</td><td>OBV + SMA 200</td><td>1.08×</td></tr>
 <tr><td>🏗 Structure + Trend</td><td>Vol Profile + SMA 200</td><td>1.06×</td></tr>
 <tr><td>🔥 Triple Exhaustion</td><td>RSI + DeMark + Bollinger</td><td>1.07×</td></tr>
-<tr><td>💪 Smart Money</td><td>OBV + MFI</td><td>1.10×</td></tr>
+<tr><td>💪 Volume-Flow Alignment</td><td>OBV + MFI</td><td>1.10×</td></tr>
 <tr><td>🎯 Volume Accum + Oversold <em>(bull-only)</em></td><td>OBV + RSI</td><td>1.07×</td></tr>
 </table>
 
