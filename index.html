@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Signal Catcher v15.30 — Dashboard</title>
+<title>Signal Catcher v15.31 — Dashboard</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -898,7 +898,7 @@ body.dark-mode .fish-links a{color:#7ec898;}
   <div class="sdot active" id="sdot"></div>
   <span class="stext active" id="stext"></span>
   <span class="sstream" id="sstream"></span>
-  <span class="v-badge" title="Build version — if this doesn't match your expected version, do a hard refresh to clear cache">v15.30</span>
+  <span class="v-badge" title="Build version — if this doesn't match your expected version, do a hard refresh to clear cache">v15.31</span>
 </div>
 
 <!-- VERDICT SUMMARY BAR -->
@@ -1143,7 +1143,7 @@ body.dark-mode .fish-links a{color:#7ec898;}
         <div class="scoring-info-popup" id="scoring-info-popup">
           <h4>How the Score Works</h4>
           8 technical indicators are scored 0–100 individually, then combined using weighted averages across two confidence buckets:<br><br>
-          <strong style="color:#4c8ef7">HIGH confidence (60%)</strong> — Volume Profile, SMA (Simple Moving Average) 200, MA Cross 50/200, RSI (Relative Strength Index) Extreme, OBV (On-Balance Volume) Trend<br>
+          <strong style="color:#4c8ef7">HIGH confidence (60%)</strong> — SMA (Simple Moving Average) 200, MA Cross 50/200, RSI (Relative Strength Index) Extreme, OBV (On-Balance Volume) Trend<br>
           <strong style="color:#a78bfa">MED confidence (40%)</strong> — Money Flow Index (MFI), Bollinger Bands, DeMark Sequential<br>
           <div class="si-section">
             <h4>ADX Trend Overlay</h4>
@@ -2001,34 +2001,50 @@ function computeVolumeProfile(bars) {
   if (n < 30) return null;
   const lookback = Math.min(n, 252), startIdx = n - lookback;
   let mn = Infinity, mx = -Infinity;
-  for (let i = startIdx; i < n; i++) { if (bars[i].l < mn) mn = bars[i].l; if (bars[i].h > mx) mx = bars[i].h; }
+  for (let i = startIdx; i < n; i++) {
+    if (bars[i].l < mn) mn = bars[i].l;
+    if (bars[i].h > mx) mx = bars[i].h;
+  }
   const BUCKETS = 24, step = (mx - mn) / BUCKETS;
   if (step <= 0 || !isFinite(step)) return null;
   const vols = Array(BUCKETS).fill(0);
+
+  // Phase 9: daily-OHLCV Volume-by-Price Proxy (context only, NOT SCORED).
+  // We do not know the true intraday volume-at-price distribution from daily bars.
+  // Spread each day's volume equally across all price buckets intersected by its
+  // high-low range instead of pretending the entire day's volume traded at the close.
   for (let i = startIdx; i < n; i++) {
-    const idx = Math.max(0, Math.min(Math.floor((bars[i].c - mn) / step), BUCKETS - 1));
-    vols[idx] += bars[i].v;
+    const lo = Math.max(0, Math.min(Math.floor((bars[i].l - mn) / step), BUCKETS - 1));
+    const hi = Math.max(0, Math.min(Math.floor((bars[i].h - mn) / step), BUCKETS - 1));
+    const count = Math.max(1, hi - lo + 1);
+    const share = (Number.isFinite(bars[i].v) ? bars[i].v : 0) / count;
+    for (let b = lo; b <= hi; b++) vols[b] += share;
   }
-  let maxVol = 0, pocIdx = 0;
-  for (let i = 0; i < BUCKETS; i++) { if (vols[i] > maxVol) { maxVol = vols[i]; pocIdx = i; } }
-  const poc = mn + (pocIdx + 0.5) * step;
-  const totalVol = vols.reduce((s, v) => s + v, 0), target = totalVol * 0.70;
+
+  let maxVol = -Infinity, pocIdx = 0;
+  for (let i = 0; i < BUCKETS; i++) {
+    if (vols[i] > maxVol) { maxVol = vols[i]; pocIdx = i; }
+  }
+  const totalVol = vols.reduce((s, v) => s + v, 0);
+  const target = totalVol * 0.70;
   if (!isFinite(target) || target <= 0) return null;
+
+  // Contiguous 70% value area expanded from POC. Boundary-safe: never step
+  // beyond [0, BUCKETS-1]. On ties choose the side that exists; otherwise high.
   let vaVol = vols[pocIdx], vaLow = pocIdx, vaHigh = pocIdx;
-  let iter = 0;
-  while (vaVol < target && (vaLow > 0 || vaHigh < BUCKETS - 1) && iter < 50) {
-    const addLow = vaLow > 0 ? vols[vaLow - 1] : 0, addHigh = vaHigh < BUCKETS - 1 ? vols[vaHigh + 1] : 0;
-    if (addHigh >= addLow) { vaHigh++; vaVol += addHigh; } else { vaLow--; vaVol += addLow; }
-    iter++;
+  while (vaVol < target && (vaLow > 0 || vaHigh < BUCKETS - 1)) {
+    const canLow = vaLow > 0, canHigh = vaHigh < BUCKETS - 1;
+    const addLow = canLow ? vols[vaLow - 1] : -Infinity;
+    const addHigh = canHigh ? vols[vaHigh + 1] : -Infinity;
+    if (addHigh >= addLow) { vaHigh++; vaVol += vols[vaHigh]; }
+    else { vaLow--; vaVol += vols[vaLow]; }
   }
-  const vah = mn + (vaHigh + 1) * step, val = mn + vaLow * step, price = bars[n - 1].c;
-  let vol5 = 0, vol20 = 0;
-  for (let i = n - 5; i < n; i++) vol5 += bars[i].v;
-  vol5 /= 5;
-  const vol20Len = Math.min(20, lookback);
-  for (let i = n - vol20Len; i < n; i++) vol20 += bars[i].v;
-  vol20 /= vol20Len;
-  return { poc, vah, val, price, volRising: vol5 > vol20 * 1.05, volFading: vol5 < vol20 * 0.85 };
+
+  const poc = mn + (pocIdx + 0.5) * step;
+  const vah = mn + (vaHigh + 1) * step;
+  const val = mn + vaLow * step;
+  const price = bars[n - 1].c;
+  return { poc, vah, val, price, lookback, buckets: BUCKETS, method: 'daily-high-low-distributed-proxy' };
 }
 function scoreVolumeProfile(vp) {
   if (!vp) return 50;
@@ -2101,7 +2117,6 @@ async function scoreSymbol(dailyBars, weeklyBars) {
   await yld();
   console.log('scoreSymbol: all computes done, scoring...');
   const scores = {
-    vol_profile: safe('sVP', ()=>scoreVolumeProfile(volProf)) ?? 50,
     rsi_extreme: safe('sRSI', ()=>scoreRSI(rsi)) ?? 50,
     sma_200: safe('sSMA', ()=>scoreSMA200(price, sma200, closes)) ?? 50,
     bollinger: safe('sBoll', ()=>scoreBollinger(boll, price, sma200)) ?? 50,
@@ -2125,7 +2140,7 @@ const API_KEY = 'managed-by-cloudflare';
 //  INDICATOR DEFINITIONS + TOOLTIPS
 // ═══════════════════════════════════════════════════
 const TIPS = {
-  vol_profile:  {name:'Volume Profile',    desc:'Identifies price levels where large institutional transactions occurred. Computed over a <strong>252-trading-day (~1 year) lookback</strong>, partitioned into 24 equal-width price buckets. The <strong>POC</strong> (Point of Control) is the price with the highest traded volume — acts as a magnet. <strong>VAH</strong> (Volume Area High) and <strong>VAL</strong> (Volume Area Low) bracket the zone where 70% of cumulative volume traded. Price above POC = bullish structure; below = bearish.'},
+  vol_profile:  {name:'Volume-by-Price Proxy', desc:'<strong>Context only — not scored.</strong> Uses up to <strong>252 daily OHLCV bars</strong> and 24 equal-width price buckets. Because daily bars do not reveal true intraday volume-at-price, each day\'s volume is spread equally across the price buckets intersected by that day\'s high-low range. <strong>POC</strong> is the center of the highest-volume proxy bucket; <strong>VAH/VAL</strong> bound a contiguous area grown from POC until it contains at least 70% of the proxy volume. This is an informational approximation, not a conventional transaction-level Volume Profile and not a buy/sell signal. During an open U.S. cash session the current daily bar may move these levels, so the reading is <strong>provisional intraday</strong>.'},
   sma_200:      {name:'SMA 200 Trend',     desc:'The <strong>SMA</strong> (Simple Moving Average) is the arithmetic mean of the latest <strong>200 daily closes</strong>. Signal Catcher grades the latest close by percentage distance from the SMA200 using its calibrated distance bands, then applies a <strong>+5 / −5 recent-cross adjustment</strong> when price crosses above / below the SMA200 within the latest <strong>10 bars</strong>. A touch exactly on the SMA is not itself a completed cross. During an open U.S. cash session, the current daily close is included for early warning and the SMA200 reading is <strong>provisional intraday</strong> until the close. The engine uses Yahoo quote closes (not adjusted-close history) for this calculation.'},
   sma_cross:    {name:'MA Cross 50/200',   desc:'<strong>MA</strong> crossover uses the <strong>50-day</strong> and <strong>200-day</strong> Simple Moving Averages. A Golden Cross is recorded only when SMA50 moves from below SMA200 to above it; a Death Cross is the reverse. <strong>Touching/equality alone is neutral and does not create a cross.</strong> At least 200 bars are needed for both averages. A cross within the last <strong>60 trading days</strong> receives the existing recency score (72–90 bullish / 10–28 bearish); older or absent crosses are graded by SMA spread, with exact equality scored neutral (50). During an open U.S. cash session the current daily close is included for early warning and is <strong>provisional intraday</strong> until the close.'},
   rsi_extreme:  {name:'RSI Extreme',       desc:'<strong>RSI</strong> (Relative Strength Index) measures momentum on a 0–100 scale using <strong>Wilder\'s 14-period smoothing</strong> (~3 weeks of trading days) of average gains vs average losses. This is a CONTRARIAN indicator: RSI below 30 = oversold → scored BULLISH (potential reversal up, sellers exhausted). RSI above 70 = overbought → scored BEARISH (potential reversal down, buyers exhausted). Signal Catcher uses a <strong>35–65 neutral scoring dead zone</strong>; 30–35 and 65–70 are approach zones that fade toward the conventional 30/70 extremes. During an open U.S. cash session, RSI intentionally includes the current daily candle for early warning and is labeled <strong>provisional intraday</strong> until the close. In strong trends RSI can remain extreme for extended periods — check trend context.'},
@@ -2138,7 +2153,7 @@ const TIPS = {
 
 const INDS={
   high:[
-    {id:'vol_profile', name:'Volume Profile',   sub:'POC / VAH / VAL — computing…',    iW:1.1},
+    {id:'vol_profile', name:'Volume-by-Price Proxy', sub:'Context only · POC / VAH / VAL — computing…', iW:0, scored:false},
     {id:'sma_200',     name:'SMA 200 Trend',    sub:'Price vs. 200-day — computing…',       iW:1.4},
     {id:'sma_cross',   name:'MA Cross 50/200',  sub:'Golden / Death cross',              iW:1.1},
     {id:'rsi_extreme', name:'RSI Extreme',      sub:'14-period — computing…',            iW:1.2},
@@ -2197,14 +2212,6 @@ const CONFLUENCE_DEFS = [
     bear: '🏦 Volume Confirms Trend — OBV distribution aligns with price below SMA200.',
     strength: 'moderate',
     multiplier: 1.08,
-  },
-  {
-    ids: ['vol_profile', 'sma_200'],
-    thresh: 62,
-    bull: '🏗 Structure + Trend — Price above value area and SMA200. Strong positional support.',
-    bear: '🏗 Structure + Trend — Price below value area and SMA200. Strong positional resistance.',
-    strength: 'moderate',
-    multiplier: 1.06,
   },
   {
     // Triple Exhaustion — multiplier reduced 1.15 → 1.07 (Apr 28 2026, Step 7b
@@ -2306,7 +2313,7 @@ let BW = {high: 0.60, med: 0.40};
 
 // ── TIMEFRAME PRESETS ──
 // Logic: shorter TF → RSI/Bollinger/DeMark matter more, SMA200 less.
-//        longer TF → SMA200/VolProfile matter more, RSI/Bollinger less.
+//        longer TF → SMA200/MA Cross matter more, RSI/Bollinger less.
 // Note: ADX is an overlay multiplier (not scored), so it's not in iw.
 const TF_PRESETS = {
   swing: {
@@ -2314,7 +2321,7 @@ const TF_PRESETS = {
     desc: 'Short-term momentum & exhaustion signals dominate.',
     bw: { high:0.55, med:0.45 },
     iw: {
-      vol_profile:1.0, sma_200:0.8,  sma_cross:0.9,  rsi_extreme:1.5, obv:1.1,
+      sma_200:0.8,  sma_cross:0.9,  rsi_extreme:1.5, obv:1.1,
       mfi:1.3,         bollinger:1.4,   demark_seq:1.4,
     }
   },
@@ -2323,16 +2330,16 @@ const TF_PRESETS = {
     desc: 'Balanced blend — the system default.',
     bw: { high:0.60, med:0.40 },
     iw: {
-      vol_profile:1.1, sma_200:1.4,  sma_cross:1.1,  rsi_extreme:1.2, obv:1.0,
+      sma_200:1.4,  sma_cross:1.1,  rsi_extreme:1.2, obv:1.0,
       mfi:1.1,         bollinger:0.9,   demark_seq:0.9,
     }
   },
   intermediate: {
     label: 'Intermediate (3–12 mo)',
-    desc: 'Trend structure & volume profile carry the most weight.',
+    desc: 'Trend structure carries the most weight; Volume-by-Price remains context only.',
     bw: { high:0.65, med:0.35 },
     iw: {
-      vol_profile:1.3, sma_200:1.5,  sma_cross:1.3,  rsi_extreme:0.9, obv:1.1,
+      sma_200:1.5,  sma_cross:1.3,  rsi_extreme:0.9, obv:1.1,
       mfi:0.8,         bollinger:0.7,   demark_seq:0.7,
     }
   },
@@ -2341,7 +2348,7 @@ const TF_PRESETS = {
     desc: 'SMA 200 & structural patterns dominate. Short signals mostly noise.',
     bw: { high:0.65, med:0.35 },
     iw: {
-      vol_profile:1.2, sma_200:1.8,  sma_cross:1.5,  rsi_extreme:0.6, obv:1.2,
+      sma_200:1.8,  sma_cross:1.5,  rsi_extreme:0.6, obv:1.2,
       mfi:0.6,         bollinger:0.5,   demark_seq:0.5,
     }
   }
@@ -3027,28 +3034,28 @@ async function runAllComputed(ticker){
       if(adxBadge) adxBadge.title = `ADX Overlay: Multiplies trend-follower weights (SMA200, MA Cross) by ${adxOverlay.multiplier}×`;
     }
 
-    // Volume Profile
+    // Volume-by-Price Proxy — context only (not scored)
     const vp = I.volProf;
     if(vp){
       let vpDetail;
       if(price > vp.vah){
         const abovePct = (price - vp.vah) / vp.vah * 100;
-        if(vp.volFading)      vpDetail = `${abovePct.toFixed(1)}% above VAH ($${vp.vah.toFixed(2)}) · ⚠ vol fading — breakout suspect`;
-        else if(vp.volRising) vpDetail = `${abovePct.toFixed(1)}% above VAH ($${vp.vah.toFixed(2)}) · ✓ vol confirms breakout`;
-        else                  vpDetail = `Price ${abovePct.toFixed(1)}% above VAH ($${vp.vah.toFixed(2)}) · POC $${vp.poc.toFixed(2)}`;
+        if(vp.volFading)      vpDetail = `${abovePct.toFixed(1)}% above proxy VAH ($${vp.vah.toFixed(2)})`;
+        else if(vp.volRising) vpDetail = `${abovePct.toFixed(1)}% above proxy VAH ($${vp.vah.toFixed(2)})`;
+        else                  vpDetail = `Price ${abovePct.toFixed(1)}% above proxy VAH ($${vp.vah.toFixed(2)}) · POC $${vp.poc.toFixed(2)}`;
       } else if(price >= vp.val && price <= vp.vah){
         const rel = price >= vp.poc ? 'above' : 'below';
-        vpDetail = `Inside VA · price ${rel} POC ($${vp.poc.toFixed(2)}) · VAH $${vp.vah.toFixed(2)} VAL $${vp.val.toFixed(2)}`;
+        vpDetail = `Inside proxy VA · price ${rel} POC ($${vp.poc.toFixed(2)}) · VAH $${vp.vah.toFixed(2)} VAL $${vp.val.toFixed(2)}`;
       } else {
         const belowPct = (vp.val - price) / vp.val * 100;
-        if(vp.volFading)      vpDetail = `${belowPct.toFixed(1)}% below VAL ($${vp.val.toFixed(2)}) · vol fading (selling may exhaust)`;
-        else if(vp.volRising) vpDetail = `${belowPct.toFixed(1)}% below VAL ($${vp.val.toFixed(2)}) · ⚠ vol confirms breakdown`;
-        else                  vpDetail = `Price ${belowPct.toFixed(1)}% below VAL ($${vp.val.toFixed(2)}) · POC $${vp.poc.toFixed(2)}`;
+        if(vp.volFading)      vpDetail = `${belowPct.toFixed(1)}% below proxy VAL ($${vp.val.toFixed(2)})`;
+        else if(vp.volRising) vpDetail = `${belowPct.toFixed(1)}% below proxy VAL ($${vp.val.toFixed(2)})`;
+        else                  vpDetail = `Price ${belowPct.toFixed(1)}% below proxy VAL ($${vp.val.toFixed(2)}) · POC $${vp.poc.toFixed(2)}`;
       }
       const vpSub = document.getElementById('sub-vol_profile');
       if(vpSub) vpSub.textContent = vpDetail;
       const vpNote = document.getElementById('nt-vol_profile');
-      if(vpNote && !vpNote.value) vpNote.value = `[Computed from ${Math.min(n,252)} daily bars] POC:$${vp.poc.toFixed(2)} VAH:$${vp.vah.toFixed(2)} VAL:$${vp.val.toFixed(2)} · ${vpDetail}`;
+      if(vpNote && !vpNote.value) vpNote.value = `[Context only · not scored · ${Math.min(n,252)} daily bars] POC:$${vp.poc.toFixed(2)} VAH:$${vp.vah.toFixed(2)} VAL:$${vp.val.toFixed(2)} · ${vpDetail}`;
     }
 
     // DeMark Sequential — confirmed daily candles drive the score.
@@ -3150,35 +3157,10 @@ async function runLevelsComputed(ticker){
     const atr = atrSum / atrPeriod;
     const stop = price - 2 * atr;
 
-    // ── Volume Profile VAH / VAL (recompute — same logic as runVolProfileComputed) ──
-    const lookback = Math.min(n, 252);
-    const recent   = bars.slice(n - lookback);
-    const mn = Math.min(...recent.map(b=>b.l));
-    const mx = Math.max(...recent.map(b=>b.h));
-    const BUCKETS = 24;
-    const step = (mx - mn) / BUCKETS;
-    let _vah = null, _val = null;
-    if(step <= 0 || !isFinite(step)){ /* skip VP levels */ } else {
-    const vols = Array(BUCKETS).fill(0);
-    recent.forEach(b => {
-      const idx = Math.max(0, Math.min(Math.floor((b.c - mn) / step), BUCKETS-1));
-      vols[idx] += b.v;
-    });
-    const pocIdx = vols.indexOf(Math.max(...vols));
-    const poc    = mn + (pocIdx + 0.5) * step;
-    const totalVol = vols.reduce((s,v)=>s+v,0);
-    let vaVol = vols[pocIdx], vaLow = pocIdx, vaHigh = pocIdx;
-    let iter2 = 0;
-    while(vaVol < totalVol * 0.70 && (vaLow > 0 || vaHigh < BUCKETS-1) && iter2 < 50){
-      const addLow  = vaLow  > 0         ? vols[vaLow-1]  : 0;
-      const addHigh = vaHigh < BUCKETS-1 ? vols[vaHigh+1] : 0;
-      if(addHigh >= addLow){ vaHigh++; vaVol += addHigh; }
-      else                  { vaLow--;  vaVol += addLow;  }
-      iter2++;
-    }
-    _vah = mn + (vaHigh + 1) * step;
-    _val = mn + vaLow * step;
-    } // end VP block
+    // ── Volume-by-Price Proxy VAH / VAL (context only; canonical calculation) ──
+    const _vpContext = computeVolumeProfile(bars);
+    let _vah = _vpContext?.vah ?? null;
+    let _val = _vpContext?.val ?? null;
 
     // ── Recent swing high/low (last 20 bars) for tighter S/R ──
     const swing = bars.slice(n-20);
@@ -3301,22 +3283,11 @@ async function renderOrientationChart(ticker){
     const lastSMA200 = sma200[sma200.length-1];
     const priceColor = lastSMA200 ? (lastClose >= lastSMA200 ? '#0a8a4e' : '#cc2840') : '#1a6fd4';
 
-    // Quick Volume Profile for price chart annotations (252-bar lookback)
-    const vpBars = allBars.slice(Math.max(0, allBars.length-252));
-    const vpMn = Math.min(...vpBars.map(b=>b.l)), vpMx = Math.max(...vpBars.map(b=>b.h));
-    const vpStep = vpMx > vpMn ? (vpMx - vpMn) / 24 : 0;
-    const vpVols = Array(24).fill(0);
-    if(vpStep > 0) vpBars.forEach(b=>{ const idx=Math.min(Math.floor((b.c-vpMn)/vpStep),23); vpVols[idx]+=b.v; });
-    const vpPocIdx = vpVols.indexOf(Math.max(...vpVols));
-    const vpPoc = vpStep > 0 ? vpMn+(vpPocIdx+0.5)*vpStep : null;
-    const vpTotalVol = vpVols.reduce((s,v)=>s+v,0);
-    let vpVaVol=vpVols[vpPocIdx], vpLo=vpPocIdx, vpHi=vpPocIdx;
-    while(vpVaVol<vpTotalVol*0.70&&(vpLo>0||vpHi<23)){
-      const aL=vpLo>0?vpVols[vpLo-1]:0, aH=vpHi<23?vpVols[vpHi+1]:0;
-      if(aH>=aL){vpHi++;vpVaVol+=aH;}else{vpLo--;vpVaVol+=aL;}
-    }
-    const vpVAH = vpStep > 0 ? vpMn+(vpHi+1)*vpStep : null;
-    const vpVAL = vpStep > 0 ? vpMn+vpLo*vpStep : null;
+    // Volume-by-Price Proxy annotations (context only; canonical 252-bar calculation)
+    const _vpContext = computeVolumeProfile(allBars);
+    const vpPoc = _vpContext?.poc ?? null;
+    const vpVAH = _vpContext?.vah ?? null;
+    const vpVAL = _vpContext?.val ?? null;
 
     // Price chart
     const pCtx = document.getElementById('orientPriceChart').getContext('2d');
@@ -3655,17 +3626,22 @@ async function renderChart(id){
     let cfg;
 
     if(id === 'vol_profile'){
-      // Volume by price bucket (horizontal bar)
+      // Volume-by-Price Proxy chart: same 24-bucket high-low distributed method as context calculation.
       const mn = Math.min(...d.map(b=>b.l)), mx = Math.max(...d.map(b=>b.h));
-      const buckets = 15;
+      const buckets = 24;
       const step = (mx-mn)/buckets;
       const vols = Array(buckets).fill(0);
       const lbls = [];
       for(let i=0;i<buckets;i++) lbls.push('$'+(mn+i*step).toFixed(0)+'–'+(mn+(i+1)*step).toFixed(0));
-      d.forEach(b=>{ const idx=Math.min(Math.floor((b.c-mn)/step),buckets-1); vols[idx]+=(b.v||0); });
+      d.forEach(b=>{
+        const lo=Math.max(0,Math.min(Math.floor((b.l-mn)/step),buckets-1));
+        const hi=Math.max(0,Math.min(Math.floor((b.h-mn)/step),buckets-1));
+        const share=(b.v||0)/Math.max(1,hi-lo+1);
+        for(let j=lo;j<=hi;j++) vols[j]+=share;
+      });
       const maxV = Math.max(...vols);
-      const colors = vols.map(v=>v===maxV?'#1a6fd4bb':'#1a6fd455');
-      cfg = { type:'bar', data:{ labels:lbls, datasets:[{label:'Volume at Price',data:vols,backgroundColor:colors,borderWidth:0}]},
+      const colors = vols.map(v=>v===maxV?'#a78bfabb':'#a78bfa55');
+      cfg = { type:'bar', data:{ labels:lbls, datasets:[{label:'Daily OHLCV proxy volume',data:vols,backgroundColor:colors,borderWidth:0}]},
         options:{...baseOpts, indexAxis:'y',
           plugins:{...baseOpts.plugins,legend:{display:false}},
           scales:{x:{...baseOpts.scales.x,ticks:{...baseOpts.scales.x.ticks,callback:v=>(v/1e6).toFixed(0)+'M'}},y:{...baseOpts.scales.y,ticks:{font:{family:'IBM Plex Mono',size:8},color:_cc.tick}}}}};
@@ -3851,7 +3827,7 @@ const IND_GROUPS = [
 ];
 // Build a lookup: id → bucket name
 const IND_BUCKET = {};
-['high','med'].forEach(b=>INDS[b].forEach(i=>{ IND_BUCKET[i.id]=b; }));
+['high','med'].forEach(b=>INDS[b].forEach(i=>{ IND_BUCKET[i.id]=i.scored===false?'context':b; }));
 // Build a lookup: id → ind object
 const IND_BY_ID = {};
 ['high','med'].forEach(b=>INDS[b].forEach(i=>{ IND_BY_ID[i.id]=i; }));
@@ -3870,7 +3846,7 @@ function buildAll(){
   document.body.classList.add('dash-active');
 }
 
-// ═══ DASHBOARD 3×3 HEAT MAP ═══
+// ═══ DASHBOARD 8-TILE GRID: 7 SCORED + 1 CONTEXT ═══
 
 const DASH_ORDER = [
   'sma_200', 'sma_cross', 'vol_profile',
@@ -3907,8 +3883,8 @@ function buildDashboard(){
     };
     tile.innerHTML = `
       <div class="dt-group-dot" style="background:${grp.color}"></div>
-      <div class="dt-bucket">${bkt.toUpperCase()}</div>
-      <div class="dt-gauge-wrap" id="dtg-${id}">${tileGaugeSVG(50, '#f0b429', 60)}</div>
+      <div class="dt-bucket">${ind.scored===false ? 'CONTEXT' : bkt.toUpperCase()}</div>
+      <div class="dt-gauge-wrap" id="dtg-${id}">${ind.scored===false ? '<div style="height:70px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-weight:700;color:#a78bfa;letter-spacing:.08em;">CTX</div>' : tileGaugeSVG(50, '#f0b429', 60)}</div>
       <div class="dt-name">${ind.name}</div>
       <div class="dt-label" id="dtl-${id}">—</div>
     `;
@@ -3961,6 +3937,15 @@ function updateDashTiles(){
   if(!window._cachedDailyBars) return; // Don't update tiles before analysis
   enableDashTiles();
   DASH_ORDER.forEach(id => {
+    const ind = IND_BY_ID[id];
+    if(ind?.scored===false){
+      const gaugeWrap = document.getElementById('dtg-'+id);
+      if(gaugeWrap) gaugeWrap.innerHTML = '<div style="height:70px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-weight:700;color:#a78bfa;letter-spacing:.08em;">CTX</div>';
+      const dtl = document.getElementById('dtl-'+id);
+      if(dtl){ const subEl=document.getElementById('sub-'+id); dtl.textContent=subEl?.textContent || 'Context only'; dtl.style.color='#a78bfa'; }
+      const tile=document.getElementById('dt-'+id); if(tile) tile.style.borderColor='#a78bfa30';
+      return;
+    }
     const score = vals[id] ?? 50;
     const color = sCol(score);
     const sig = getSig(score);
@@ -3992,9 +3977,10 @@ function showTileModal(id){
   if(hint) hint.style.opacity = '0';
   const ind = IND_BY_ID[id];
   if(!ind) return;
-  const score = vals[id] ?? 50;
-  const color = sCol(score);
-  const sig = getSig(score);
+  const isContext = ind.scored===false;
+  const score = isContext ? null : (vals[id] ?? 50);
+  const color = isContext ? '#a78bfa' : sCol(score);
+  const sig = isContext ? {txt:'Context only'} : getSig(score);
   const bkt = IND_BUCKET[id] || 'med';
   const grp = DASH_GROUP[id];
   const tip = TIPS[id];
@@ -4003,7 +3989,7 @@ function showTileModal(id){
   const tagsEl = document.getElementById('dt-modal-tags');
   tagsEl.innerHTML = `
     <span class="dt-modal-tag" style="color:${grp.color};background:${grp.color}18;border:1px solid ${grp.color}40;">${grp.label}</span>
-    <span class="dt-modal-tag" style="color:var(--text3);background:var(--surface3);border:1px solid var(--border);">${bkt.toUpperCase()}</span>
+    <span class="dt-modal-tag" style="color:var(--text3);background:var(--surface3);border:1px solid var(--border);">${isContext ? 'CONTEXT · NOT SCORED' : bkt.toUpperCase()}</span>
   `;
 
   // Title — prefix with the ticker symbol so the panel shows what we're analyzing
@@ -4020,8 +4006,12 @@ function showTileModal(id){
 
   // Mini gauge in modal
   const gaugeWrap = document.getElementById('dt-modal-gauge-wrap');
-  gaugeWrap.innerHTML = `<canvas id="dt-modal-gauge-cv" width="90" height="58"></canvas>`;
-  setTimeout(() => drawTileGauge(document.getElementById('dt-modal-gauge-cv'), score), 10);
+  if(isContext){
+    gaugeWrap.innerHTML = '<div style="width:90px;height:58px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:20px;font-weight:700;color:#a78bfa;">CTX</div>';
+  } else {
+    gaugeWrap.innerHTML = `<canvas id="dt-modal-gauge-cv" width="90" height="58"></canvas>`;
+    setTimeout(() => drawTileGauge(document.getElementById('dt-modal-gauge-cv'), score), 10);
+  }
 
   // Label + signal
   const subEl = document.getElementById('sub-'+id);
@@ -4029,7 +4019,7 @@ function showTileModal(id){
   const isPlaceholder = subText.includes('computing') || subText.includes('Scanning');
   document.getElementById('dt-modal-label').textContent = (!isPlaceholder && subText.length > 2) ? subText : sig.txt;
   document.getElementById('dt-modal-label').style.color = color;
-  document.getElementById('dt-modal-signal').textContent = `Signal: ${Math.round(score)} / 100${id === 'demark_seq' ? ' · confirmed daily bars only' : ((id === 'sma_200' && window._sma200Provisional) || (id === 'sma_cross' && window._maCrossProvisional) || (id === 'adx' && window._adxProvisional) || (id === 'bollinger' && window._bollingerProvisional) || (id === 'mfi' && window._mfiProvisional) || (id === 'obv' && window._obvProvisional) ? ' · provisional intraday' : '')}`;
+  document.getElementById('dt-modal-signal').textContent = isContext ? 'Context only · excluded from composite score' : `Signal: ${Math.round(score)} / 100${id === 'demark_seq' ? ' · confirmed daily bars only' : ((id === 'sma_200' && window._sma200Provisional) || (id === 'sma_cross' && window._maCrossProvisional) || (id === 'adx' && window._adxProvisional) || (id === 'bollinger' && window._bollingerProvisional) || (id === 'mfi' && window._mfiProvisional) || (id === 'obv' && window._obvProvisional) ? ' · provisional intraday' : '')}`;
   const verifyEl = document.getElementById('dt-modal-verify');
   if(verifyEl){
     if(id === 'demark_seq' && window._demarkVerification){
@@ -4398,7 +4388,7 @@ function buildModalChart(indId, container){
     }
   }
 
-  // Volume Profile — price + POC/VAH/VAL horizontal lines
+  // Volume-by-Price Proxy — context-only POC/VAH/VAL horizontal lines
   if(indId === 'vol_profile' && CI.volProf && hasAnnotation){
     const vp = CI.volProf;
     if(vp.poc) annotations.poc = { type: 'line', yMin: vp.poc, yMax: vp.poc, borderColor: '#f0b429', borderWidth: 1.5, borderDash: [6,3], label: { content: `POC $${vp.poc.toFixed(2)}`, display: true, position: 'start', font: { size: 8 }, color: '#f0b429', backgroundColor: '#f0b42920' } };
@@ -4667,7 +4657,7 @@ setTimeout(buildADXBarZones, 0);
 
 // ═══ CALCULATE ═══
 function bScore(b){
-  const is=INDS[b];
+  const is=INDS[b].filter(i=>i.scored!==false);
   // Apply confluence multipliers AND ADX overlay to effective weights
   const effectiveW = (i) => {
     let w = i.iW || 1;
@@ -4688,7 +4678,7 @@ function recalc(){
   // a displayed 62 can never carry the <62 verdict/color from an unrounded 61.6.
   const roundedT=Math.round(rawT);
   // Compute dispersion: std dev of all active indicator scores
-  const allInds=[...INDS.high,...INDS.med];
+  const allInds=[...INDS.high,...INDS.med].filter(i=>i.scored!==false);
   const scores=allInds.map(i=>vals[i.id]??50);
   const mean=scores.reduce((s,v)=>s+v,0)/scores.length;
   const variance=scores.reduce((s,v)=>s+(v-mean)**2,0)/scores.length;
@@ -4979,11 +4969,10 @@ function detectDualSignalCommentary(){
   const obv      = vals.obv ?? 50;
   const boll     = vals.bollinger ?? 50;
   const mfiVal   = vals.mfi ?? 50;
-  const volP     = vals.vol_profile ?? 50;
   const maCross  = vals.sma_cross ?? 50;
 
   // Compute weighted score (incorporating ADX overlay on trend-followers)
-  const allInds=[...INDS.high,...INDS.med];
+  const allInds=[...INDS.high,...INDS.med].filter(i=>i.scored!==false);
   const effectiveW2 = (i) => {
     let w = (i.iW||1)*(confluenceMultipliers[i.id]||1);
     if(ADX_TREND_IDS.includes(i.id)) w *= (adxOverlay.multiplier||1);
@@ -5708,7 +5697,7 @@ async function runAnalysis(){
   const obvSub = document.getElementById('sub-obv');
   if(obvSub) obvSub.textContent='OBV — computing…';
   const vpSub = document.getElementById('sub-vol_profile');
-  if(vpSub) vpSub.textContent='POC / VAH / VAL — computing…';
+  if(vpSub) vpSub.textContent='Context only · POC / VAH / VAL — computing…';
   // Reset orientation chart
   const os=document.getElementById('orient-status');
   if(os) os.textContent='Loading…';
@@ -6951,8 +6940,8 @@ document.addEventListener('DOMContentLoaded',()=>{
 <h2>📖 Signal Catcher Guide</h2>
 
 <h3>What Is Signal Catcher?</h3>
-<p>Signal Catcher takes daily price and trading volume data from Yahoo's free dataset — Open, High, Low, Close, Volume (OHLCV) — and computes 8 widely followed technical trading indicators. These technical indicators are normally viewed on a chart with price, but Signal Catcher converts chart analysis into rule-based scoring.</p>
-<p>For each stock, eight indicators evaluate price and volume data. Each applies a fixed condition (e.g., price vs. 200-day moving average, RSI above or below thresholds) and outputs a 0–100 score.</p>
+<p>Signal Catcher takes daily price and trading volume data from Yahoo's free dataset — Open, High, Low, Close, Volume (OHLCV) — and computes 7 scored technical indicators plus one contextual Volume-by-Price Proxy. These technical indicators are normally viewed on a chart with price, but Signal Catcher converts chart analysis into rule-based scoring.</p>
+<p>For each stock, seven scored indicators evaluate price and volume data. The separate Volume-by-Price Proxy is context only and does not affect the composite. Each scored indicator applies a fixed condition (e.g., price vs. 200-day moving average, RSI above or below thresholds) and outputs a 0–100 score.</p>
 <p>Scores are combined using a weighted formula. Structural indicators (trend, volume) carry more weight than timing signals. Agreement across indicators increases the composite score. Conflicts are explicitly flagged.</p>
 <p>The result is a single 0–100 score reflecting the degree and strength of alignment in the data. Identical inputs produce identical outputs. No interpretation required.</p>
 <p>There is no AI speculation inside the scoring engine. No fundamental analysis. No subjective chart drawings or analyst opinions. Just clean, deterministic mathematics — the same input data will always produce the exact same score, no matter who computes it or when.</p>
@@ -6976,7 +6965,7 @@ Together, they help you avoid the classic "great company, terrible entry" trap.
 <p><strong>SMA 200 Trend</strong> — Signal Catcher averages the latest 200 daily closes and scores the latest price by its percentage distance from that average. A price/SMA200 cross within the latest 10 bars adds +5 for an upward cross or −5 for a downward cross; touching the SMA exactly is not itself a completed cross. The current U.S. daily close is included intraday for early warning, so the reading is labeled <strong>provisional intraday</strong> until the close. The existing calibrated distance-score thresholds are unchanged.</p>
 <p><strong>MA Cross 50/200</strong> — When the 50-day Moving Average crosses above the 200-day, that's a Golden Cross (bullish structural shift); crossing below is a Death Cross (bearish). These events are rare and meaningful — they signal the trend itself is changing, not just price.</p>
 <h4>Volume &amp; Institutional Flow</h4>
-<p><strong>Volume Profile</strong> — Maps where the heaviest institutional trading occurred. The POC (Point of Control) is the price with the most volume — it acts as a magnet. VAH (Volume Area High) and VAL (Volume Area Low) bracket where 70% of volume traded. Price above POC = bullish structure.</p>
+<p><strong>Volume-by-Price Proxy</strong> — <em>Context only; not scored.</em> Uses daily OHLCV rather than transaction-level volume-at-price. Each day’s volume is spread equally across the 24 price buckets intersected by that day’s high-low range. POC marks the highest-volume proxy bucket; VAH/VAL bound a contiguous area containing at least 70% of proxy volume. These levels are approximate chart context, not institutional-flow evidence or a buy/sell signal.</p>
 <p><strong>OBV Trend</strong> — On-Balance Volume adds volume on up closes, subtracts it on down closes, and is unchanged on flat closes. Signal Catcher compares the 20-day and 50-day averages of OBV for accumulation/distribution context and uses 20-day price/OBV directional divergence for its strongest readings. The old 78/22 acceleration tiers were removed after the Phase 5 walk-forward found no reliable added edge. During the U.S. cash session, current-day volume is partial and the OBV reading is labeled <strong>provisional intraday</strong>.</p>
 <p><strong>MFI</strong> — Money Flow Index is a 14-period volume-weighted momentum oscillator. Typical price is multiplied by volume, then classified as positive or negative money flow according to whether typical price rose or fell; unchanged typical price contributes neither side. Signal Catcher scores MFI contrarianly: below 20 = oversold/bullish context; above 80 = overbought/bearish context, but these readings are <strong>not standalone buy/sell signals</strong>. During the U.S. cash session, the current daily price and partial-day volume are included for early warning and labeled <strong>provisional intraday</strong>. <em>MFI bridges both worlds — it lives in the volume family because it is volume-weighted, but uses contrarian oversold/overbought scoring like the mean-reversion indicators.</em></p>
 
@@ -6989,13 +6978,13 @@ Together, they help you avoid the classic "great company, terrible entry" trap.
 <p><strong>ADX</strong> — The Average Directional Index doesn't produce a score. Instead, it tells the system <em>how much to trust</em> the two trend-direction indicators specifically: <strong>SMA 200</strong> and <strong>MA Cross 50/200</strong>. In strong trends (ADX above 25), those two signals get boosted. In choppy, range-bound markets (ADX below 20), they get dampened. Other indicators — including MFI, OBV, and the contrarian set — are not affected by ADX.</p>
 
 <h3>Two Families of Indicators</h3>
-<p>Six of the eight scored indicators fall into two philosophical families. Every market speaks in two voices at once:</p>
+<p>Six of the seven scored indicators fall into two philosophical families. Every market speaks in two voices at once:</p>
 <table>
 <tr><th>Family</th><th>What It Measures</th><th>Indicators</th></tr>
 <tr><td><strong>Trend-Following</strong></td><td>Persistence &amp; strength of the current move</td><td>SMA 200, MA Cross 50/200</td></tr>
 <tr><td><strong>Contrarian</strong></td><td>When a move has gone too far (exhaustion)</td><td>RSI Extreme, DeMark Sequential, Bollinger Bands, MFI</td></tr>
 </table>
-<p>The remaining two — <strong>Volume Profile</strong> and <strong>OBV</strong> — sit outside this dichotomy. They're <em>structural anchors</em> that describe where institutional money has been flowing, independent of trend direction or exhaustion. Their disagreement with either family is often the earliest warning that a regime is shifting.</p>
+<p>The remaining scored indicator, <strong>OBV</strong>, sits outside this dichotomy as a volume-flow measure. The separate <strong>Volume-by-Price Proxy</strong> is displayed for chart context only and does not affect the composite.</p>
 <p><strong>When trend and contrarian agree →</strong> highest-conviction setup. The trend is strong AND it's not exhausted.<br>
 <strong>When they clash →</strong> the system flags the exact tension — those moments often mark transitions where the biggest opportunities and risks hide.</p>
 
@@ -7016,7 +7005,7 @@ Together, they help you avoid the classic "great company, terrible entry" trap.
 <h4>2. Weight by Confidence Bucket</h4>
 <table>
 <tr><th>Bucket</th><th>Weight</th><th>Indicators</th><th>Role</th></tr>
-<tr><td><strong>HIGH</strong></td><td>60%</td><td>Volume Profile, SMA 200, MA Cross, RSI Extreme, OBV (On-Balance Volume)</td><td>Structural, institutional-grade anchors</td></tr>
+<tr><td><strong>HIGH</strong></td><td>60%</td><td>SMA 200, MA Cross, RSI Extreme, OBV (On-Balance Volume)</td><td>Higher-confidence scored signals</td></tr>
 <tr><td><strong>MED</strong></td><td>40%</td><td>MFI, Bollinger Bands, DeMark</td><td>Interpretive timing tools</td></tr>
 </table>
 <p>Each indicator has an <strong>intra-weight</strong> reflecting its authority. The defaults (Position timeframe) are:</p>
@@ -7024,7 +7013,6 @@ Together, they help you avoid the classic "great company, terrible entry" trap.
 <tr><th>Indicator</th><th>Bucket</th><th>iW</th><th>Why</th></tr>
 <tr><td><strong>SMA 200</strong></td><td>HIGH</td><td>1.4×</td><td>Most widely watched institutional level</td></tr>
 <tr><td><strong>RSI Extreme</strong></td><td>HIGH</td><td>1.2×</td><td>Strongest contrarian signal</td></tr>
-<tr><td><strong>Volume Profile</strong></td><td>HIGH</td><td>1.1×</td><td>Where institutional volume traded</td></tr>
 <tr><td><strong>MA Cross 50/200</strong></td><td>HIGH</td><td>1.1×</td><td>Structural trend shifts</td></tr>
 <tr><td><strong>MFI</strong></td><td>MED</td><td>1.1×</td><td>Volume-weighted oscillator</td></tr>
 <tr><td><strong>OBV</strong></td><td>HIGH</td><td>1.0×</td><td>Cumulative volume flow</td></tr>
@@ -7045,15 +7033,14 @@ Together, they help you avoid the classic "great company, terrible entry" trap.
 </table>
 
 <h4>4. Confluences &amp; Conflicts</h4>
-<p><strong>8 confluence patterns</strong> boost weights when specific combinations align:</p>
+<p><strong>7 confluence patterns</strong> boost weights when specific combinations align:</p>
 <table>
 <tr><th>Pattern</th><th>Indicators</th><th>Multiplier</th></tr>
 <tr><td>🔒 Dual Trend Confirmed</td><td>SMA 200 + MA Cross</td><td>1.10×</td></tr>
 <tr><td>⚡ Double Exhaustion</td><td>DeMark + Bollinger</td><td>1.10×</td></tr>
 <tr><td>📈 Dual Oscillator</td><td>MFI + RSI</td><td>1.08×</td></tr>
 <tr><td>🏦 Volume Confirms Trend</td><td>OBV + SMA 200</td><td>1.08×</td></tr>
-<tr><td>🏗 Structure + Trend</td><td>Vol Profile + SMA 200</td><td>1.06×</td></tr>
-<tr><td>🔥 Triple Exhaustion</td><td>RSI + DeMark + Bollinger</td><td>1.07×</td></tr>
+<tr><td><tr><td>🔥 Triple Exhaustion</td><td>RSI + DeMark + Bollinger</td><td>1.07×</td></tr>
 <tr><td>💪 Volume-Flow Alignment</td><td>OBV + MFI</td><td>1.10×</td></tr>
 <tr><td>🎯 Volume Accum + Oversold <em>(bull-only)</em></td><td>OBV + RSI</td><td>1.07×</td></tr>
 </table>
@@ -7078,12 +7065,12 @@ Together, they help you avoid the classic "great company, terrible entry" trap.
 <p><strong>Regime detection moved up a level.</strong> Instead of judging regime per symbol from conflict counts, the system now evaluates the <em>universe</em>: when the tiered watchlist collectively shows stretched trend structure alongside weak momentum, the alert email carries an amber caution banner. That signal held up in testing where the per-symbol version did not.</p>
 
 <h4>5. Timeframe Presets</h4>
-<p>The Timeframe selector above the gauge re-balances both the bucket weights and the individual indicator weights to match your trade horizon. Same eight indicators, different emphasis:</p>
+<p>The Timeframe selector above the gauge re-balances both the bucket weights and the individual indicator weights to match your trade horizon. Same seven scored indicators, different emphasis; the Volume-by-Price Proxy remains context only:</p>
 <table>
 <tr><th>Preset</th><th>HIGH/MED Split</th><th>Emphasis</th></tr>
 <tr><td><strong>Swing (1–2 wk)</strong></td><td>55% / 45%</td><td>RSI, MFI, Bollinger, DeMark dominate; SMA 200 dampened</td></tr>
 <tr><td><strong>Position (1–3 mo)</strong> <em>default</em></td><td>60% / 40%</td><td>Balanced — the system's tuned baseline</td></tr>
-<tr><td><strong>Intermediate (3–12 mo)</strong></td><td>65% / 35%</td><td>Trend structure &amp; volume profile lead</td></tr>
+<tr><td><strong>Intermediate (3–12 mo)</strong></td><td>65% / 35%</td><td>Trend structure leads; proxy remains context only</td></tr>
 <tr><td><strong>Long-Term (1 yr+)</strong></td><td>65% / 35%</td><td>SMA 200 dominates (1.8×); short-cycle signals minimized</td></tr>
 </table>
 <p style="font-size:12px;color:var(--text3);margin-top:-4px;">Switching timeframes recomputes the composite score from cached indicator values — no re-fetch required.</p>
